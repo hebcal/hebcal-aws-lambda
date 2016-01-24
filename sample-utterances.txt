@@ -1,0 +1,18 @@
+GetHolidayDate when is {Holiday} in {Date}
+GetHoliday when is {Holiday}
+GetHoliday when does {Holiday} start
+GetParsha what's the parashat for tonight
+GetParsha what's the parashat for today
+GetParsha what's the parashat for this week
+GetParsha what is this week's parasha
+GetParsha what is this week's Torah reading
+GetParsha what is this week's Torah portion
+GetHebrewDate what is today's Hebrew date
+GetCandleLighting when is candle lighting
+GetCandleLighting what is candle lighting time
+GetCandleLighting when do we light candles
+GetCandleLighting when does Shabbat begin
+GetCandleLighting when does Shabbat start
+GetCandleLighting when does Shabbos begin
+GetCandleLighting when does Shabbos start
+GetOmer what day of the Omer is it

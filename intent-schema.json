@@ -1,0 +1,47 @@
+{
+  "intents": [
+    {
+      "intent": "GetHolidayDate",
+      "slots": [
+        {
+          "name": "Holiday",
+          "type": "LIST_OF_HOLIDAYS"
+        },
+        {
+          "name": "Date",
+          "type": "AMAZON.DATE"
+        }
+      ]
+    },
+    {
+      "intent": "GetHoliday",
+      "slots": [
+        {
+          "name": "Holiday",
+          "type": "LIST_OF_HOLIDAYS"
+        }        
+      ]
+    },
+    {
+      "intent": "GetParsha"
+    },
+    {
+      "intent": "GetHebrewDate"
+    },
+    {
+      "intent": "GetCandleLighting"
+    },
+    {
+      "intent": "GetOmer"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
+    },
+    {
+      "intent": "AMAZON.CancelIntent"
+    },
+    {
+      "intent": "AMAZON.StopIntent"
+    }
+    ]
+}
