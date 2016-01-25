@@ -1,23 +1,5 @@
-/*
-const spawn = require('child_process').spawn;
-const ls = spawn('ls', ['-lh', '/usr']);
-
-ls.stdout.on('data', (data) => {
-  console.log(`stdout: ${data}`);
-});
-
-ls.stderr.on('data', (data) => {
-  console.log(`stderr: ${data}`);
-});
-
-ls.on('close', (code) => {
-  console.log(`child process exited with code ${code}`);
-});
-
-child.on('error', (err) => {
-  console.log('Failed to start child process.');
-});
-*/
+var spawn = require('child_process').spawn;
+var readline = require('readline');
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -120,9 +102,8 @@ function getWelcomeResponse(callback) {
     var cardTitle = "Welcome";
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
-    var repromptText = "You can ask when a holiday is, today's Hebrew date, candle lighting times, the Parashat HaShavuah, or the days of the Omer.";
-    var speechOutput = "Welcome to HebCal Heeb-Cal Hebe-Kal Hieb-Kal Heib-Kal. " +
-        repromptText + " What will it be?";
+    var repromptText = "You can ask when a holiday is, today's Hebrew date, candle lighting times, the weekly Torah portion, or the days of the Omer.";
+    var speechOutput = "Welcome to Hieb-Kal. " + repromptText + " What will it be?";
     var shouldEndSession = false;
 
     callback(sessionAttributes,
@@ -132,7 +113,117 @@ function getWelcomeResponse(callback) {
 function getHebcalResponse(intent, session, callback) {
     var repromptText = null;
     var sessionAttributes = {};
-    var shouldEndSession = false;
+    var shouldEndSession = true;
+
+    var hebcalOpts = ['-e'];
+    if (intent.name === "GetParsha") {
+        hebcalOpts.push('-t');
+        hebcalOpts.push('-S');
+    } else if (intent.name === "GetHebrewDate") {
+        hebcalOpts.push('-t');
+    } else if (intent.name === "GetHebrewDateTwo") {
+        hebcalOpts.push('-d');
+    } else if (intent.name === "GetOmer") {
+        hebcalOpts.push('-o');
+    } else if (intent.name === "GetCandleLighting") {
+        hebcalOpts.push('-c');
+        hebcalOpts.push('-E');
+    }
+
+    process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
+    var proc = spawn('./hebcal', hebcalOpts);
+
+    var events = [];
+
+    var rd = readline.createInterface({
+        input: proc.stdout,
+        terminal: false
+    }).on('line', function(line) {
+        var space = line.indexOf(' ');
+        var mdy = line.substr(0, space).split('.');
+        var isoDate = mdy.reverse().join('-');
+        var name = line.substr(space + 1);
+        var dt = new Date(isoDate);
+        events.push({dt: dt, name: name, lname: name.toLowerCase()});
+    })
+
+    proc.on('close', function(code) {
+        if (events.length === 0) {
+            callback({}, respond(intent, "Sorry, something is broken!"));
+        } else if (intent.name === "GetParsha") {
+            var found = events.filter(function(evt) {
+                return evt.name.indexOf("Parashat ") === 0;
+            });
+            if (found.length) {
+                callback({},
+                    respond(intent, "This week's Torah portion is " + found[0].name));
+            }
+        } else if (intent.name === "GetHebrewDate") {
+            callback({}, respond(intent, "Today is " + events[0].name));
+        } else if (intent.name === "GetHebrewDateTwo" && intent.slots && intent.slots.MyDate) {
+            var src = new Date(intent.slots.MyDate.value);
+            var found = events.filter(function(evt) {
+                return evt.dt.getFullYear() == src.getFullYear() &&
+                    evt.dt.getMonth() == src.getMonth() &&
+                    evt.dt.getDate() == src.getDate();
+            });
+            if (found.length) {
+                callback({},
+                    respond(intent, intent.slots.MyDate.value + " is "
+                        + found[0].name));
+            } else {
+                callback({},
+                    respond(intent, "Sorry, we could not convert Gregorian date "
+                        + intent.slots.MyDate.value + " for some reason"));
+            }
+        } else if (intent.name === "GetOmer") {
+            callback({},
+                respond(intent, "Sorry, Omer is not implemented yet."));
+        } else if (intent.name === "GetCandleLighting") {
+            callback({},
+                respond(intent, "Sorry, candle lighting times are not implemented yet."));
+        } else if (intent.slots && intent.slots.Holiday) {
+            var searchStr = intent.slots.Holiday.value.toLowerCase();
+            if (searchStr === 'passover') {
+                searchStr = 'pesach';
+            } else if (searchStr == 'candle lighting') {
+                callback({},
+                    respond(intent, "Sorry, candle lighting times are not implemented yet."));
+            }
+            var now = new Date().getTime();
+            var future = events.filter(function(evt) {
+                return evt.dt.getTime() >= now;
+            });
+            var found = future.filter(function(evt) {
+                return evt.lname.indexOf(searchStr) != -1;
+            });
+            if (found.length) {
+                callback({},
+                    respond(intent, found[0].name + " occurs on "
+                        + found[0].dt.toDateString()));
+            } else {
+                callback({},
+                    respond(intent, "Sorry, we could not find the date for "
+                        + intent.slots.Holiday.value + " for some reason"));
+            }
+        } else {
+            callback({}, respond(intent, "Sorry, something is also broken!"));
+        }
+    });
+
+    proc.on('error', function(err) {
+        console.log('Failed to start child process.');
+    });
+}
+
+function respond(intent, speechOutput) {
+    return buildSpeechletResponse(intent.name, speechOutput, null, true);
+}
+
+function getFakeResponse(intent, session, callback) {
+    var repromptText = null;
+    var sessionAttributes = {};
+    var shouldEndSession = true;
     var speechOutput = "We heard you specify intent " + intent.name + ".";
 
     if (intent.slots && intent.slots.MyDate) {

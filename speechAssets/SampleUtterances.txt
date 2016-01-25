@@ -1,7 +1,11 @@
 GetHolidayDate when is {Holiday} in {MyDate}
+
 GetHoliday when is {Holiday}
 GetHoliday when does {Holiday} start
 GetHoliday when does {Holiday} begin
+
+GetParsha what's the parasha
+GetParsha what's the parsha
 GetParsha what's the parasha for tonight
 GetParsha what's the parsha for tonight
 GetParsha what is the parasha for tonight
@@ -18,6 +22,9 @@ GetParsha what is this week's parasha
 GetParsha what is this week's parsha
 GetParsha what is this week's Torah reading
 GetParsha what is this week's Torah portion
+GetParsha what is the Torah reading
+GetParsha what is the Torah portion
+
 GetHebrewDate give me the Hebrew date
 GetHebrewDate tell me the Hebrew date
 GetHebrewDate what is today's Hebrew date
@@ -25,10 +32,13 @@ GetHebrewDate what is the Hebrew date
 GetHebrewDate what's the Hebrew date
 GetHebrewDate what is the Hebrew date today
 GetHebrewDate what's the Hebrew date today
+
 GetHebrewDateTwo what is the Hebrew date on {MyDate}
 GetHebrewDateTwo what's the Hebrew date on {MyDate}
 GetHebrewDateTwo what Hebrew day is {MyDate}
 GetHebrewDateTwo convert {MyDate} to Hebrew date
 GetHebrewDateTwo convert {MyDate} to Hebrew calendar
+
 GetCandleLighting when do we light candles
+
 GetOmer what day of the Omer is it
