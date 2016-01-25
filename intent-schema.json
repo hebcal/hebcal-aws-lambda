@@ -8,7 +8,7 @@
           "type": "LIST_OF_HOLIDAYS"
         },
         {
-          "name": "Date",
+          "name": "MyDate",
           "type": "AMAZON.DATE"
         }
       ]
@@ -29,13 +29,19 @@
       "intent": "GetHebrewDate"
     },
     {
+      "intent": "GetHebrewDateTwo",
+      "slots": [
+        {
+          "name": "MyDate",
+          "type": "AMAZON.DATE"
+        }
+      ]
+    },
+    {
       "intent": "GetCandleLighting"
     },
     {
       "intent": "GetOmer"
-    },
-    {
-      "intent": "AMAZON.HelpIntent"
     },
     {
       "intent": "AMAZON.CancelIntent"

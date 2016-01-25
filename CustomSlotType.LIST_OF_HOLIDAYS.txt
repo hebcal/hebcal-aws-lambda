@@ -1,7 +1,14 @@
+candle lighting
+candle lighting time
+Shabbat
+Shabbos
+Passover
+Rosh Chodesh
 Asara B'Tevet
 Chanukah
 Days of the Omer
 Lag B'Omer
+Lag BaOmer
 Leil Selichot
 Pesach
 Pesach Sheni
@@ -31,11 +38,13 @@ Shabbat Shekalim
 Shabbat Shuva
 Shabbat Zachor
 Shavuot
+Shavuos
 Shmini Atzeret
 Shushan Purim
 Sigd
 Simchat Torah
 Sukkot
+Sukkos
 Ta'anit Bechorot
 Ta'anit Esther
 Tish'a B'Av

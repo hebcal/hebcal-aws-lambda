@@ -19,27 +19,12 @@ child.on('error', (err) => {
 });
 */
 
-/**
- * This sample demonstrates a simple skill built with the Amazon Alexa Skills Kit.
- * The Intent Schema, Custom Slots, and Sample Utterances for this skill, as well as
- * testing instructions are located at http://amzn.to/1LzFrj6
- *
- * For additional samples, visit the Alexa Skills Kit Getting Started guide at
- * http://amzn.to/1LGWsLG
- */
-
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
     try {
-        console.log("event.session.application.applicationId=" + event.session.application.applicationId);
-
-        /**
-         * Uncomment this if statement and populate with your skill's application ID to
-         * prevent someone else from configuring a skill that sends requests to this function.
-         */
-        if (event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {
-             context.fail("Invalid Application ID");
+        if (event.session.application && event.session.application.applicationId && event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {
+             context.fail("Invalid Application ID=" + event.session.application.applicationId);
         }
 
         if (event.session.new) {
@@ -103,16 +88,17 @@ function onIntent(intentRequest, session, callback) {
         getHebcalResponse(intent, session, callback);
     } else if ("GetParsha" === intentName) {
         getHebcalResponse(intent, session, callback);
-    } else if ("GetHebrewDate" === intentName) {
+    } else if ("GetHebrewDate" === intentName || "GetHebrewDateTwo" === intentName) {
         getHebcalResponse(intent, session, callback);
     } else if ("GetCandleLighting" === intentName) {
         getHebcalResponse(intent, session, callback);
     } else if ("GetOmer" === intentName) {
         getHebcalResponse(intent, session, callback);
-    } else if ("AMAZON.HelpIntent" === intentName) {
-        getWelcomeResponse(callback);
+    } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
+        callback({}, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
     } else {
-        throw "Invalid intent";
+        callback({}, buildSpeechletResponse("Invalid intent", "Invalid intent " + intentName + ". Goodbye", null, true));
+//        throw "Invalid intent";
     }
 }
 
@@ -132,12 +118,11 @@ function getWelcomeResponse(callback) {
     // If we wanted to initialize the session to have some attributes we could add those here.
     var sessionAttributes = {};
     var cardTitle = "Welcome";
-    var speechOutput = "Welcome to the Alexa Skills Kit sample. " +
-        "Please tell me your favorite color by saying, my favorite color is red";
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
-    var repromptText = "Please tell me your favorite color by saying, " +
-        "my favorite color is red";
+    var repromptText = "You can ask when a holiday is, today's Hebrew date, candle lighting times, the Parashat HaShavuah, or the days of the Omer.";
+    var speechOutput = "Welcome to HebCal Heeb-Cal Hebe-Kal Hieb-Kal Heib-Kal. " +
+        repromptText + " What will it be?";
     var shouldEndSession = false;
 
     callback(sessionAttributes,
@@ -148,7 +133,17 @@ function getHebcalResponse(intent, session, callback) {
     var repromptText = null;
     var sessionAttributes = {};
     var shouldEndSession = false;
-    var speechOutput = "We heard you specify intent " + intent.name + ". You are awesome.";
+    var speechOutput = "We heard you specify intent " + intent.name + ".";
+
+    if (intent.slots && intent.slots.MyDate) {
+        speechOutput += " Date was " + intent.slots.MyDate.value + ".";
+    }
+
+    if (intent.slots && intent.slots.Holiday) {
+        speechOutput += " Holiday was " + intent.slots.Holiday.value + ".";
+    }
+
+    speechOutput += " You are awesome.";
 
     // Setting repromptText to null signifies that we do not want to reprompt the user.
     // If the user does not respond or says something that is not understood, the session
@@ -167,8 +162,8 @@ function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
         },
         card: {
             type: "Simple",
-            title: "SessionSpeechlet - " + title,
-            content: "SessionSpeechlet - " + output
+            title: "Hebcal - " + title,
+            content: "Hebcal - " + output
         },
         reprompt: {
             outputSpeech: {

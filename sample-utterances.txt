@@ -1,18 +1,34 @@
-GetHolidayDate when is {Holiday} in {Date}
+GetHolidayDate when is {Holiday} in {MyDate}
 GetHoliday when is {Holiday}
 GetHoliday when does {Holiday} start
-GetParsha what's the parashat for tonight
-GetParsha what's the parashat for today
-GetParsha what's the parashat for this week
+GetHoliday when does {Holiday} begin
+GetParsha what's the parasha for tonight
+GetParsha what's the parsha for tonight
+GetParsha what is the parasha for tonight
+GetParsha what is the parsha for tonight
+GetParsha what's the parasha for today
+GetParsha what's the parsha for today
+GetParsha what is the parasha for today
+GetParsha what is the parsha for today
+GetParsha what's the parasha for this week
+GetParsha what's the parsha for this week
+GetParsha what is the parasha for this week
+GetParsha what is the parsha for this week
 GetParsha what is this week's parasha
+GetParsha what is this week's parsha
 GetParsha what is this week's Torah reading
 GetParsha what is this week's Torah portion
+GetHebrewDate give me the Hebrew date
+GetHebrewDate tell me the Hebrew date
 GetHebrewDate what is today's Hebrew date
-GetCandleLighting when is candle lighting
-GetCandleLighting what is candle lighting time
+GetHebrewDate what is the Hebrew date
+GetHebrewDate what's the Hebrew date
+GetHebrewDate what is the Hebrew date today
+GetHebrewDate what's the Hebrew date today
+GetHebrewDateTwo what is the Hebrew date on {MyDate}
+GetHebrewDateTwo what's the Hebrew date on {MyDate}
+GetHebrewDateTwo what Hebrew day is {MyDate}
+GetHebrewDateTwo convert {MyDate} to Hebrew date
+GetHebrewDateTwo convert {MyDate} to Hebrew calendar
 GetCandleLighting when do we light candles
-GetCandleLighting when does Shabbat begin
-GetCandleLighting when does Shabbat start
-GetCandleLighting when does Shabbos begin
-GetCandleLighting when does Shabbos start
 GetOmer what day of the Omer is it
