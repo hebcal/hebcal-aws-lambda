@@ -288,7 +288,8 @@ function getHebcalResponse(intent, session, callback) {
         hebcalOpts.push('-t');
     } else if (intent.name === "GetHebrewDateTwo") {
         hebcalOpts.push('-d');
-        if (intent.slots && intent.slots.MyDate) {
+        if (intent.slots && intent.slots.MyDate
+            && intent.slots.MyDate.value && intent.slots.MyDate.value.length) {
             hebcalOpts.push(intent.slots.MyDate.value.substr(0, 4));
         }
     } else if (intent.name === "GetOmer") {
@@ -297,7 +298,8 @@ function getHebcalResponse(intent, session, callback) {
         hebcalOpts.push('-c');
         hebcalOpts.push('-E');
     } else if (intent.name === "GetHolidayDate") {
-        if (intent.slots && intent.slots.MyDate) {
+        if (intent.slots && intent.slots.MyDate
+            && intent.slots.MyDate.value && intent.slots.MyDate.value.length) {
             hebcalOpts.push(intent.slots.MyDate.value.substr(0, 4));
         }
     } else if (intent.name === "GetHolidayNextYear") {
@@ -354,7 +356,7 @@ function getHebcalResponse(intent, session, callback) {
             if (found.length) {
                 var speech = hebrewDateSSML(found[0].name);
                 callback({},
-                    respond(intent, intent.slots.MyDate.value + " is " + speech));
+                    respond(intent, intent.slots.MyDate.value + " is the " + speech));
             } else {
                 callback({},
                     respond(intent, "Sorry, we could not convert Gregorian date "
