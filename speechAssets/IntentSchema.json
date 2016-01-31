@@ -19,7 +19,16 @@
         {
           "name": "Holiday",
           "type": "LIST_OF_HOLIDAYS"
-        }        
+        }
+      ]
+    },
+    {
+      "intent": "GetHolidayNextYear",
+      "slots": [
+        {
+          "name": "Holiday",
+          "type": "LIST_OF_HOLIDAYS"
+        }
       ]
     },
     {

@@ -1,8 +1,15 @@
 GetHolidayDate when is {Holiday} in {MyDate}
+GetHolidayDate when was {Holiday} in {MyDate}
 
 GetHoliday when is {Holiday}
+GetHoliday when is {Holiday} this year
 GetHoliday when does {Holiday} start
 GetHoliday when does {Holiday} begin
+
+GetHolidayNextYear when is {Holiday} next year
+GetHolidayNextYear when is next {Holiday}
+GetHolidayNextYear when is the following {Holiday}
+GetHolidayNextYear when is the next {Holiday}
 
 GetParsha what's the parasha
 GetParsha what's the parsha
@@ -38,6 +45,7 @@ GetHebrewDateTwo what's the Hebrew date on {MyDate}
 GetHebrewDateTwo what Hebrew day is {MyDate}
 GetHebrewDateTwo convert {MyDate} to Hebrew date
 GetHebrewDateTwo convert {MyDate} to Hebrew calendar
+GetHebrewDateTwo convert {MyDate}
 
 GetCandleLighting when do we light candles
 
