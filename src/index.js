@@ -1,6 +1,8 @@
 var spawn = require('child_process').spawn;
 var readline = require('readline');
 
+var doyLong = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ");
+
 var parsha2ipa = {
 "Achrei Mot": "ʔäχaʁej mot",
 "Balak": "bäläk",
@@ -60,11 +62,12 @@ var parsha2ipa = {
 
 var holiday2ipa = {
 "Asara B'Tevet": "ʕasäʁäh bØtevet",
-"Candle lighting": "hdlkt nʁvt",
+"Candle lighting": "hadlakat neʁot",
 "Chanukah": "χanukäh",
 "Havdalah": "hävdäläh",
-"Lag BaOmer": "l״g bØʕomeʁ",
-"Leil Selichot": "sljχvt",
+"Lag B'Omer": "lag bØʕomeʁ",
+"Lag BaOmer": "lag bØʕomeʁ",
+"Leil Selichot": "lel sljχot",
 "Pesach": "pesäχ",
 "Pesach Sheni": "pesäχ ʃnj",
 "Purim": "puʁijm",
@@ -103,6 +106,7 @@ var holiday2ipa = {
 "Ta'anit Esther": "täʕanijt ʔesØteʁ",
 "Tish'a B'Av": "tiʃØʕäh bØʔäv",
 "Tu B'Av": "tu bØʔäv",
+"Tu B'Shvat": "tu biʃØvät",
 "Tu BiShvat": "tu biʃØvät",
 "Tzom Gedaliah": "ʦom gØdälØjäh",
 "Tzom Tammuz": "ʦom tämuz",
@@ -114,6 +118,8 @@ var holiday2ipa = {
 };
 
 var holidayAlias = {
+    'lag baomer': 'lag b\'omer',
+    'tu bishvat': 'tu b\'shvat',
     'hanukkah': 'chanukah',
     'passover': 'pesach',
     'sukkos': 'sukkot',
@@ -258,6 +264,58 @@ function getHolidayBasename(str) {
     return str;
 }
 
+function filterEvents(events) {
+    var dest = [];
+    var seen = {};
+    events.forEach(function(evt) {
+        var subj = evt.name;
+        if (subj.indexOf("Erev ") === 0) {
+            return;
+        }
+        if (subj.indexOf("Chanukah: ") === 0) {
+            if (subj === "Chanukah: 2 Candles") {
+                subj = "Chanukah";
+            } else {
+                return;
+            }
+        } else {
+            subj = getHolidayBasename(subj);
+        }
+        if (seen[subj]) {
+            return;
+        }
+        evt.basename = subj;
+        dest.push(evt);
+        if (subj != "Asara B'Tevet") {
+            seen[subj] = true;
+        }
+    });
+    return dest;
+}
+
+function beginsWhen(name) {
+    if (name === "Leil Selichot") {
+        return "after nightfall";
+    } else if (beginsAtDawn(name)) {
+        return "at dawn";
+    } else {
+        return "at sundown";
+    }
+}
+
+function beginsAtDawn(name) {
+    var re =  /^(Tzom|Asara|Ta\'anit) /;
+    return name.search(re) != -1;
+}
+
+function dayEventObserved(evt) {
+    if (beginsAtDawn(evt.name) || evt.name === "Leil Selichot") {
+        return evt.dt;
+    } else {
+        return new Date(evt.dt.getTime() - (24 * 60 * 60 * 1000));
+    }
+}
+
 // returns a 8-char string with 0-padding on month and day if needed
 function formatDateSsml(dt) {
     var year = dt.getFullYear(),
@@ -376,8 +434,9 @@ function getHebcalResponse(intent, session, callback) {
                 callback({},
                     respond(intent, "Sorry, candle lighting times are not implemented yet."));
             }
+            var eventsFiltered = filterEvents(events);
             var now = new Date().getTime();
-            var future = events.filter(function(evt) {
+            var future = eventsFiltered.filter(function(evt) {
                 return evt.dt.getTime() >= now;
             });
             var found = future.filter(function(evt) {
@@ -390,9 +449,12 @@ function getHebcalResponse(intent, session, callback) {
                 var phoneme = ipa
                     ? "<phoneme alphabet=\"ipa\" ph=\"" + ipa + "\">" + holiday + "</phoneme>"
                     : holiday;
-                var dateSsml = formatDateSsml(found[0].dt);
+                var observedDt = dayEventObserved(found[0]),
+                    observedWhen = beginsWhen(found[0].name),
+                    observedDow = doyLong[observedDt.getDay()];
+                var dateSsml = formatDateSsml(observedDt);
                 callback({},
-                    respond(intent, phoneme + " begins on " + dateSsml));
+                    respond(intent, phoneme + " begins " + observedWhen + " on " + observedDow + ", " + dateSsml));
             } else {
                 callback({},
                     respond(intent, "Sorry, we could not find the date for "
