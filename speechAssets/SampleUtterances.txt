@@ -1,5 +1,7 @@
-GetHolidayDate when is {Holiday} in {MyDate}
-GetHolidayDate when was {Holiday} in {MyDate}
+GetHolidayDate when is {Holiday} in {MyYear}
+GetHolidayDate when is {Holiday} in the year {MyYear}
+GetHolidayDate when is {Holiday} in year {MyYear}
+GetHolidayDate when was {Holiday} in {MyYear}
 
 GetHoliday when is {Holiday}
 GetHoliday when is {Holiday} this year
@@ -32,6 +34,7 @@ GetParsha what is this week's Torah portion
 GetParsha what is the Torah reading
 GetParsha what is the Torah portion
 
+GetHebrewDate for the Hebrew date
 GetHebrewDate give me the Hebrew date
 GetHebrewDate tell me the Hebrew date
 GetHebrewDate what is today's Hebrew date

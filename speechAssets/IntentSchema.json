@@ -8,8 +8,8 @@
           "type": "LIST_OF_HOLIDAYS"
         },
         {
-          "name": "MyDate",
-          "type": "AMAZON.DATE"
+          "name": "MyYear",
+          "type": "AMAZON.FOUR_DIGIT_NUMBER"
         }
       ]
     },

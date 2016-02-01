@@ -356,9 +356,8 @@ function getHebcalResponse(intent, session, callback) {
         hebcalOpts.push('-c');
         hebcalOpts.push('-E');
     } else if (intent.name === "GetHolidayDate") {
-        if (intent.slots && intent.slots.MyDate
-            && intent.slots.MyDate.value && intent.slots.MyDate.value.length) {
-            hebcalOpts.push(intent.slots.MyDate.value.substr(0, 4));
+        if (intent.slots && intent.slots.MyYear && intent.slots.MyYear.value) {
+            hebcalOpts.push(intent.slots.MyYear.value);
         }
     } else if (intent.name === "GetHolidayNextYear") {
         var year = new Date().getFullYear() + 1;
