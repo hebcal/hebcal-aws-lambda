@@ -434,13 +434,22 @@ function getHebcalResponse(intent, session, callback) {
                     respond(intent, "Sorry, candle lighting times are not implemented yet."));
             }
             var eventsFiltered = filterEvents(events);
-            var now = new Date().getTime();
+            var now = new Date(),
+                nowTs = now.getTime();
+            // events today or in the future
             var future = eventsFiltered.filter(function(evt) {
-                return evt.dt.getTime() >= now;
+                return (evt.dt.getTime() >= nowTs)
+                    || (evt.dt.getFullYear() === now.getFullYear() &&
+                        evt.dt.getMonth() === now.getMonth() &&
+                        evt.dt.getDate() === now.getDate());
             });
             var found = future.filter(function(evt) {
-                var h = getHolidayBasename(evt.name);
-                return h.toLowerCase() === searchStr;
+                if (searchStr === 'rosh chodesh') {
+                    return h.indexOf('Rosh Chodesh ') === 0;
+                } else {
+                    var h = getHolidayBasename(evt.name);
+                    return h.toLowerCase() === searchStr;
+                }
             });
             if (found.length) {
                 var holiday = getHolidayBasename(found[0].name);
