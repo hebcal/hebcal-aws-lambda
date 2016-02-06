@@ -47,9 +47,6 @@
       ]
     },
     {
-      "intent": "GetCandleLighting"
-    },
-    {
       "intent": "GetOmer"
     },
     {

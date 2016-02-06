@@ -2,8 +2,10 @@ GetHolidayDate when is {Holiday} in {MyYear}
 GetHolidayDate when is {Holiday} in the year {MyYear}
 GetHolidayDate when is {Holiday} in year {MyYear}
 GetHolidayDate when was {Holiday} in {MyYear}
+GetHolidayDate when {Holiday} was in {MyYear}
 
 GetHoliday when is {Holiday}
+GetHoliday when {Holiday} is
 GetHoliday when is {Holiday} this year
 GetHoliday when does {Holiday} start
 GetHoliday when does {Holiday} begin
@@ -12,44 +14,44 @@ GetHolidayNextYear when is {Holiday} next year
 GetHolidayNextYear when is next {Holiday}
 GetHolidayNextYear when is the following {Holiday}
 GetHolidayNextYear when is the next {Holiday}
-
-GetParsha what's the parasha
-GetParsha what's the parsha
-GetParsha what's the parasha for tonight
-GetParsha what's the parsha for tonight
-GetParsha what is the parasha for tonight
-GetParsha what is the parsha for tonight
-GetParsha what's the parasha for today
-GetParsha what's the parsha for today
-GetParsha what is the parasha for today
-GetParsha what is the parsha for today
-GetParsha what's the parasha for this week
-GetParsha what's the parsha for this week
-GetParsha what is the parasha for this week
-GetParsha what is the parsha for this week
-GetParsha what is this week's parasha
-GetParsha what is this week's parsha
-GetParsha what is this week's Torah reading
-GetParsha what is this week's Torah portion
-GetParsha what is the Torah reading
-GetParsha what is the Torah portion
+GetHolidayNextYear what the date of the next {Holiday} is
 
 GetHebrewDate for the Hebrew date
 GetHebrewDate give me the Hebrew date
 GetHebrewDate tell me the Hebrew date
 GetHebrewDate what is today's Hebrew date
 GetHebrewDate what is the Hebrew date
-GetHebrewDate what's the Hebrew date
 GetHebrewDate what is the Hebrew date today
-GetHebrewDate what's the Hebrew date today
 
+GetHebrewDateTwo give me the Hebrew date for {MyDate}
+GetHebrewDateTwo tell me the Hebrew date for {MyDate}
 GetHebrewDateTwo what is the Hebrew date on {MyDate}
-GetHebrewDateTwo what's the Hebrew date on {MyDate}
 GetHebrewDateTwo what Hebrew day is {MyDate}
+GetHebrewDateTwo what is {MyDate} on the Hebrew calendar
+GetHebrewDateTwo give me {MyDate} as a Hebrew date
 GetHebrewDateTwo convert {MyDate} to Hebrew date
 GetHebrewDateTwo convert {MyDate} to Hebrew calendar
 GetHebrewDateTwo convert {MyDate}
 
-GetCandleLighting when do we light candles
+GetParsha give me this week's Torah portion
+GetParsha give me this week's Torah reading
+GetParsha tell me this week's Torah portion
+GetParsha tell me this week's Torah reading
+GetParsha this week's Torah portion
+GetParsha this week's Torah reading
+GetParsha what is the Torah portion
+GetParsha what is the Torah reading
+GetParsha what is the parasha
+GetParsha what is the parasha for this week
+GetParsha what is the parasha for today
+GetParsha what is the parasha for tonight
+GetParsha what is the parsha
+GetParsha what is the parsha for this week
+GetParsha what is the parsha for today
+GetParsha what is the parsha for tonight
+GetParsha what is this week's Torah portion
+GetParsha what is this week's Torah reading
+GetParsha what is this week's parasha
+GetParsha what is this week's parsha
 
 GetOmer what day of the Omer is it

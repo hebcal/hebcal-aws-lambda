@@ -1,7 +1,6 @@
-var spawn = require('child_process').spawn;
-var readline = require('readline');
-
-var doyLong = "Sunday Monday Tuesday Wednesday Thursday Friday Saturday".split(" ");
+var spawn = require('child_process').spawn,
+    readline = require('readline'),
+    moment = require('moment');
 
 var parsha2ipa = {
 "Achrei Mot": "ʔäχaʁej mot",
@@ -193,8 +192,14 @@ function onIntent(intentRequest, session, callback) {
         }
     } else if ("GetParsha" === intentName) {
         getHebcalResponse(intent, session, callback);
-    } else if ("GetHebrewDate" === intentName || "GetHebrewDateTwo" === intentName) {
+    } else if ("GetHebrewDate" === intentName) {
         getHebcalResponse(intent, session, callback);
+    } else if ("GetHebrewDateTwo" === intentName) {
+        if (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value) {
+            getHebcalResponse(intent, session, callback);
+        } else {
+            getWhichDateResponse(callback);
+        }
     } else if ("GetCandleLighting" === intentName) {
         getHebcalResponse(intent, session, callback);
     } else if ("GetOmer" === intentName) {
@@ -229,6 +234,15 @@ function getWelcomeResponse(callback) {
 
     callback(sessionAttributes,
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession, false));
+}
+
+function getWhichDateResponse(callback) {
+    var cardTitle = "What date?";
+    var repromptText = "Which date would you like me to convert?";
+    var speechOutput = "Sorry, Hieb-Kal didn't understand the date. " + repromptText;
+    var shouldEndSession = false;
+    callback({},
+        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession, false));    
 }
 
 function getWhichHolidayResponse(callback) {
@@ -312,25 +326,46 @@ function dayEventObserved(evt) {
     if (beginsAtDawn(evt.name) || evt.name === "Leil Selichot") {
         return evt.dt;
     } else {
-        return new Date(evt.dt.getTime() - (24 * 60 * 60 * 1000));
+        return evt.dt.subtract(1, 'd');
     }
 }
 
 // returns a 8-char string with 0-padding on month and day if needed
 function formatDateSsml(dt) {
-    var year = dt.getFullYear(),
-        month = dt.getMonth() + 1,
-        day = dt.getDate(),
-        thisYear = new Date().getFullYear(),
-        yearStr = thisYear == year ? '????' : year.toString(),
-        m = month.toString(),
-        d = day.toString(),
-        mp = m.length == 2 ? '' : '0',
-        dp = d.length == 2 ? '' : '0';
+    var year = dt.format('YYYY'),
+        month = dt.format('MM'),
+        day = dt.format('DD'),
+        thisYear = moment().format('YYYY'),
+        yearStr = (thisYear == year) ? '????' : year;
     return '<say-as interpret-as="date">'
         + yearStr
-        + mp + m + dp + d
+        + month + day
         + '</say-as>';
+}
+
+/*
+“today”: 2015-11-24
+“tomorrow”: 2015-11-25
+“november twenty-fifth”: 2015-11-25
+“next monday”: 2015-11-30
+“this week”: 2015-W48
+“next week”: 2015-W49
+“this weekend”: 2015-W48-WE
+“this month”: 2015-11
+“next year”: 2016
+“this decade”: 201X
+*/
+function parseAmazonDateFormat(str) {
+    if (str.length == 4 & str.charAt(3) == 'X') {
+        var year = str.substr(0,3);
+        return moment.utc(new Date(+year, 0, 1));
+    }
+    var m = moment.utc(str);
+    if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W')
+        || (str.length == 11 && str.substr(8) == '-WE')) {
+        return m.day('Saturday');
+    } 
+    return m;
 }
 
 function getHebcalResponse(intent, session, callback) {
@@ -345,16 +380,17 @@ function getHebcalResponse(intent, session, callback) {
     } else if (intent.name === "GetHebrewDate") {
         hebcalOpts.push('-t');
     } else if (intent.name === "GetHebrewDateTwo") {
+        var m = parseAmazonDateFormat(intent.slots.MyDate.value);
         hebcalOpts.push('-d');
-        if (intent.slots && intent.slots.MyDate
-            && intent.slots.MyDate.value && intent.slots.MyDate.value.length) {
-            hebcalOpts.push(intent.slots.MyDate.value.substr(0, 4));
-        }
+        hebcalOpts.push(m.format('YYYY'));
     } else if (intent.name === "GetOmer") {
         hebcalOpts.push('-o');
     } else if (intent.name === "GetCandleLighting") {
         hebcalOpts.push('-c');
         hebcalOpts.push('-E');
+    } else if (intent.name === "GetHoliday") {
+        hebcalOpts.push('--years');
+        hebcalOpts.push('2');
     } else if (intent.name === "GetHolidayDate") {
         if (intent.slots && intent.slots.MyYear && intent.slots.MyYear.value) {
             hebcalOpts.push(intent.slots.MyYear.value);
@@ -365,7 +401,7 @@ function getHebcalResponse(intent, session, callback) {
     }
 
     process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-//    console.log(JSON.stringify(hebcalOpts));
+    console.log(JSON.stringify(hebcalOpts));
     var proc = spawn('./hebcal', hebcalOpts);
 
     var events = [];
@@ -378,7 +414,7 @@ function getHebcalResponse(intent, session, callback) {
         var mdy = line.substr(0, space).split('.');
         var isoDate = mdy.reverse().join('-');
         var name = line.substr(space + 1);
-        var dt = new Date(isoDate);
+        var dt = moment.utc(isoDate, 'YYYY-MM-DD');
         events.push({dt: dt, name: name});
     })
 
@@ -403,12 +439,10 @@ function getHebcalResponse(intent, session, callback) {
         } else if (intent.name === "GetHebrewDate") {
             var speech = hebrewDateSSML(events[0].name);
             callback({}, respond(intent, "Today is the " + speech));
-        } else if (intent.name === "GetHebrewDateTwo" && intent.slots && intent.slots.MyDate) {
-            var src = new Date(intent.slots.MyDate.value);
+        } else if (intent.name === "GetHebrewDateTwo") {
+            var src = parseAmazonDateFormat(intent.slots.MyDate.value);
             var found = events.filter(function(evt) {
-                return evt.dt.getFullYear() === src.getFullYear() &&
-                    evt.dt.getMonth() === src.getMonth() &&
-                    evt.dt.getDate() === src.getDate();
+                return evt.dt.isSame(src, 'day');
             });
             if (found.length) {
                 var speech = hebrewDateSSML(found[0].name);
@@ -424,30 +458,37 @@ function getHebcalResponse(intent, session, callback) {
                 respond(intent, "Sorry, Omer is not implemented yet."));
         } else if (intent.name === "GetCandleLighting") {
             callback({},
-                respond(intent, "Sorry, candle lighting times are not implemented yet."));
+                respond(intent, "Candle lighting times are not yet supported."));
         } else if (intent.slots && intent.slots.Holiday) {
             var searchStr0 = intent.slots.Holiday.value.toLowerCase(),
                 searchStr = holidayAlias[searchStr0] || searchStr0;
             if (searchStr == 'candle lighting' || searchStr == 'candle lighting time'
                 || searchStr == 'shabbat' || searchStr == 'shabbos') {
                 callback({},
-                    respond(intent, "Sorry, candle lighting times are not implemented yet."));
+                    respond(intent, "Candle lighting times are not yet supported."));
             }
             var eventsFiltered = filterEvents(events);
-            var now = new Date(),
-                nowTs = now.getTime();
-            // events today or in the future
-            var future = eventsFiltered.filter(function(evt) {
-                return (evt.dt.getTime() >= nowTs)
-                    || (evt.dt.getFullYear() === now.getFullYear() &&
-                        evt.dt.getMonth() === now.getMonth() &&
-                        evt.dt.getDate() === now.getDate());
-            });
-            var found = future.filter(function(evt) {
+            if (intent.name === "GetHoliday") {
+                var now = moment();
+                // events today or in the future
+                var future = eventsFiltered.filter(function(evt) {
+                    return evt.dt.isSameOrAfter(now, 'day');
+                });
+                eventsFiltered = future;
+            }
+            console.log("Searching for [" + searchStr + "] in " + eventsFiltered.length);
+            if (eventsFiltered.length) {
+                var evt = eventsFiltered[0],
+                    evt2 = eventsFiltered[eventsFiltered.length - 1];
+                console.log("Event 0 is [" + evt.name + "] on " + evt.dt.format('YYYY-MM-DD'));
+                console.log("Event " + (eventsFiltered.length - 1) + " is [" + evt2.name + "] on " + evt2.dt.format('YYYY-MM-DD'));
+            }
+            var found = eventsFiltered.filter(function(evt) {
                 if (searchStr === 'rosh chodesh') {
-                    return h.indexOf('Rosh Chodesh ') === 0;
+                    return evt.name.indexOf('Rosh Chodesh ') === 0;
                 } else {
                     var h = getHolidayBasename(evt.name);
+                    console.log("orig=[" + evt.name + "],base=[" + h + "],search=[" + searchStr + "]");
                     return h.toLowerCase() === searchStr;
                 }
             });
@@ -459,7 +500,7 @@ function getHebcalResponse(intent, session, callback) {
                     : holiday;
                 var observedDt = dayEventObserved(found[0]),
                     observedWhen = beginsWhen(found[0].name),
-                    observedDow = doyLong[observedDt.getDay()];
+                    observedDow = observedDt.format('dddd');
                 var dateSsml = formatDateSsml(observedDt);
                 callback({},
                     respond(intent, phoneme + " begins " + observedWhen + " on " + observedDow + ", " + dateSsml));
