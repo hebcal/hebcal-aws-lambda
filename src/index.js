@@ -173,7 +173,7 @@ function onSessionStarted(sessionStartedRequest, session) {
  */
 function onLaunch(launchRequest, session, callback) {
     // Dispatch to your skill's launch.
-    getWelcomeResponse(callback);
+    getWelcomeResponse(callback, false);
 }
 
 /**
@@ -199,7 +199,7 @@ function onIntent(intentRequest, session, callback) {
     } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
         callback({}, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
     } else if ("AMAZON.HelpIntent" === intentName) {
-        getWelcomeResponse(callback);
+        getWelcomeResponse(callback, true);
     } else {
         callback({}, buildSpeechletResponse("Invalid intent", "Invalid intent " + intentName + ". Goodbye", null, true));
     }
@@ -215,18 +215,29 @@ function onSessionEnded(sessionEndedRequest, session) {
 
 // --------------- Functions that control the skill's behavior -----------------------
 
-function getWelcomeResponse(callback) {
-    // If we wanted to initialize the session to have some attributes we could add those here.
-    var sessionAttributes = {};
-    var cardTitle = "Welcome";
-    // If the user either does not reply to the welcome message or says something that is not
-    // understood, they will be prompted again with this text.
+function getWelcomeResponse(callback, isHelpIntent) {
     var repromptText = "You can ask about holidays, the Torah portion, or Hebrew dates.";
-    var speechOutput = "Welcome to Hieb-Kal. " + repromptText + " What will it be?";
-    var shouldEndSession = false;
-
-    callback(sessionAttributes,
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+    var nag = ' What will it be?';
+    var args = ['-t'];
+    invokeHebcal(args, function(err, events) {
+        if (err) {
+            return callback({}, respond('Internal Error', err));
+        }
+        var hebrewDateStr = events[0].name;
+        var speech = hebrewDateSSML(hebrewDateStr);
+        var cardText = 'Welcome to Hebcal. ';
+        var ssmlContent = 'Welcome to Hieb-Kal. ';
+        if (!isHelpIntent) {
+            cardText += 'Today is the ' + hebrewDateStr + '. ';
+            ssmlContent += 'Today is the ' + speech + '. ';
+        }
+        var response = respond('Welcome to Hebcal',
+            cardText + repromptText + nag,
+            ssmlContent + repromptText + nag);
+        response.shouldEndSession = false;
+        response.reprompt.outputSpeech.text = repromptText;
+        callback({}, response);
+    });
 }
 
 function getWhichDateResponse(callback) {
@@ -415,16 +426,6 @@ function getParshaResponse(intent, session, callback) {
     });
 }
 
-// var args = ['-t'];
-// invokeHebcal(args, function(err, events) {
-//     if (err) {
-//         return callback({}, respond("Error", err));
-//     }
-//     var speech = hebrewDateSSML(events[0].name);
-//     callback({}, respond(intent.name, "Today is the " + speech));
-// });
-
-
 function getHebrewDateResponse(intent, session, callback) {
     var src = (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value)
         ? parseAmazonDateFormat(intent.slots.MyDate.value)
@@ -489,13 +490,13 @@ function getOmerResponse(intent, session, callback) {
                 speech));
         } else {
             var observedDt = dayEventObserved(evt),
-                observedWhen = beginsWhen(evt.name),
                 observedDow = observedDt.format('dddd');
             var dateSsml = formatDateSsml(observedDt),
                 dateText = observedDt.format('dddd, MMMM Do YYYY');
+            var prefix = 'The counting of the Omer begins at sundown on ';
             callback({}, respond('Counting of the Omer',
-                'The counting of the Omer begins at sundown on ' + dateText + '.',
-                'The counting of the Omer begins ' + observedWhen + ' on ' + observedDow + ', ' + dateSsml));
+                prefix + dateText + '.',
+                prefix + observedDow + ', ' + dateSsml));
         }
     });
 }
