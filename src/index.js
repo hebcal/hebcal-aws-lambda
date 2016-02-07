@@ -71,19 +71,19 @@ var holiday2ipa = {
 "Pesach Sheni": "ˈpeɪsɑːχ ʃnj",
 "Purim": "puːʁˈim",
 "Purim Katan": "puːʁˈim kɒˈtɒn",
-"Rosh Chodesh Adar": "ʁoʔʃ χvdʃ ʔädäʁ",
-"Rosh Chodesh Adar I": "ʁoʔʃ χvdʃ ʔädäʁ ʔ׳",
-"Rosh Chodesh Adar II": "ʁoʔʃ χvdʃ ʔädäʁ v׳",
-"Rosh Chodesh Av": "ʁoʔʃ χvdʃ ʔäv",
-"Rosh Chodesh Cheshvan": "ʁoʔʃ χvdʃ χeʃØvän",
-"Rosh Chodesh Elul": "ʁoʔʃ χvdʃ ʔelul",
-"Rosh Chodesh Iyyar": "ʁoʔʃ χvdʃ ʔijäjʁ",
-"Rosh Chodesh Kislev": "ʁoʔʃ χvdʃ kisØlev",
-"Rosh Chodesh Nisan": "ʁoʔʃ χvdʃ nijsän",
-"Rosh Chodesh Sh'vat": "ʁoʔʃ χvdʃ ʃØvät",
-"Rosh Chodesh Sivan": "ʁoʔʃ χvdʃ sijvän",
-"Rosh Chodesh Tamuz": "ʁoʔʃ χvdʃ tämuz",
-"Rosh Chodesh Tevet": "ʁoʔʃ χvdʃ tevet",
+"Rosh Chodesh Adar": "ˈʁoʔʃ ˈχodəʃ ˈädäʁ",
+"Rosh Chodesh Adar I": "ˈʁoʔʃ ˈχodəʃ ˈädäʁ ˈwʌn",
+"Rosh Chodesh Adar II": "ˈʁoʔʃ ˈχodəʃ ˈädäʁ ˈtuː",
+"Rosh Chodesh Av": "ˈʁoʔʃ ˈχodəʃ ˈav",
+"Rosh Chodesh Cheshvan": "ˈʁoʔʃ ˈχodəʃ ˈχeʃØvän",
+"Rosh Chodesh Elul": "ˈʁoʔʃ ˈχodəʃ ˈelul",
+"Rosh Chodesh Iyyar": "ˈʁoʔʃ ˈχodəʃ ˈijäjʁ",
+"Rosh Chodesh Kislev": "ˈʁoʔʃ ˈχodəʃ ˈkisØlev",
+"Rosh Chodesh Nisan": "ˈʁoʔʃ ˈχodəʃ ˈnijsän",
+"Rosh Chodesh Sh'vat": "ˈʁoʔʃ ˈχodəʃ ˈʃØvät",
+"Rosh Chodesh Sivan": "ˈʁoʔʃ ˈχodəʃ ˈsijvän",
+"Rosh Chodesh Tamuz": "ˈʁoʔʃ ˈχodəʃ ˈtämuz",
+"Rosh Chodesh Tevet": "ˈʁoʔʃ ˈχodəʃ ˈtevet",
 "Rosh Hashana": "ʁoʔʃ häʃׁänäh",
 "Shabbat Chazon": "ʃəˈbɑːt χazon",
 "Shabbat HaChodesh": "ʃəˈbɑːt häχodeʃ",
@@ -197,11 +197,11 @@ function onIntent(intentRequest, session, callback) {
     } else if ("GetOmer" === intentName) {
         getOmerResponse(intent, session, callback);
     } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
-        callback({}, buildSpeechletResponse("Goodbye", "Goodbye", null, true, false));
+        callback({}, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
     } else if ("AMAZON.HelpIntent" === intentName) {
         getWelcomeResponse(callback);
     } else {
-        callback({}, buildSpeechletResponse("Invalid intent", "Invalid intent " + intentName + ". Goodbye", null, true, false));
+        callback({}, buildSpeechletResponse("Invalid intent", "Invalid intent " + intentName + ". Goodbye", null, true));
     }
 }
 
@@ -226,7 +226,7 @@ function getWelcomeResponse(callback) {
     var shouldEndSession = false;
 
     callback(sessionAttributes,
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession, false));
+        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
 function getWhichDateResponse(callback) {
@@ -235,7 +235,7 @@ function getWhichDateResponse(callback) {
     var speechOutput = "Sorry, Hieb-Kal didn't understand the date. " + repromptText;
     var shouldEndSession = false;
     callback({},
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession, false));    
+        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
 function getWhichHolidayResponse(callback) {
@@ -244,7 +244,7 @@ function getWhichHolidayResponse(callback) {
     var speechOutput = "Sorry, Hieb-Kal didn't understand the holiday. " + repromptText;
     var shouldEndSession = false;
     callback({},
-        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession, false));    
+        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
 function hebrewDateSSML(str) {
@@ -397,18 +397,19 @@ function getParshaResponse(intent, session, callback) {
     var args = ['-t', '-S'];
     invokeHebcal(args, function(err, events) {
         if (err) {
-            return callback({}, respond("Error", err));
+            return callback({}, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
             return evt.name.indexOf("Parashat ") === 0;
         });
         if (found.length) {
-            var space = found[0].name.indexOf(' '),
-                parsha = found[0].name.substr(space + 1),
+            var name = found[0].name;
+            var space = name.indexOf(' '),
+                parsha = name.substr(space + 1),
                 ipa = parsha2ipa[parsha] || parsha;
-            var phoneme = '<phoneme alphabet="ipa" ph="paʁaʃat ' + ipa + '">' + found[0].name + '</phoneme>';
-            callback({}, respond(intent.name,
-                "This week's Torah portion is " + found[0].name,
+            var phoneme = '<phoneme alphabet="ipa" ph="paʁaˈʃat ' + ipa + '">' + name + '</phoneme>';
+            callback({}, respond(name,
+                "This week's Torah portion is " + name + '.',
                 "This week's Torah portion is " + phoneme));
         }
     });
@@ -433,18 +434,22 @@ function getHebrewDateResponse(intent, session, callback) {
         srcDateText = src.format('MMMM Do YYYY');
     invokeHebcal(args, function(err, events) {
         if (err) {
-            return callback({}, respond("Error", err));
+            return callback({}, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
             return evt.dt.isSame(src, 'day');
         });
         if (found.length) {
-            var speech = hebrewDateSSML(found[0].name);
-            callback({}, respond(intent.name,
-                srcDateText + ' is the ' + found[0].name,
-                srcDateSsml + ' is the ' + speech));
+            var evt = found[0],
+                now = moment.utc(),
+                isOrWasThe = evt.dt.isSameOrAfter(now, 'day') ? ' is the ' : ' was the ',
+                name = evt.name;
+            var speech = hebrewDateSSML(name);
+            callback({}, respond(name,
+                srcDateText + isOrWasThe + name + '.',
+                srcDateSsml + isOrWasThe + speech));
         } else {
-            callback({}, respond(intent.name + " Error",
+            callback({}, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not convert " + srcDateText + " to Hebrew calendar.",
                 "Sorry, we could not convert " + srcDateSsml + " to Hebrew calendar."));
         }
@@ -456,7 +461,7 @@ function getOmerResponse(intent, session, callback) {
     invokeHebcal(args, function(err, events) {
         var now = moment.utc();
         if (err) {
-            return callback({}, respond("Error", err));
+            return callback({}, respond('Internal Error', err));
         }
         var re = /^(\d+)\w+ day of the Omer$/;
         var omerEvents = events.filter(function(evt) {
@@ -464,10 +469,11 @@ function getOmerResponse(intent, session, callback) {
         });
         console.log("Filtered " + events.length + " events to " + omerEvents.length + " future");
         if (omerEvents.length == 0) {
-            return callback({}, respond("Error", 'Sorry, Omer is not implemented yet.'));
+            return callback({}, respond('Interal Error', 'Cannot find Omer in event list.'));
         }
-        if (omerEvents[0].dt.isSame(now, 'day')) {
-            var matches = omerEvents[0].name.match(re),
+        var evt = omerEvents[0];
+        if (evt.dt.isSame(now, 'day')) {
+            var matches = evt.name.match(re),
                 num = matches[1],
                 weeks = Math.floor(num / 7),
                 days = num % 7,
@@ -478,17 +484,17 @@ function getOmerResponse(intent, session, callback) {
                     speech += ' and ' + days + ' days';
                 }
             }
-            return callback({}, respond(intent.name,
-                'Today is the ' + omerEvents[0].name,
+            return callback({}, respond(evt.name,
+                'Today is the ' + evt.name + '.',
                 speech));
         } else {
-            var observedDt = dayEventObserved(omerEvents[0]),
-                observedWhen = beginsWhen(omerEvents[0].name),
+            var observedDt = dayEventObserved(evt),
+                observedWhen = beginsWhen(evt.name),
                 observedDow = observedDt.format('dddd');
             var dateSsml = formatDateSsml(observedDt),
                 dateText = observedDt.format('dddd, MMMM Do YYYY');
-            callback({}, respond(intent.name,
-                'The counting of the Omer begins at sundown on ' + dateText,
+            callback({}, respond('Counting of the Omer',
+                'The counting of the Omer begins at sundown on ' + dateText + '.',
                 'The counting of the Omer begins ' + observedWhen + ' on ' + observedDow + ', ' + dateSsml));
         }
     });
@@ -498,10 +504,11 @@ function getHolidayResponse(intent, session, callback) {
     var args;
     var searchStr0 = intent.slots.Holiday.value.toLowerCase(),
         searchStr = holidayAlias[searchStr0] || searchStr0;
+    var titleYear;
 
     if (searchStr == 'candle lighting' || searchStr == 'candle lighting time'
         || searchStr == 'shabbat' || searchStr == 'shabbos') {
-        return callback({}, respond(intent.name,
+        return callback({}, respond('Shabbat candle lighting times',
             "Candle lighting times are not yet supported."));
     }
 
@@ -510,16 +517,19 @@ function getHolidayResponse(intent, session, callback) {
     } else if (intent.name === "GetHolidayDate") {
         if (intent.slots && intent.slots.MyYear && intent.slots.MyYear.value) {
             args = [intent.slots.MyYear.value];
+            titleYear = intent.slots.MyYear.value;
         }
     } else if (intent.name === "GetHolidayNextYear") {
-        var year = new Date().getFullYear() + 1;
-        args = [year.toString()];
+        var year = new Date().getFullYear() + 1,
+            yearStr = year.toString();
+        args = [yearStr];
+        titleYear = yearStr;
     }
 
     invokeHebcal(args, function(err, events) {
         var now = moment.utc();
         if (err) {
-            return callback({}, respond("Error", err));
+            return callback({}, respond('Internal Error', err));
         }
         if (intent.name === "GetHoliday") {
             // events today or in the future
@@ -562,13 +572,16 @@ function getHolidayResponse(intent, session, callback) {
                 dateText = observedDt.format('dddd, MMMM Do YYYY');
             var begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began',
                 beginsOn = ' ' + begins + ' ' + observedWhen + ' on ';
-            callback({}, respond(intent.name,
-                holiday + beginsOn + dateText,
+            var title = holiday;
+            if (titleYear) {
+                title += ' ' + titleYear;
+            }
+            callback({}, respond(title,
+                holiday + beginsOn + dateText + '.',
                 phoneme + beginsOn + observedDow + ', ' + dateSsml));
         } else {
-            callback({},
-                respond(intent.name, "Sorry, we could not find the date for "
-                    + intent.slots.Holiday.value + " for some reason"));
+            callback({}, respond(intent.slots.Holiday.value,
+                'Sorry, we could not find the date for ' + intent.slots.Holiday.value + '.'));
         }
     });
 }
@@ -585,7 +598,7 @@ function respond(title, cardText, ssmlContent) {
         outputSpeech: outputSpeech,
         card: {
             type: "Simple",
-            title: "Hebcal - " + title,
+            title: title,
             content: cardText
         },
         reprompt: {
@@ -598,41 +611,14 @@ function respond(title, cardText, ssmlContent) {
     };
 }
 
-function getFakeResponse(intent, session, callback) {
-    var repromptText = null;
-    var sessionAttributes = {};
-    var shouldEndSession = true;
-    var speechOutput = "We heard you specify intent " + intent.name + ".";
-
-    if (intent.slots && intent.slots.MyDate) {
-        speechOutput += " Date was " + intent.slots.MyDate.value + ".";
-    }
-
-    if (intent.slots && intent.slots.Holiday) {
-        speechOutput += " Holiday was " + intent.slots.Holiday.value + ".";
-    }
-
-    speechOutput += " You are awesome.";
-
-    // Setting repromptText to null signifies that we do not want to reprompt the user.
-    // If the user does not respond or says something that is not understood, the session
-    // will end.
-    callback(sessionAttributes,
-         buildSpeechletResponse(intent.name, speechOutput, repromptText, shouldEndSession, false));
-}
-
 // --------------- Helpers that build all of the responses -----------------------
 
-function buildSpeechletResponse(title, output, repromptText, shouldEndSession, ssml) {
-    var outputSpeech = ssml ? {
-        type: "SSML",
-        ssml: "<speak>" + output + "</speak>"
-    } : {
-        type: "PlainText",
-        text: output
-    };
+function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
     return {
-        outputSpeech: outputSpeech,
+        outputSpeech: {
+            type: "PlainText",
+            text: output
+        },
         card: {
             type: "Simple",
             title: "Hebcal - " + title,
