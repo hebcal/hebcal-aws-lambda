@@ -45,8 +45,17 @@ GetParsha give me this week's Torah portion
 GetParsha give me this week's Torah reading
 GetParsha tell me this week's Torah portion
 GetParsha tell me this week's Torah reading
+GetParsha the Torah portion
+GetParsha the Torah reading
+GetParsha the parsha
+GetParsha the weekly Torah portion
+GetParsha the weekly Torah reading
 GetParsha this week's Torah portion
 GetParsha this week's Torah reading
+GetParsha this week's parsha
+GetParsha today's Torah portion
+GetParsha today's Torah reading
+GetParsha today's parsha
 GetParsha what is the Torah portion
 GetParsha what is the Torah reading
 GetParsha what is the parasha
@@ -61,17 +70,6 @@ GetParsha what is this week's Torah portion
 GetParsha what is this week's Torah reading
 GetParsha what is this week's parasha
 GetParsha what is this week's parsha
-GetParsha this week's parsha
-GetParsha this week's Torah reading
-GetParsha this week's Torah portion
-GetParsha today's parsha
-GetParsha today's Torah reading
-GetParsha today's Torah portion
-GetParsha the parsha
-GetParsha the Torah reading
-GetParsha the Torah portion
-GetParsha the weekly Torah reading
-GetParsha the weekly Torah portion
 
 GetOmer tell me the day of the Omer
 GetOmer what day of the Omer is it
