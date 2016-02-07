@@ -59,6 +59,22 @@ var parsha2ipa = {
 "Yitro": "jitØʁo"
 };
 
+var month2ipa = {
+"Adar": "ˈädäʁ",
+"Adar I": "ˈädäʁ ˈwʌn",
+"Adar II": "ˈädäʁ ˈtuː",
+"Av": "ˈav",
+"Cheshvan": "ˈχeʃØvän",
+"Elul": "ˈelul",
+"Iyyar": "ˈijäjʁ",
+"Kislev": "ˈkisØlev",
+"Nisan": "nijˈsän",
+"Sh'vat": "ʃəˈvät",
+"Sivan": "ˈsijvän",
+"Tamuz": "ˈtämuz",
+"Tevet": "ˈtevet"
+};
+
 var holiday2ipa = {
 "Asara B'Tevet": "ʕasäʁäh bØtevet",
 "Candle lighting": "hɒdlɒˈkɒt neɪˈʁot",
@@ -80,7 +96,7 @@ var holiday2ipa = {
 "Rosh Chodesh Iyyar": "ˈʁoʔʃ ˈχodəʃ ˈijäjʁ",
 "Rosh Chodesh Kislev": "ˈʁoʔʃ ˈχodəʃ ˈkisØlev",
 "Rosh Chodesh Nisan": "ˈʁoʔʃ ˈχodəʃ ˈnijsän",
-"Rosh Chodesh Sh'vat": "ˈʁoʔʃ ˈχodəʃ ˈʃØvät",
+"Rosh Chodesh Sh'vat": "ˈʁoʔʃ ˈχodəʃ ʃəˈvät",
 "Rosh Chodesh Sivan": "ˈʁoʔʃ ˈχodəʃ ˈsijvän",
 "Rosh Chodesh Tamuz": "ˈʁoʔʃ ˈχodəʃ ˈtämuz",
 "Rosh Chodesh Tevet": "ˈʁoʔʃ ˈχodəʃ ˈtevet",
@@ -103,10 +119,10 @@ var holiday2ipa = {
 "Sukkot": "sukot",
 "Ta'anit Bechorot": "täʕanijt bØχoʁot",
 "Ta'anit Esther": "täʕanijt ʔesØteʁ",
-"Tish'a B'Av": "tiʃØʕäh bØʔäv",
-"Tu B'Av": "tu bØʔäv",
-"Tu B'Shvat": "tu biʃØvät",
-"Tu BiShvat": "tu biʃØvät",
+"Tish'a B'Av": "tiʃˈäh bəˈäv",
+"Tu B'Av": "ˈtu bəˈäv",
+"Tu B'Shvat": "ˈtu biʃəˈvät",
+"Tu BiShvat": "ˈtu biʃəˈvät",
 "Tzom Gedaliah": "ʦom ɡəˈdɑːljə",
 "Tzom Tammuz": "ʦom tämuz",
 "Yom HaAtzma'ut": "ˈjom häʕäʦØmäʔut",
@@ -224,12 +240,12 @@ function getWelcomeResponse(callback, isHelpIntent) {
             return callback({}, respond('Internal Error', err));
         }
         var hebrewDateStr = events[0].name;
-        var speech = hebrewDateSSML(hebrewDateStr);
-        var cardText = 'Welcome to Hebcal. ';
-        var ssmlContent = 'Welcome to Hieb-Kal. ';
+        var speech = hebrewDateSSML(hebrewDateStr, true);
+        var cardText = '';
+        var ssmlContent = '';
         if (!isHelpIntent) {
-            cardText += 'Today is the ' + hebrewDateStr + '. ';
-            ssmlContent += 'Today is the ' + speech + '. ';
+            cardText += 'Welcome to Hebcal. Today is the ' + hebrewDateStr + '. ';
+            ssmlContent += 'Welcome to Hieb-Kal. Today is the ' + speech + '. ';
         }
         var response = respond('Welcome to Hebcal',
             cardText + repromptText + nag,
@@ -258,15 +274,19 @@ function getWhichHolidayResponse(callback) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function hebrewDateSSML(str) {
+function hebrewDateSSML(str, suppressYear) {
     var re = /^(\d+)\w+ of ([^,]+), (\d+)$/,
         matches = str.match(re),
         day = matches[1],
         month = matches[2],
-        year = matches[3];
-    return '<say-as interpret-as="ordinal">' + day + '</say-as> of '
-        + month + ', '
-        + year.substr(0,2) + ' ' + year.substr(2);
+        year = matches[3],
+        ipa = month2ipa[month],
+        phoneme = '<phoneme alphabet="ipa" ph="' + ipa + '">' + month + '</phoneme>',
+        ssml = '<say-as interpret-as="ordinal">' + day + '</say-as> of ' + phoneme;
+    if (!suppressYear) {
+        ssml += ', ' + year.substr(0,2) + ' ' + year.substr(2);
+    }
+    return ssml;
 }
 
 function getHolidayBasename(str) {
@@ -336,15 +356,25 @@ function dayEventObserved(evt) {
 
 // returns a 8-char string with 0-padding on month and day if needed
 function formatDateSsml(dt) {
-    var year = dt.format('YYYY'),
-        month = dt.format('MM'),
-        day = dt.format('DD'),
-        thisYear = moment().format('YYYY'),
-        yearStr = (thisYear == year) ? '????' : year;
-    return '<say-as interpret-as="date">'
-        + yearStr
-        + month + day
-        + '</say-as>';
+    var now = moment.utc(),
+        isToday = dt.isSame(now, 'day');
+
+    if (isToday) {
+        return 'Today';
+    } else {
+        var year = dt.format('YYYY'),
+            month = dt.format('MM'),
+            day = dt.format('DD'),
+            dow = dt.format('dddd'),
+            thisYear = now.format('YYYY'),
+            yearStr = (thisYear == year) ? '????' : year;
+
+        return dow + ', <say-as interpret-as="date">'
+            + yearStr
+            + month + day
+            + '</say-as>';
+
+    }
 }
 
 /*
@@ -490,13 +520,12 @@ function getOmerResponse(intent, session, callback) {
                 speech));
         } else {
             var observedDt = dayEventObserved(evt),
-                observedDow = observedDt.format('dddd');
-            var dateSsml = formatDateSsml(observedDt),
+                dateSsml = formatDateSsml(observedDt),
                 dateText = observedDt.format('dddd, MMMM Do YYYY');
             var prefix = 'The counting of the Omer begins at sundown on ';
             callback({}, respond('Counting of the Omer',
                 prefix + dateText + '.',
-                prefix + observedDow + ', ' + dateSsml));
+                prefix + dateSsml));
         }
     });
 }
@@ -567,19 +596,22 @@ function getHolidayResponse(intent, session, callback) {
                 ? '<phoneme alphabet="ipa" ph="' + ipa + '">' + holiday + '</phoneme>'
                 : holiday;
             var observedDt = dayEventObserved(found[0]),
-                observedWhen = beginsWhen(found[0].name),
-                observedDow = observedDt.format('dddd');
+                observedWhen = beginsWhen(found[0].name);
             var dateSsml = formatDateSsml(observedDt),
                 dateText = observedDt.format('dddd, MMMM Do YYYY');
             var begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began',
-                beginsOn = ' ' + begins + ' ' + observedWhen + ' on ';
+                isToday = observedDt.isSame(now, 'day'),
+                beginsOn = ' ' + begins + ' ' + observedWhen + ' ';
             var title = holiday;
             if (titleYear) {
                 title += ' ' + titleYear;
             }
+            if (!isToday) {
+                beginsOn += 'on ';
+            }
             callback({}, respond(title,
                 holiday + beginsOn + dateText + '.',
-                phoneme + beginsOn + observedDow + ', ' + dateSsml));
+                phoneme + beginsOn + dateSsml));
         } else {
             callback({}, respond(intent.slots.Holiday.value,
                 'Sorry, we could not find the date for ' + intent.slots.Holiday.value + '.'));
