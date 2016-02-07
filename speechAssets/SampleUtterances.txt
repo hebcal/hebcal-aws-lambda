@@ -3,13 +3,19 @@ GetHolidayDate when is {Holiday} in the year {MyYear}
 GetHolidayDate when is {Holiday} in year {MyYear}
 GetHolidayDate when was {Holiday} in {MyYear}
 GetHolidayDate when {Holiday} was in {MyYear}
+GetHolidayDate give me the date of {Holiday} in {MyYear}
+GetHolidayDate tell me the date of {Holiday} in {MyYear}
 
 GetHoliday {Holiday}
+GetHoliday about {Holiday}
+GetHoliday for {Holiday}
 GetHoliday when is {Holiday}
 GetHoliday when {Holiday} is
 GetHoliday when is {Holiday} this year
 GetHoliday when does {Holiday} start
 GetHoliday when does {Holiday} begin
+GetHoliday give me the date of {Holiday}
+GetHoliday tell me the date of {Holiday}
 
 GetHolidayNextYear when is {Holiday} next year
 GetHolidayNextYear when is next {Holiday}
@@ -32,6 +38,8 @@ GetHebrewDate what is the Hebrew date {MyDate}
 GetHebrewDate what is {MyDate} Hebrew date
 GetHebrewDate what is {MyDate} on the Hebrew calendar
 GetHebrewDate what was the Hebrew date {MyDate}
+GetHebrewDate Hebrew date {MyDate}
+GetHebrewDate Hebrew day {MyDate}
 
 GetParsha give me this week's Torah portion
 GetParsha give me this week's Torah reading
@@ -53,9 +61,24 @@ GetParsha what is this week's Torah portion
 GetParsha what is this week's Torah reading
 GetParsha what is this week's parasha
 GetParsha what is this week's parsha
+GetParsha this week's parsha
+GetParsha this week's Torah reading
+GetParsha this week's Torah portion
+GetParsha today's parsha
+GetParsha today's Torah reading
+GetParsha today's Torah portion
+GetParsha the parsha
+GetParsha the Torah reading
+GetParsha the Torah portion
+GetParsha the weekly Torah reading
+GetParsha the weekly Torah portion
 
 GetOmer tell me the day of the Omer
 GetOmer what day of the Omer is it
 GetOmer what is the Omer count
 GetOmer give me the Omer count
 GetOmer tell me the Omer count
+GetOmer what is the day of the Omer
+GetOmer what's the day of the Omer
+GetOmer I would like the day of the Omer
+GetOmer day of the Omer
