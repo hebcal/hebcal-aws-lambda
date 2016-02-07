@@ -186,29 +186,22 @@ function onIntent(intentRequest, session, callback) {
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
         if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value) {
-            getHebcalResponse(intent, session, callback);
+            getHolidayResponse(intent, session, callback);
         } else {
             getWhichHolidayResponse(callback);
         }
     } else if ("GetParsha" === intentName) {
-        getHebcalResponse(intent, session, callback);
+        getParshaResponse(intent, session, callback);
     } else if ("GetHebrewDate" === intentName) {
-        getHebcalResponse(intent, session, callback);
-    } else if ("GetHebrewDateTwo" === intentName) {
-        if (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value) {
-            getHebcalResponse(intent, session, callback);
-        } else {
-            getWhichDateResponse(callback);
-        }
-    } else if ("GetCandleLighting" === intentName) {
-        getHebcalResponse(intent, session, callback);
+        getHebrewDateResponse(intent, session, callback);
     } else if ("GetOmer" === intentName) {
-        getHebcalResponse(intent, session, callback);
+        getOmerResponse(intent, session, callback);
     } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
         callback({}, buildSpeechletResponse("Goodbye", "Goodbye", null, true, false));
+    } else if ("AMAZON.HelpIntent" === intentName) {
+        getWelcomeResponse(callback);
     } else {
         callback({}, buildSpeechletResponse("Invalid intent", "Invalid intent " + intentName + ". Goodbye", null, true, false));
-//        throw "Invalid intent";
     }
 }
 
@@ -260,9 +253,9 @@ function hebrewDateSSML(str) {
         day = matches[1],
         month = matches[2],
         year = matches[3];
-    return "<say-as interpret-as=\"ordinal\">" + day + "</say-as> of "
-        + month + ", "
-        + year.substr(0,2) + " " + year.substr(2);
+    return '<say-as interpret-as="ordinal">' + day + '</say-as> of '
+        + month + ', '
+        + year.substr(0,2) + ' ' + year.substr(2);
 }
 
 function getHolidayBasename(str) {
@@ -368,159 +361,241 @@ function parseAmazonDateFormat(str) {
     return m;
 }
 
-function getHebcalResponse(intent, session, callback) {
-    var repromptText = null;
-    var sessionAttributes = {};
-    var shouldEndSession = true;
-
-    var hebcalOpts = ['-e'];
-    if (intent.name === "GetParsha") {
-        hebcalOpts.push('-t');
-        hebcalOpts.push('-S');
-    } else if (intent.name === "GetHebrewDate") {
-        hebcalOpts.push('-t');
-    } else if (intent.name === "GetHebrewDateTwo") {
-        var m = parseAmazonDateFormat(intent.slots.MyDate.value);
-        hebcalOpts.push('-d');
-        hebcalOpts.push(m.format('YYYY'));
-    } else if (intent.name === "GetOmer") {
-        hebcalOpts.push('-o');
-    } else if (intent.name === "GetCandleLighting") {
-        hebcalOpts.push('-c');
-        hebcalOpts.push('-E');
-    } else if (intent.name === "GetHoliday") {
-        hebcalOpts.push('--years');
-        hebcalOpts.push('2');
-    } else if (intent.name === "GetHolidayDate") {
-        if (intent.slots && intent.slots.MyYear && intent.slots.MyYear.value) {
-            hebcalOpts.push(intent.slots.MyYear.value);
-        }
-    } else if (intent.name === "GetHolidayNextYear") {
-        var year = new Date().getFullYear() + 1;
-        hebcalOpts.push(year.toString());
-    }
+function invokeHebcal(args, callback) {
+    var proc, rd, events = [];
 
     process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
-    console.log(JSON.stringify(hebcalOpts));
-    var proc = spawn('./hebcal', hebcalOpts);
+    proc = spawn('./hebcal', args);
 
-    var events = [];
+    proc.on('error', function(err) {
+        console.log('Failed to start child process.');
+        callback('Failed to start child process.', null);
+    });
 
-    var rd = readline.createInterface({
+    rd = readline.createInterface({
         input: proc.stdout,
         terminal: false
     }).on('line', function(line) {
         var space = line.indexOf(' ');
-        var mdy = line.substr(0, space).split('.');
-        var isoDate = mdy.reverse().join('-');
+        var mdy = line.substr(0, space);
         var name = line.substr(space + 1);
-        var dt = moment.utc(isoDate, 'YYYY-MM-DD');
+        var dt = moment.utc(mdy, 'MM/DD/YYYY');
         events.push({dt: dt, name: name});
     })
 
     proc.on('close', function(code) {
-//        if (events.length !== 0) {
-//            console.log(JSON.stringify(events));
-//        }
+        console.log("Got " + events.length + " events");
         if (events.length === 0) {
-            callback({}, respond(intent, "Sorry, something is broken!"));
-        } else if (intent.name === "GetParsha") {
-            var found = events.filter(function(evt) {
-                return evt.name.indexOf("Parashat ") === 0;
-            });
-            if (found.length) {
-                var space = found[0].name.indexOf(' '),
-                    parsha = found[0].name.substr(space + 1),
-                    ipa = parsha2ipa[parsha] || parsha;
-                var phoneme = "<phoneme alphabet=\"ipa\" ph=\"paʁaʃat " + ipa + "\">" + found[0].name + "</phoneme>";
-                callback({},
-                    respond(intent, "This week's Torah portion is " + phoneme));
-            }
-        } else if (intent.name === "GetHebrewDate") {
-            var speech = hebrewDateSSML(events[0].name);
-            callback({}, respond(intent, "Today is the " + speech));
-        } else if (intent.name === "GetHebrewDateTwo") {
-            var src = parseAmazonDateFormat(intent.slots.MyDate.value);
-            var found = events.filter(function(evt) {
-                return evt.dt.isSame(src, 'day');
-            });
-            if (found.length) {
-                var speech = hebrewDateSSML(found[0].name);
-                callback({},
-                    respond(intent, intent.slots.MyDate.value + " is the " + speech));
-            } else {
-                callback({},
-                    respond(intent, "Sorry, we could not convert Gregorian date "
-                        + intent.slots.MyDate.value + " for some reason"));
-            }
-        } else if (intent.name === "GetOmer") {
-            callback({},
-                respond(intent, "Sorry, Omer is not implemented yet."));
-        } else if (intent.name === "GetCandleLighting") {
-            callback({},
-                respond(intent, "Candle lighting times are not yet supported."));
-        } else if (intent.slots && intent.slots.Holiday) {
-            var searchStr0 = intent.slots.Holiday.value.toLowerCase(),
-                searchStr = holidayAlias[searchStr0] || searchStr0;
-            if (searchStr == 'candle lighting' || searchStr == 'candle lighting time'
-                || searchStr == 'shabbat' || searchStr == 'shabbos') {
-                callback({},
-                    respond(intent, "Candle lighting times are not yet supported."));
-            }
-            var eventsFiltered = filterEvents(events);
-            if (intent.name === "GetHoliday") {
-                var now = moment();
-                // events today or in the future
-                var future = eventsFiltered.filter(function(evt) {
-                    return evt.dt.isSameOrAfter(now, 'day');
-                });
-                eventsFiltered = future;
-            }
-            console.log("Searching for [" + searchStr + "] in " + eventsFiltered.length);
-            if (eventsFiltered.length) {
-                var evt = eventsFiltered[0],
-                    evt2 = eventsFiltered[eventsFiltered.length - 1];
-                console.log("Event 0 is [" + evt.name + "] on " + evt.dt.format('YYYY-MM-DD'));
-                console.log("Event " + (eventsFiltered.length - 1) + " is [" + evt2.name + "] on " + evt2.dt.format('YYYY-MM-DD'));
-            }
-            var found = eventsFiltered.filter(function(evt) {
-                if (searchStr === 'rosh chodesh') {
-                    return evt.name.indexOf('Rosh Chodesh ') === 0;
-                } else {
-                    var h = getHolidayBasename(evt.name);
-                    console.log("orig=[" + evt.name + "],base=[" + h + "],search=[" + searchStr + "]");
-                    return h.toLowerCase() === searchStr;
-                }
-            });
-            if (found.length) {
-                var holiday = getHolidayBasename(found[0].name);
-                var ipa = holiday2ipa[holiday];
-                var phoneme = ipa
-                    ? "<phoneme alphabet=\"ipa\" ph=\"" + ipa + "\">" + holiday + "</phoneme>"
-                    : holiday;
-                var observedDt = dayEventObserved(found[0]),
-                    observedWhen = beginsWhen(found[0].name),
-                    observedDow = observedDt.format('dddd');
-                var dateSsml = formatDateSsml(observedDt);
-                callback({},
-                    respond(intent, phoneme + " begins " + observedWhen + " on " + observedDow + ", " + dateSsml));
-            } else {
-                callback({},
-                    respond(intent, "Sorry, we could not find the date for "
-                        + intent.slots.Holiday.value + " for some reason"));
-            }
+            callback('No event data available.', null);
         } else {
-            callback({}, respond(intent, "Sorry, something is also broken!"));
+            callback(null, events);
         }
-    });
-
-    proc.on('error', function(err) {
-        console.log('Failed to start child process.');
     });
 }
 
-function respond(intent, speechOutput) {
-    return buildSpeechletResponse(intent.name, speechOutput, null, true, true);
+function getParshaResponse(intent, session, callback) {
+    var args = ['-t', '-S'];
+    invokeHebcal(args, function(err, events) {
+        if (err) {
+            return callback({}, respond("Error", err));
+        }
+        var found = events.filter(function(evt) {
+            return evt.name.indexOf("Parashat ") === 0;
+        });
+        if (found.length) {
+            var space = found[0].name.indexOf(' '),
+                parsha = found[0].name.substr(space + 1),
+                ipa = parsha2ipa[parsha] || parsha;
+            var phoneme = '<phoneme alphabet="ipa" ph="paʁaʃat ' + ipa + '">' + found[0].name + '</phoneme>';
+            callback({}, respond(intent.name,
+                "This week's Torah portion is " + found[0].name,
+                "This week's Torah portion is " + phoneme));
+        }
+    });
+}
+
+// var args = ['-t'];
+// invokeHebcal(args, function(err, events) {
+//     if (err) {
+//         return callback({}, respond("Error", err));
+//     }
+//     var speech = hebrewDateSSML(events[0].name);
+//     callback({}, respond(intent.name, "Today is the " + speech));
+// });
+
+
+function getHebrewDateResponse(intent, session, callback) {
+    var src = (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value)
+        ? parseAmazonDateFormat(intent.slots.MyDate.value)
+        : moment.utc(),
+        args = ['-d', src.format('YYYY')],
+        srcDateSsml = formatDateSsml(src),
+        srcDateText = src.format('MMMM Do YYYY');
+    invokeHebcal(args, function(err, events) {
+        if (err) {
+            return callback({}, respond("Error", err));
+        }
+        var found = events.filter(function(evt) {
+            return evt.dt.isSame(src, 'day');
+        });
+        if (found.length) {
+            var speech = hebrewDateSSML(found[0].name);
+            callback({}, respond(intent.name,
+                srcDateText + ' is the ' + found[0].name,
+                srcDateSsml + ' is the ' + speech));
+        } else {
+            callback({}, respond(intent.name + " Error",
+                "Sorry, we could not convert " + srcDateText + " to Hebrew calendar.",
+                "Sorry, we could not convert " + srcDateSsml + " to Hebrew calendar."));
+        }
+    });
+}
+
+function getOmerResponse(intent, session, callback) {
+    var args = ['-o', '--years', '2'];
+    invokeHebcal(args, function(err, events) {
+        var now = moment.utc();
+        if (err) {
+            return callback({}, respond("Error", err));
+        }
+        var re = /^(\d+)\w+ day of the Omer$/;
+        var omerEvents = events.filter(function(evt) {
+            return re.test(evt.name) && evt.dt.isSameOrAfter(now, 'day');
+        });
+        console.log("Filtered " + events.length + " events to " + omerEvents.length + " future");
+        if (omerEvents.length == 0) {
+            return callback({}, respond("Error", 'Sorry, Omer is not implemented yet.'));
+        }
+        if (omerEvents[0].dt.isSame(now, 'day')) {
+            var matches = omerEvents[0].name.match(re),
+                num = matches[1],
+                weeks = Math.floor(num / 7),
+                days = num % 7,
+                speech = 'Today is the <say-as interpret-as="ordinal">' + num + '</say-as> day of the Omer';
+            if (weeks) {
+                speech += ', which is ' + weeks + ' weeks';
+                if (days) {
+                    speech += ' and ' + days + ' days';
+                }
+            }
+            return callback({}, respond(intent.name,
+                'Today is the ' + omerEvents[0].name,
+                speech));
+        } else {
+            var observedDt = dayEventObserved(omerEvents[0]),
+                observedWhen = beginsWhen(omerEvents[0].name),
+                observedDow = observedDt.format('dddd');
+            var dateSsml = formatDateSsml(observedDt),
+                dateText = observedDt.format('dddd, MMMM Do YYYY');
+            callback({}, respond(intent.name,
+                'The counting of the Omer begins at sundown on ' + dateText,
+                'The counting of the Omer begins ' + observedWhen + ' on ' + observedDow + ', ' + dateSsml));
+        }
+    });
+}
+
+function getHolidayResponse(intent, session, callback) {
+    var args;
+    var searchStr0 = intent.slots.Holiday.value.toLowerCase(),
+        searchStr = holidayAlias[searchStr0] || searchStr0;
+
+    if (searchStr == 'candle lighting' || searchStr == 'candle lighting time'
+        || searchStr == 'shabbat' || searchStr == 'shabbos') {
+        return callback({}, respond(intent.name,
+            "Candle lighting times are not yet supported."));
+    }
+
+    if (intent.name === "GetHoliday") {
+        args = ['--years', '2'];
+    } else if (intent.name === "GetHolidayDate") {
+        if (intent.slots && intent.slots.MyYear && intent.slots.MyYear.value) {
+            args = [intent.slots.MyYear.value];
+        }
+    } else if (intent.name === "GetHolidayNextYear") {
+        var year = new Date().getFullYear() + 1;
+        args = [year.toString()];
+    }
+
+    invokeHebcal(args, function(err, events) {
+        var now = moment.utc();
+        if (err) {
+            return callback({}, respond("Error", err));
+        }
+        if (intent.name === "GetHoliday") {
+            // events today or in the future
+            var future = events.filter(function(evt) {
+                return evt.dt.isSameOrAfter(now, 'day');
+            });
+            console.log("Filtered " + events.length + " events to " + future.length + " future");
+            events = future;
+        }
+        var eventsFiltered = filterEvents(events);
+        console.log("Filtered to " + eventsFiltered.length + " first occurrences");
+        /*
+        console.log(JSON.stringify({events: eventsFiltered}));
+        console.log("Searching for [" + searchStr + "] in " + eventsFiltered.length);
+        if (eventsFiltered.length) {
+            var evt = eventsFiltered[0],
+                evt2 = eventsFiltered[eventsFiltered.length - 1];
+            console.log("Event 0 is [" + evt.name + "] on " + evt.dt.format('YYYY-MM-DD'));
+            console.log("Event " + (eventsFiltered.length - 1) + " is [" + evt2.name + "] on " + evt2.dt.format('YYYY-MM-DD'));
+        }
+        */
+        var found = eventsFiltered.filter(function(evt) {
+            if (searchStr === 'rosh chodesh') {
+                return evt.name.indexOf('Rosh Chodesh ') === 0;
+            } else {
+                var h = getHolidayBasename(evt.name);
+                return h.toLowerCase() === searchStr;
+            }
+        });
+        if (found.length) {
+            var holiday = getHolidayBasename(found[0].name);
+            var ipa = holiday2ipa[holiday];
+            var phoneme = ipa
+                ? '<phoneme alphabet="ipa" ph="' + ipa + '">' + holiday + '</phoneme>'
+                : holiday;
+            var observedDt = dayEventObserved(found[0]),
+                observedWhen = beginsWhen(found[0].name),
+                observedDow = observedDt.format('dddd');
+            var dateSsml = formatDateSsml(observedDt),
+                dateText = observedDt.format('dddd, MMMM Do YYYY');
+            var begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began',
+                beginsOn = ' ' + begins + ' ' + observedWhen + ' on ';
+            callback({}, respond(intent.name,
+                holiday + beginsOn + dateText,
+                phoneme + beginsOn + observedDow + ', ' + dateSsml));
+        } else {
+            callback({},
+                respond(intent.name, "Sorry, we could not find the date for "
+                    + intent.slots.Holiday.value + " for some reason"));
+        }
+    });
+}
+
+function respond(title, cardText, ssmlContent) {
+    var outputSpeech = ssmlContent ? {
+        type: 'SSML',
+        ssml: '<speak>' + ssmlContent + '</speak>'
+    } : {
+        type: 'PlainText',
+        text: cardText
+    };
+    return {
+        outputSpeech: outputSpeech,
+        card: {
+            type: "Simple",
+            title: "Hebcal - " + title,
+            content: cardText
+        },
+        reprompt: {
+            outputSpeech: {
+                type: "PlainText",
+                text: null
+            }
+        },
+        shouldEndSession: true
+    };
 }
 
 function getFakeResponse(intent, session, callback) {

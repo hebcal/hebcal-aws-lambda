@@ -35,10 +35,7 @@
       "intent": "GetParsha"
     },
     {
-      "intent": "GetHebrewDate"
-    },
-    {
-      "intent": "GetHebrewDateTwo",
+      "intent": "GetHebrewDate",
       "slots": [
         {
           "name": "MyDate",
@@ -48,6 +45,9 @@
     },
     {
       "intent": "GetOmer"
+    },
+    {
+      "intent": "AMAZON.HelpIntent"
     },
     {
       "intent": "AMAZON.CancelIntent"
