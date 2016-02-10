@@ -358,7 +358,7 @@ function dayEventObserved(evt) {
 
 // returns a 8-char string with 0-padding on month and day if needed
 function formatDateSsml(dt) {
-    var now = moment.utc(),
+    var now = moment(),
         isToday = dt.isSame(now, 'day');
 
     if (isToday) {
@@ -394,9 +394,9 @@ function formatDateSsml(dt) {
 function parseAmazonDateFormat(str) {
     if (str.length == 4 & str.charAt(3) == 'X') {
         var year = str.substr(0,3);
-        return moment.utc(new Date(+year, 0, 1));
+        return moment(new Date(+year, 0, 1));
     }
-    var m = moment.utc(str);
+    var m = moment(str);
     if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W')
         || (str.length == 11 && str.substr(8) == '-WE')) {
         return m.day('Saturday');
@@ -422,7 +422,7 @@ function invokeHebcal(args, callback) {
         var space = line.indexOf(' ');
         var mdy = line.substr(0, space);
         var name = line.substr(space + 1);
-        var dt = moment.utc(mdy, 'MM/DD/YYYY');
+        var dt = moment(mdy, 'MM/DD/YYYY');
         events.push({dt: dt, name: name});
     })
 
@@ -461,7 +461,7 @@ function getParshaResponse(intent, session, callback) {
 function getHebrewDateResponse(intent, session, callback) {
     var src = (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value)
         ? parseAmazonDateFormat(intent.slots.MyDate.value)
-        : moment.utc(),
+        : moment(),
         args = ['-d', src.format('YYYY')],
         srcDateSsml = formatDateSsml(src),
         srcDateText = src.format('MMMM Do YYYY');
@@ -474,7 +474,7 @@ function getHebrewDateResponse(intent, session, callback) {
         });
         if (found.length) {
             var evt = found[0],
-                now = moment.utc(),
+                now = moment(),
                 isOrWasThe = evt.dt.isSameOrAfter(now, 'day') ? ' is the ' : ' was the ',
                 name = evt.name;
             var speech = hebrewDateSSML(name);
@@ -492,7 +492,7 @@ function getHebrewDateResponse(intent, session, callback) {
 function getOmerResponse(intent, session, callback) {
     var args = ['-o', '--years', '2'];
     invokeHebcal(args, function(err, events) {
-        var now = moment.utc();
+        var now = moment();
         if (err) {
             return callback({}, respond('Internal Error', err));
         }
@@ -559,7 +559,7 @@ function getHolidayResponse(intent, session, callback) {
     }
 
     invokeHebcal(args, function(err, events) {
-        var now = moment.utc();
+        var now = moment();
         if (err) {
             return callback({}, respond('Internal Error', err));
         }
