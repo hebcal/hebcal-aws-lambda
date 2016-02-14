@@ -30,16 +30,26 @@ GetHebrewDate for the Hebrew date {MyDate}
 GetHebrewDate give me the Hebrew date for {MyDate}
 GetHebrewDate give me the Hebrew date {MyDate}
 GetHebrewDate give me {MyDate} as a Hebrew date
+GetHebrewDate Hebrew date {MyDate}
+GetHebrewDate Hebrew day {MyDate}
 GetHebrewDate tell me the Hebrew date for {MyDate}
 GetHebrewDate tell me the Hebrew date {MyDate}
+GetHebrewDate today's date
+GetHebrewDate today's Hebrew date
 GetHebrewDate what Hebrew day is {MyDate}
+GetHebrewDate what is the date
+GetHebrewDate what is the date today
+GetHebrewDate what is the Hebrew date
 GetHebrewDate what is the Hebrew date on {MyDate}
+GetHebrewDate what is the Hebrew date today
 GetHebrewDate what is the Hebrew date {MyDate}
+GetHebrewDate what is today's date
+GetHebrewDate what is today's Hebrew date
 GetHebrewDate what is {MyDate} Hebrew date
 GetHebrewDate what is {MyDate} on the Hebrew calendar
 GetHebrewDate what was the Hebrew date {MyDate}
-GetHebrewDate Hebrew date {MyDate}
-GetHebrewDate Hebrew day {MyDate}
+GetHebrewDate {MyDate} date
+GetHebrewDate {MyDate} Hebrew date
 
 GetParsha give me this week's Torah portion
 GetParsha give me this week's Torah reading

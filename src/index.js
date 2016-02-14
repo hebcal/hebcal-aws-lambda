@@ -1,6 +1,6 @@
 var spawn = require('child_process').spawn,
     readline = require('readline'),
-    moment = require('moment');
+    moment = require('moment-timezone');
 
 var parsha2ipa = {
 "Achrei Mot": "ʔäχaʁej mot",
@@ -145,6 +145,8 @@ var holidayAlias = {
     "ta'anis bechoros": "ta'anit bechorot",
     'shavuos': 'shavuot'
 };
+
+moment.tz.setDefault("America/New_York");
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -295,7 +297,7 @@ function getHolidayBasename(str) {
     str = str.replace(/ \d\d\d\d$/, '');
     str = str.replace(/ \(CH\'\'M\)$/, '');
     str = str.replace(/ \(Hoshana Raba\)$/, '');
-    if (str !== 'Rosh Chodesh Adar II') {
+    if (str.indexOf('Rosh Chodesh Adar ') !== 0) {
         str = str.replace(/ [IV]+$/, '');
     }
     str = str.replace(/: \d Candles?$/, '');
@@ -393,8 +395,9 @@ function formatDateSsml(dt) {
 */
 function parseAmazonDateFormat(str) {
     if (str.length == 4 & str.charAt(3) == 'X') {
-        var year = str.substr(0,3);
-        return moment(new Date(+year, 0, 1));
+        var yearStr = str.substr(0,3),
+            year = (+yearStr) * 10;
+        return moment({ year : year, month : 1, day : 1 });
     }
     var m = moment(str);
     if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W')
@@ -453,7 +456,8 @@ function getParshaResponse(intent, session, callback) {
             var phoneme = '<phoneme alphabet="ipa" ph="paʁaˈʃat ' + ipa + '">' + name + '</phoneme>';
             callback({}, respond(name,
                 "This week's Torah portion is " + name + '.',
-                "This week's Torah portion is " + phoneme));
+                "This week's Torah portion is " + phoneme,
+                true));
         }
     });
 }
@@ -480,7 +484,8 @@ function getHebrewDateResponse(intent, session, callback) {
             var speech = hebrewDateSSML(name);
             callback({}, respond(name,
                 srcDateText + isOrWasThe + name + '.',
-                srcDateSsml + isOrWasThe + speech));
+                srcDateSsml + isOrWasThe + speech,
+                true));
         } else {
             callback({}, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not convert " + srcDateText + " to Hebrew calendar.",
@@ -519,7 +524,8 @@ function getOmerResponse(intent, session, callback) {
             }
             return callback({}, respond(evt.name,
                 'Today is the ' + evt.name + '.',
-                speech));
+                speech,
+                true));
         } else {
             var observedDt = dayEventObserved(evt),
                 dateSsml = formatDateSsml(observedDt),
@@ -527,7 +533,8 @@ function getOmerResponse(intent, session, callback) {
             var prefix = 'The counting of the Omer begins at sundown on ';
             callback({}, respond('Counting of the Omer',
                 prefix + dateText + '.',
-                prefix + dateSsml));
+                prefix + dateSsml,
+                true));
         }
     });
 }
@@ -613,7 +620,8 @@ function getHolidayResponse(intent, session, callback) {
             }
             callback({}, respond(title,
                 holiday + beginsOn + dateText + '.',
-                phoneme + beginsOn + dateSsml));
+                phoneme + beginsOn + dateSsml,
+                true));
         } else {
             callback({}, respond(intent.slots.Holiday.value,
                 'Sorry, we could not find the date for ' + intent.slots.Holiday.value + '.'));
@@ -621,20 +629,44 @@ function getHolidayResponse(intent, session, callback) {
     });
 }
 
-function respond(title, cardText, ssmlContent) {
-    var outputSpeech = ssmlContent ? {
+function strWithShabbatShalom(str, isTodayShabbat, ssml) {
+    var ss;
+    if (!isTodayShabbat || !str || !str.length) {
+        return str;
+    }
+    ss = str;
+    if (str.charAt(str.length - 1) !== '.') {
+        ss += '.';
+    }
+    ss += ' ';
+    if (ssml) {
+        ss += '<phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
+    }
+    ss += 'Shabbat Shalom';
+    if (ssml) {
+        ss += '</phoneme>';
+    }
+    ss += '.';
+    return ss;
+}
+
+function respond(title, cardText, ssmlContent, addShabbatShalom) {
+    var isTodayShabbat = addShabbatShalom ? moment().day() === 6 : false;
+    var cardText2 = strWithShabbatShalom(cardText, isTodayShabbat, false),
+        ssmlContent2 = strWithShabbatShalom(ssmlContent, isTodayShabbat, true);
+    var outputSpeech = ssmlContent2 ? {
         type: 'SSML',
-        ssml: '<speak>' + ssmlContent + '</speak>'
+        ssml: '<speak>' + ssmlContent2 + '</speak>'
     } : {
         type: 'PlainText',
-        text: cardText
+        text: cardText2
     };
     return {
         outputSpeech: outputSpeech,
         card: {
             type: "Simple",
             title: title,
-            content: cardText
+            content: cardText2
         },
         reprompt: {
             outputSpeech: {
