@@ -445,7 +445,7 @@ function getParshaResponse(intent, session, callback) {
             var space = name.indexOf(' '),
                 parsha = name.substr(space + 1),
                 ipa = parsha2ipa[parsha] || parsha;
-            var phoneme = '<phoneme alphabet="ipa" ph="paʁaˈʃat ' + ipa + '">' + name + '</phoneme>';
+            var phoneme = '<phoneme alphabet="ipa" ph="ˈpɑːʁɑːˈʃɑːt ' + ipa + '">' + name + '</phoneme>';
             callback({}, respond(name,
                 "This week's Torah portion is " + name + '.',
                 "This week's Torah portion is " + phoneme,
