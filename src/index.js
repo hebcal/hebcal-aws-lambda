@@ -72,7 +72,8 @@ var month2ipa = {
 "Sh'vat": "ʃəˈvɑːt",
 "Sivan": "sijˈvɑːn",
 "Tamuz": "tɑːˈmuz",
-"Tevet": "ˈtevet"
+"Tevet": "ˈtevet",
+"Tishrei": "ˈtiʃʁeɪ"
 };
 
 var roshChodeshIpa = "ˈʁoʔʃ ˈχodəʃ ";
@@ -89,19 +90,6 @@ var holiday2ipa = {
 "Pesach Sheni": "ˈpeɪsɑːχ ʃeɪˈnj",
 "Purim": "puːʁˈim",
 "Purim Katan": "puːʁˈim kɒˈtɒn",
-"Rosh Chodesh Adar": roshChodeshIpa + month2ipa["Adar"],
-"Rosh Chodesh Adar I": roshChodeshIpa + month2ipa["Adar I"],
-"Rosh Chodesh Adar II": roshChodeshIpa + month2ipa["Adar II"],
-"Rosh Chodesh Av": roshChodeshIpa + month2ipa["Av"],
-"Rosh Chodesh Cheshvan": roshChodeshIpa + month2ipa["Cheshvan"],
-"Rosh Chodesh Elul": roshChodeshIpa + month2ipa["Elul"],
-"Rosh Chodesh Iyyar": roshChodeshIpa + month2ipa["Iyyar"],
-"Rosh Chodesh Kislev": roshChodeshIpa + month2ipa["Kislev"],
-"Rosh Chodesh Nisan": roshChodeshIpa + month2ipa["Nisan"],
-"Rosh Chodesh Sh'vat": roshChodeshIpa + month2ipa["Sh'vat"],
-"Rosh Chodesh Sivan": roshChodeshIpa + month2ipa["Sivan"],
-"Rosh Chodesh Tamuz": roshChodeshIpa + month2ipa["Tamuz"],
-"Rosh Chodesh Tevet": roshChodeshIpa + month2ipa["Tevet"],
 "Rosh Hashana": "ʁoʔʃ häʃׁänäh",
 "Shabbat Chazon": "ʃəˈbɑːt χazon",
 "Shabbat HaChodesh": "ʃəˈbɑːt häχodeʃ",
@@ -145,6 +133,10 @@ var holidayAlias = {
     "ta'anis bechoros": "ta'anit bechorot",
     'shavuos': 'shavuot'
 };
+
+for (var k in month2ipa) {
+    holiday2ipa["Rosh Chodesh " + k] = roshChodeshIpa + month2ipa[k];
+}
 
 moment.tz.setDefault("America/New_York");
 
