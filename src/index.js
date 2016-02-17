@@ -431,23 +431,45 @@ function invokeHebcal(args, callback) {
     });
 }
 
+function getParashaOrHolidayName(name) {
+    if (name.indexOf("Parashat ") === 0) {
+        var space = name.indexOf(' '),
+            parsha = name.substr(space + 1),
+            ipa = parsha2ipa[parsha];
+        return {
+            title: name,
+            name: name,
+            ipa: 'ˈpɑːʁɑːˈʃɑːt ' + ipa
+        }
+    } else {
+        var holiday = getHolidayBasename(name),
+            ipa = holiday2ipa[holiday];
+        return {
+            title: holiday + ' Torah reading',
+            name: holiday,
+            ipa: ipa
+        }
+    }
+}
+
 function getParshaResponse(intent, session, callback) {
-    var args = ['-t', '-S'];
+    var saturday = moment().day('Saturday'),
+        satYear = saturday.format('YYYY');
+    var args = ['-s', satYear];
     invokeHebcal(args, function(err, events) {
+        var re =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
         if (err) {
             return callback({}, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
-            return evt.name.indexOf("Parashat ") === 0;
+            return evt.dt.isSame(saturday, 'day')
+                && evt.name.search(re) != -1;
         });
         if (found.length) {
-            var name = found[0].name;
-            var space = name.indexOf(' '),
-                parsha = name.substr(space + 1),
-                ipa = parsha2ipa[parsha] || parsha;
-            var phoneme = '<phoneme alphabet="ipa" ph="ˈpɑːʁɑːˈʃɑːt ' + ipa + '">' + name + '</phoneme>';
-            callback({}, respond(name,
-                "This week's Torah portion is " + name + '.',
+            var result = getParashaOrHolidayName(found[0].name);
+            var phoneme = '<phoneme alphabet="ipa" ph="' + result.ipa + '">' + result.name + '</phoneme>';
+            callback({}, respond(result.title,
+                "This week's Torah portion is " + result.name + '.',
                 "This week's Torah portion is " + phoneme,
                 true));
         }
