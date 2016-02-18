@@ -47,6 +47,15 @@
       "intent": "GetOmer"
     },
     {
+      "intent": "GetCandles",
+      "slots": [
+        {
+          "name": "ZipCode",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
       "intent": "AMAZON.HelpIntent"
     },
     {

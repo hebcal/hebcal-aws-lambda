@@ -134,6 +134,21 @@ var holidayAlias = {
     'shavuos': 'shavuot'
 };
 
+var ZIPCODES_TZ_MAP = {
+    '0'  : 'UTC',
+    '4'  : 'America/Puerto_Rico',
+    '5'  : 'America/New_York',
+    '6'  : 'America/Chicago',
+    '7'  : 'America/Denver',
+    '8'  : 'America/Los_Angeles',
+    '9'  : 'America/Anchorage',
+    '10' : 'Pacific/Honolulu',
+    '11' : 'Pacific/Pago_Pago',
+    '13' : 'Pacific/Funafuti',
+    '14' : 'Pacific/Guam',
+    '15' : 'Pacific/Palau'
+};
+
 for (var k in month2ipa) {
     holiday2ipa["Rosh Chodesh " + k] = roshChodeshIpa + month2ipa[k];
 }
@@ -206,6 +221,13 @@ function onIntent(intentRequest, session, callback) {
         getParshaResponse(intent, session, callback);
     } else if ("GetHebrewDate" === intentName) {
         getHebrewDateResponse(intent, session, callback);
+    } else if ("GetCandles" === intentName) {
+        if (intent.slots && intent.slots.ZipCode && intent.slots.ZipCode.value
+            && intent.slots.ZipCode.value.length == 5) {
+            getCandleLightingResponse(intent, session, callback);
+        } else {
+            getWhichZipCodeResponse(callback);
+        }
     } else if ("GetOmer" === intentName) {
         getOmerResponse(intent, session, callback);
     } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
@@ -401,6 +423,7 @@ function parseAmazonDateFormat(str) {
 
 function invokeHebcal(args, callback) {
     var proc, rd, events = [];
+    var evtTimeRe = /(\d+:\d+)$/;
 
     process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
     proc = spawn('./hebcal', args);
@@ -417,7 +440,17 @@ function invokeHebcal(args, callback) {
         var space = line.indexOf(' ');
         var mdy = line.substr(0, space);
         var name = line.substr(space + 1);
-        var dt = moment(mdy, 'MM/DD/YYYY');
+        var dt;
+        if (name.indexOf('Candle lighting') === 0
+            || name.indexOf('Havdalah') === 0) {
+            var matches = name.match(evtTimeRe),
+                hourMin = matches[1],
+                timeStr = mdy + ' ' + hourMin;
+            dt = moment(timeStr, 'MM/DD/YYYY HH:mm');
+            name = name.substr(0, name.indexOf(':'));
+        } else {
+            dt = moment(mdy, 'MM/DD/YYYY');
+        }
         events.push({dt: dt, name: name});
     })
 
@@ -450,6 +483,102 @@ function getParashaOrHolidayName(name) {
             ipa: ipa
         }
     }
+}
+
+function latlongToHebcal(latitude,longitude) {
+    var latDeg = latitude > 0 ? Math.floor(latitude) : Math.ceil(latitude),
+        longDeg = longitude > 0 ? Math.floor(longitude) : Math.ceil(longitude),
+        latMin = Math.floor((latitude - latDeg) * 60),
+        longMin = Math.floor((longitude - longDeg) * 60);
+    return {
+        latitude: latitude,
+        longitude: longitude,
+        latDeg: latDeg,
+        latMin: Math.abs(latMin),
+        longDeg: longDeg * -1,
+        longMin: Math.abs(longMin)
+    };
+}
+
+function getUsaTzid(state,tz,dst) {
+    if (state && state === 'AK' && tz === 10) {
+        return 'America/Adak';
+    } else if (state && state === 'AZ' && tz === 7) {
+        if (dst === 'Y') {
+            return 'America/Denver';
+        } else {
+            return 'America/Phoenix';
+        }
+    } else {
+        return ZIPCODES_TZ_MAP[tz];
+    }
+}
+
+function getWhichZipCodeResponse(callback, prefixText) {
+    var cardTitle = "What ZIP code?";
+    var repromptText = "Which ZIP code for candle lighting times?";
+    var speechOutput = prefixText ? (prefixText + repromptText) : repromptText;
+    var shouldEndSession = false;
+    callback({},
+        buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
+}
+
+function getCandleLightingResponse(intent, session, callback) {
+    var friday = moment().day('Friday'),
+        friYear = friday.format('YYYY');
+    var sqlite3 = require('sqlite3').verbose();
+
+    var db = new sqlite3.Database('zips.sqlite3', sqlite3.OPEN_READONLY);
+
+    var zipCode = intent.slots.ZipCode.value;
+
+    var sql = "SELECT CityMixedCase,State,Latitude,Longitude,TimeZone,DayLightSaving \
+    FROM ZIPCodes_Primary \
+    WHERE ZipCode = '" + zipCode + "'";
+
+    db.get(sql, function(err, row) {
+        if (err) {
+            return callback({}, respond('Internal Error', err));
+        } else if (!row) {
+            return getWhichZipCodeResponse(callback,
+                'We could not find ZIP code ' + zipCode + '. ');
+        }
+        var tzid = getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
+        var ll = latlongToHebcal(row.Latitude, row.Longitude);
+        var cityName = row.CityMixedCase + ', ' + row.State + ' ' + zipCode;
+        var args = [
+            '-c',
+            '-E',
+            '-L', ll.longDeg + ',' + ll.longMin,
+            '-l', ll.latDeg  + ',' + ll.latMin,
+            '-z', tzid,
+            '-m', '50',
+            friYear
+        ];
+        moment.tz.setDefault(tzid);
+        invokeHebcal(args, function(err, events) {
+            if (err) {
+                return callback({}, respond('Internal Error', err));
+            }
+            var found = events.filter(function(evt) {
+                return evt.name === 'Candle lighting'
+                    && evt.dt.isSame(friday, 'day');
+            });
+            if (found.length) {
+                var evt = found[0],
+                    title = evt.name + ' for ' + cityName,
+                    dateText = evt.dt.format('dddd, MMMM Do YYYY'),
+                    timeText = evt.dt.format('h:mma');
+                callback({}, respond(title,
+                    evt.name + ' is at ' + timeText + ' on ' + dateText + '.',
+                    evt.name + ' for Friday is at ' + timeText + ' in ' + cityName + '.',
+                    true));
+            } else {
+                callback({}, respond('Internal Error - ' + intent.name,
+                    "Sorry, we could not get candle-lighting times for " + cityName));
+            }
+        });
+    });
 }
 
 function getParshaResponse(intent, session, callback) {
@@ -558,12 +687,6 @@ function getHolidayResponse(intent, session, callback) {
     var searchStr0 = intent.slots.Holiday.value.toLowerCase(),
         searchStr = holidayAlias[searchStr0] || searchStr0;
     var titleYear;
-
-    if (searchStr == 'candle lighting' || searchStr == 'candle lighting time'
-        || searchStr == 'shabbat' || searchStr == 'shabbos') {
-        return callback({}, respond('Shabbat candle lighting times',
-            "Candle lighting times are not yet supported."));
-    }
 
     if (intent.name === "GetHoliday") {
         args = ['--years', '2'];

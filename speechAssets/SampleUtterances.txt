@@ -90,3 +90,24 @@ GetOmer what is the day of the Omer
 GetOmer what's the day of the Omer
 GetOmer I would like the day of the Omer
 GetOmer day of the Omer
+
+GetCandles for Shabbat time in {ZipCode}
+GetCandles for Shabbat in {ZipCode}
+GetCandles for Shabbos time in {ZipCode}
+GetCandles for Shabbos in {ZipCode}
+GetCandles for candle lighting in {ZipCode}
+GetCandles for candle lighting time in {ZipCode}
+GetCandles when is Shabbat in {ZipCode}
+GetCandles when is Shabbos in {ZipCode}
+GetCandles when is candle lighting in {ZipCode}
+GetCandles when is candle lighting time for {ZipCode}
+GetCandles when do we light candles in {ZipCode}
+GetCandles when does Shabbat start in {ZipCode}
+GetCandles when does Shabbat begin in {ZipCode}
+GetCandles when does Shabbos start in {ZipCode}
+GetCandles when does Shabbos begin in {ZipCode}
+GetCandles give me candle lighting time for {ZipCode}
+GetCandles tell me candle lighting time for {ZipCode}
+GetCandles give me candle lighting for {ZipCode}
+GetCandles tell me candle lighting for {ZipCode}
+GetCandles what time do we light candles in {ZipCode}
