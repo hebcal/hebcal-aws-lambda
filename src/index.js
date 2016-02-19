@@ -535,6 +535,7 @@ function getCandleLightingResponse(intent, session, callback) {
     var db = new sqlite3.Database('zips.sqlite3', sqlite3.OPEN_READONLY);
 
     var zipCode = intent.slots.ZipCode.value;
+    var sessionAttributes = {zipCode: zipCode};
 
     var sql = "SELECT CityMixedCase,State,Latitude,Longitude,TimeZone,DayLightSaving \
     FROM ZIPCodes_Primary \
@@ -542,7 +543,7 @@ function getCandleLightingResponse(intent, session, callback) {
 
     db.get(sql, function(err, row) {
         if (err) {
-            return callback({}, respond('Internal Error', err));
+            return callback(sessionAttributes, respond('Internal Error', err));
         } else if (!row) {
             return getWhichZipCodeResponse(callback,
                 'We could not find ZIP code ' + zipCode + '. ');
@@ -562,7 +563,7 @@ function getCandleLightingResponse(intent, session, callback) {
         moment.tz.setDefault(tzid);
         invokeHebcal(args, function(err, events) {
             if (err) {
-                return callback({}, respond('Internal Error', err));
+                return callback(sessionAttributes, respond('Internal Error', err));
             }
             var found = events.filter(function(evt) {
                 return evt.name === 'Candle lighting'
@@ -572,12 +573,12 @@ function getCandleLightingResponse(intent, session, callback) {
                 var evt = found[0],
                     dateText = evt.dt.format('dddd, MMMM Do YYYY'),
                     timeText = evt.dt.format('h:mma');
-                callback({}, respond(evt.name + ' ' + timeText,
+                callback(sessionAttributes, respond(evt.name + ' ' + timeText,
                     evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + cityName + ' ' + zipCode + '.',
                     evt.name + ' on Friday, in ' + cityName + ', is at ' + timeText + '.',
                     true));
             } else {
-                callback({}, respond('Internal Error - ' + intent.name,
+                callback(sessionAttributes, respond('Internal Error - ' + intent.name,
                     "Sorry, we could not get candle-lighting times for " + cityName));
             }
         });

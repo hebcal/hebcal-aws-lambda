@@ -99,6 +99,9 @@ GetCandles about Shabbat time in {ZipCode}
 GetCandles about Shabbos
 GetCandles about Shabbos in {ZipCode}
 GetCandles about Shabbos time in {ZipCode}
+GetCandles candle lighting in {ZipCode}
+GetCandles candle lighting time in {ZipCode}
+GetCandles candle lighting times
 GetCandles for candle lighting in {ZipCode}
 GetCandles for candle lighting time in {ZipCode}
 GetCandles for Shabbat in {ZipCode}
@@ -110,6 +113,8 @@ GetCandles for Shabbos times
 GetCandles give me candle lighting for {ZipCode}
 GetCandles give me candle lighting time
 GetCandles give me candle lighting time for {ZipCode}
+GetCandles Shabbat in {ZipCode}
+GetCandles Shabbat times
 GetCandles tell me candle lighting for {ZipCode}
 GetCandles tell me candle lighting time
 GetCandles tell me candle lighting time for {ZipCode}
@@ -145,8 +150,12 @@ GetCandles when is Shabbat
 GetCandles when is Shabbat in {ZipCode}
 GetCandles when is Shabbos
 GetCandles when is Shabbos in {ZipCode}
+GetCandles when Shabbat begins
 GetCandles when Shabbat begins in {ZipCode}
+GetCandles when Shabbat starts
 GetCandles when Shabbat starts in {ZipCode}
+GetCandles when Shabbos begins
 GetCandles when Shabbos begins in {ZipCode}
+GetCandles when Shabbos starts
 GetCandles when Shabbos starts in {ZipCode}
 GetCandles {ZipCode}
