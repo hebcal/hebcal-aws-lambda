@@ -149,11 +149,14 @@ var ZIPCODES_TZ_MAP = {
     '15' : 'Pacific/Palau'
 };
 
+var defaultTimezone = 'America/New_York';
+
 for (var k in month2ipa) {
     holiday2ipa["Rosh Chodesh " + k] = roshChodeshIpa + month2ipa[k];
 }
 
-moment.tz.setDefault("America/New_York");
+moment.tz.setDefault(defaultTimezone);
+process.env.TZ = defaultTimezone;
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -234,6 +237,8 @@ function onIntent(intentRequest, session, callback) {
         }
     } else if ("GetOmer" === intentName) {
         getOmerResponse(intent, session, callback);
+    } else if ("GetDafYomi" === intentName) {
+        getDafYomiResponse(intent, session, callback);
     } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
         callback({}, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
     } else if ("AMAZON.HelpIntent" === intentName) {
@@ -637,6 +642,27 @@ function getHebrewDateResponse(intent, session, callback) {
             callback({}, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not convert " + srcDateText + " to Hebrew calendar.",
                 "Sorry, we could not convert " + srcDateSsml + " to Hebrew calendar."));
+        }
+    });
+}
+
+function getDafYomiResponse(intent, session, callback) {
+    var args = ['-F', '-h', '-x', '-t'];
+    invokeHebcal(args, function(err, events) {
+        var found = false;
+        if (err) {
+            return callback({}, respond('Internal Error', err));
+        }
+        events.forEach(function(evt) {
+            if (evt.name.indexOf('Daf Yomi:') === 0) {
+                var daf = evt.name.substr(10);
+                found = true;
+                return callback({}, respond(daf, "Today's Daf Yomi is " + daf));
+            }
+        });
+        if (!found) {
+            return callback({}, respond('Internal Error - ' + intent.name,
+                "Sorry, we could fetch Daf Yomi. Please try again later."));
         }
     });
 }
