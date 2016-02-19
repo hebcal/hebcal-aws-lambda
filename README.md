@@ -13,6 +13,7 @@ Here are some more examples of what you can say:
 - "Alexa, ask Hebcal for the weekly Torah portion."
 - "Alexa, ask Hebcal for today’s Hebrew date."
 - "Alexa, ask Hebcal for the Omer count."
+- "Alexa, ask Hebcal for Daf Yomi."
 - "Alexa, ask Hebcal to convert October 20th, 1994."
 - "Alexa, ask Hebcal when is Rosh Chodesh?"
 - "Alexa, open Hebcal."

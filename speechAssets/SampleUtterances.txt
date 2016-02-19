@@ -159,3 +159,13 @@ GetCandles when Shabbos begins in {ZipCode}
 GetCandles when Shabbos starts
 GetCandles when Shabbos starts in {ZipCode}
 GetCandles {ZipCode}
+
+GetDafYomi about daf yomi
+GetDafYomi daf yomi
+GetDafYomi for daf yomi
+GetDafYomi for the daf yomi
+GetDafYomi for today's daf yomi
+GetDafYomi give me the daf yomi
+GetDafYomi I would like the daf yomi
+GetDafYomi tell me the daf yomi
+GetDafYomi what is the daf yomi
