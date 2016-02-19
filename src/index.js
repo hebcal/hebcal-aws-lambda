@@ -210,6 +210,10 @@ function onIntent(intentRequest, session, callback) {
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
 
+    if (session && session.attributes) {
+        console.log("sessionAttributes=" + JSON.stringify(session.attributes));
+    }
+
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
         if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value) {
@@ -279,7 +283,7 @@ function getWhichDateResponse(callback) {
     var repromptText = "Which date would you like me to convert?";
     var speechOutput = "Sorry, Hieb-Kal didn't understand the date. " + repromptText;
     var shouldEndSession = false;
-    callback({},
+    callback({prev:'getWhichDateResponse'},
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
@@ -288,7 +292,7 @@ function getWhichHolidayResponse(callback) {
     var repromptText = "Which holiday would you like?";
     var speechOutput = "Sorry, Hieb-Kal didn't understand the holiday. " + repromptText;
     var shouldEndSession = false;
-    callback({},
+    callback({prev:'getWhichHolidayResponse'},
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
@@ -519,7 +523,7 @@ function getWhichZipCodeResponse(callback, prefixText) {
     var repromptText = "Which ZIP code for candle lighting times?";
     var speechOutput = prefixText ? (prefixText + repromptText) : repromptText;
     var shouldEndSession = false;
-    callback({},
+    callback({prev:'getWhichZipCodeResponse'},
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
