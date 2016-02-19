@@ -545,7 +545,7 @@ function getCandleLightingResponse(intent, session, callback) {
         }
         var tzid = getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
         var ll = latlongToHebcal(row.Latitude, row.Longitude);
-        var cityName = row.CityMixedCase + ', ' + row.State + ' ' + zipCode;
+        var cityName = row.CityMixedCase + ', ' + row.State;
         var args = [
             '-c',
             '-E',
@@ -566,12 +566,11 @@ function getCandleLightingResponse(intent, session, callback) {
             });
             if (found.length) {
                 var evt = found[0],
-                    title = evt.name + ' for ' + cityName,
                     dateText = evt.dt.format('dddd, MMMM Do YYYY'),
                     timeText = evt.dt.format('h:mma');
-                callback({}, respond(title,
-                    evt.name + ' is at ' + timeText + ' on ' + dateText + '.',
-                    evt.name + ' for Friday is at ' + timeText + ' in ' + cityName + '.',
+                callback({}, respond(evt.name + ' ' + timeText,
+                    evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + cityName + ' ' + zipCode + '.',
+                    evt.name + ' on Friday, in ' + cityName + ', is at ' + timeText + '.',
                     true));
             } else {
                 callback({}, respond('Internal Error - ' + intent.name,
