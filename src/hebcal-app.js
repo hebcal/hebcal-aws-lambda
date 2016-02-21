@@ -3,10 +3,6 @@ var spawn = require('child_process').spawn,
     moment = require('moment-timezone');
 
 var hebcal = {
-    sqlite3: null,
-
-    zipsDb: null,
-
     defaultTimezone: 'America/New_York',
 
     roshChodeshIpa: "ˈʁoʔʃ ˈχodəʃ ",
@@ -287,10 +283,8 @@ var hebcal = {
                 thisYear = now.format('YYYY'),
                 yearStr = (thisYear == year) ? '????' : year;
 
-            return dow + ', <say-as interpret-as="date">'
-                + yearStr
-                + month + day
-                + '</say-as>';
+            return dow + ', <say-as interpret-as="date">' +
+                yearStr + month + day + '</say-as>';
 
         }
     },
@@ -314,8 +308,8 @@ var hebcal = {
             return moment({ year : year, month : 1, day : 1 });
         }
         var m = moment(str);
-        if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W')
-            || (str.length == 11 && str.substr(8) == '-WE')) {
+        if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W') ||
+            (str.length == 11 && str.substr(8) == '-WE')) {
             return m.day('Saturday');
         } 
         return m;
@@ -325,7 +319,7 @@ var hebcal = {
         var proc, rd, events = [];
         var evtTimeRe = /(\d+:\d+)$/;
 
-        process.env['PATH'] = process.env['PATH'] + ':' + process.env['LAMBDA_TASK_ROOT'];
+        process.env.PATH = process.env.PATH + ':' + process.env.LAMBDA_TASK_ROOT;
         proc = spawn('./hebcal', args);
 
         proc.on('error', function(err) {
@@ -341,8 +335,8 @@ var hebcal = {
             var mdy = line.substr(0, space);
             var name = line.substr(space + 1);
             var dt;
-            if (name.indexOf('Candle lighting') === 0
-                || name.indexOf('Havdalah') === 0) {
+            if (name.indexOf('Candle lighting') === 0 ||
+                name.indexOf('Havdalah') === 0) {
                 var matches = name.match(evtTimeRe),
                     hourMin = matches[1],
                     timeStr = mdy + ' ' + hourMin;
@@ -352,7 +346,7 @@ var hebcal = {
                 dt = moment(mdy, 'MM/DD/YYYY');
             }
             events.push({dt: dt, name: name});
-        })
+        });
 
         proc.on('close', function(code) {
             console.log("Got " + events.length + " events");
@@ -373,15 +367,14 @@ var hebcal = {
                 title: name,
                 name: name,
                 ipa: 'ˈpɑːʁɑːˈʃɑːt ' + ipa
-            }
+            };
         } else {
-            var holiday = this.getHolidayBasename(name),
-                ipa = this.holiday2ipa[holiday];
+            var holiday = this.getHolidayBasename(name);
             return {
                 title: holiday + ' Torah reading',
                 name: holiday,
-                ipa: ipa
-            }
+                ipa: this.holiday2ipa[holiday]
+            };
         }
     },
 
@@ -414,6 +407,9 @@ var hebcal = {
         }
     },
 
+    sqlite3: null,
+    zipsDb: null,
+
     lookupZipCode: function(zipCode, callback) {
         var self = this;
 
@@ -422,8 +418,8 @@ var hebcal = {
             this.zipsDb = new this.sqlite3.Database('zips.sqlite3', this.sqlite3.OPEN_READONLY);
         }
 
-        var sql = "SELECT CityMixedCase,State,Latitude,Longitude,TimeZone,DayLightSaving \
-        FROM ZIPCodes_Primary WHERE ZipCode = '" + zipCode + "'";
+        var sql = "SELECT CityMixedCase,State,Latitude,Longitude,TimeZone,DayLightSaving" +
+            " FROM ZIPCodes_Primary WHERE ZipCode = '" + zipCode + "'";
 
         this.zipsDb.get(sql, function(err, row) {
             if (err) {
@@ -446,31 +442,39 @@ var hebcal = {
     },
 
     // dynamodb
-    /*
-    var AWS = require("aws-sdk");
+    AWS: null,
+    docClient: null,
+    dynamoTableName: 'HebcalUsers',
 
-    AWS.config.update({
-      region: "us-east-1",
-      endpoint: "http://localhost:8000"
-    });
+    getDocClient: function() {
+        if (!this.docClient) {
+            this.AWS = require('aws-sdk');
 
-    var docClient = new AWS.DynamoDB.DocumentClient();
-    lookupUser(docClient, session.user.userId, function(err, data) {
-    });
-    */
-    lookupUser: function(docClient, userId, callback) {
+            this.AWS.config.update({
+              region: "us-east-1",
+//              endpoint: "http://localhost:8000"
+            });
+
+            this.docClient = new this.AWS.DynamoDB.DocumentClient();
+        }
+
+        return this.docClient;
+    },
+
+    lookupUser: function(userId, callback) {
         var params = {
-            TableName: "HebcalUsers",
+            TableName: this.dynamoTableName,
             Key: {
                 userId: userId
             }
         };
+        var docClient = this.getDocClient();
         docClient.get(params, callback);
     },
 
-    saveUser: function(docClient, user, callback) {
+    saveUser: function(user, callback) {
         var params = {
-            TableName: "HebcalUsers",
+            TableName: this.dynamoTableName,
             Key: {
                 userId: user.userId,
                 zipCode: user.zipCode,
@@ -480,11 +484,35 @@ var hebcal = {
                 cityName: user.cityName
             }
         };
+        var docClient = this.getDocClient();
         docClient.put(params, callback);
     }
 };
 
 hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
+
+hebcal.lookupZipCode('94306', function(err, data) {
+    if (err) {
+        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+    } else if (!data) {
+        console.error("ZIP not found");
+    } else {
+        console.error("Success:", JSON.stringify(data, null, 2));
+    }
+});
+
+hebcal.lookupUser('amzn1.echo-sdk-account.FOOBAR',
+function(err, data) {
+    if (err) {
+        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+    } else {
+        console.log("Query succeeded.");
+        console.log(JSON.stringify(data, null, 2));
+        if (data && data.Item) {
+            console.log(data.Item.zipCode);
+        }
+    }
+});
 
 module.exports = hebcal;
