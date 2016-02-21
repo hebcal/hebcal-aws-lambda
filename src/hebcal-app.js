@@ -1,10 +1,9 @@
+"use strict"; /* jshint node: true */
 var spawn = require('child_process').spawn,
     readline = require('readline'),
     moment = require('moment-timezone');
 
 var hebcal = {
-    defaultTimezone: 'America/New_York',
-
     roshChodeshIpa: "ˈʁoʔʃ ˈχodəʃ ",
 
     parsha2ipa: {
@@ -152,6 +151,8 @@ var hebcal = {
         '14' : 'Pacific/Guam',
         '15' : 'Pacific/Palau'
     },
+
+    defaultTimezone: 'America/New_York',
 
     init: function() {
         this.setDefaultTimeZone(this.defaultTimezone);
@@ -492,6 +493,7 @@ var hebcal = {
 hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
+/*
 hebcal.lookupZipCode('94306', function(err, data) {
     if (err) {
         console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
@@ -514,5 +516,6 @@ function(err, data) {
         }
     }
 });
+*/
 
 module.exports = hebcal;

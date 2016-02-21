@@ -73,8 +73,7 @@ function onIntent(intentRequest, session, callback) {
     } else if ("GetHebrewDate" === intentName) {
         getHebrewDateResponse(intent, session, callback);
     } else if ("GetCandles" === intentName) {
-        if (intent.slots && intent.slots.ZipCode && intent.slots.ZipCode.value
-            && intent.slots.ZipCode.value.length == 5) {
+        if (hasCandleLightingZipCode(intent, sesion)) {
             getCandleLightingResponse(intent, session, callback);
         } else {
             getWhichZipCodeResponse(callback);
@@ -154,23 +153,29 @@ function getWhichZipCodeResponse(callback, prefixText) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
+function hasCandleLightingZipCode(intent, sesion) {
+    if (session && session.attributes && session.attributes.location) {
+        return session.attributes.location;
+    } else if (intent.slots &&
+        intent.slots.ZipCode &&
+        intent.slots.ZipCode.value &&
+        intent.slots.ZipCode.value.length == 5) {
+        return {
+            zipCode: intent.slots.ZipCode.value
+        };
+    } else {
+        return false;
+    }
+}
+
 function getCandleLightingResponse(intent, session, callback) {
     var friday = moment().day('Friday'),
         friYear = friday.format('YYYY');
+    var location = hasCandleLightingZipCode(intent, sesion);
+    var sessionAttributes = session && session.attributes ? session.attributes : {};
 
-    var zipCode = intent.slots.ZipCode.value;
-    var sessionAttributes = {zipCode: zipCode};
-
-    hebcal.lookupZipCode(zipCode, function(err, data) {
-        if (err) {
-            return callback(sessionAttributes, respond('Internal Error', err));
-        } else if (!data) {
-            return getWhichZipCodeResponse(callback,
-                'We could not find ZIP code ' + zipCode + '. ');
-        }
-        var tzid = data.tzid;
-        var ll = hebcal.latlongToHebcal(data.latitude, data.longitude);
-        var cityName = data.cityName;
+    var getHebcalArgs = function(latitude, longitude, tzid) {
+        var ll = hebcal.latlongToHebcal(latitude, longitude);
         var args = [
             '-c',
             '-E',
@@ -181,28 +186,51 @@ function getCandleLightingResponse(intent, session, callback) {
             friYear
         ];
         hebcal.setDefaultTimeZone(tzid);
-        hebcal.invokeHebcal(args, function(err, events) {
+        return args;
+    };
+
+    var hebcalEventsCallback = function(err, events) {
+        if (err) {
+            return callback(sessionAttributes, respond('Internal Error', err));
+        }
+        var found = events.filter(function(evt) {
+            return evt.name === 'Candle lighting' &&
+                evt.dt.isSame(friday, 'day');
+        });
+        if (found.length) {
+            var evt = found[0],
+                dateText = evt.dt.format('dddd, MMMM Do YYYY'),
+                timeText = evt.dt.format('h:mma');
+            callback(sessionAttributes, respond(evt.name + ' ' + timeText,
+                evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + location.cityName + ' ' + location.zipCode + '.',
+                evt.name + ' on Friday, in ' + location.cityName + ', is at ' + timeText + '.',
+                true));
+        } else {
+            callback(sessionAttributes, respond('Internal Error - ' + intent.name,
+                "Sorry, we could not get candle-lighting times for " + location.cityName));
+        }
+    };
+
+    var args;
+    if (location.latitude) {
+        args = getHebcalArgs(location.latitude, location.longitude,
+            location.tzid);
+        hebcal.invokeHebcal(args, hebcalEventsCallback);
+    } else {
+        hebcal.lookupZipCode(location.zipCode, function(err, data) {
             if (err) {
                 return callback(sessionAttributes, respond('Internal Error', err));
+            } else if (!data) {
+                return getWhichZipCodeResponse(callback,
+                    'We could not find ZIP code ' + location.zipCode + '. ');
             }
-            var found = events.filter(function(evt) {
-                return evt.name === 'Candle lighting'
-                    && evt.dt.isSame(friday, 'day');
-            });
-            if (found.length) {
-                var evt = found[0],
-                    dateText = evt.dt.format('dddd, MMMM Do YYYY'),
-                    timeText = evt.dt.format('h:mma');
-                callback(sessionAttributes, respond(evt.name + ' ' + timeText,
-                    evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + cityName + ' ' + zipCode + '.',
-                    evt.name + ' on Friday, in ' + cityName + ', is at ' + timeText + '.',
-                    true));
-            } else {
-                callback(sessionAttributes, respond('Internal Error - ' + intent.name,
-                    "Sorry, we could not get candle-lighting times for " + cityName));
-            }
+            location = data;
+            sessionAttributes.location = data;
+            args = getHebcalArgs(location.latitude, location.longitude,
+                location.tzid);
+            hebcal.invokeHebcal(args, hebcalEventsCallback);
         });
-    });
+    }
 }
 
 function getParshaResponse(intent, session, callback) {
@@ -215,8 +243,8 @@ function getParshaResponse(intent, session, callback) {
             return callback({}, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
-            return evt.dt.isSame(saturday, 'day')
-                && evt.name.search(re) != -1;
+            return evt.dt.isSame(saturday, 'day') &&
+                evt.name.search(re) != -1;
         });
         if (found.length) {
             var result = hebcal.getParashaOrHolidayName(found[0].name);
@@ -229,10 +257,16 @@ function getParshaResponse(intent, session, callback) {
     });
 }
 
+function getDateFromSlotOrNow(intent) {
+    if (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value) {
+        return hebcal.parseAmazonDateFormat(intent.slots.MyDate.value);
+    } else {
+        return moment();
+    }
+}
+
 function getHebrewDateResponse(intent, session, callback) {
-    var src = (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value)
-        ? hebcal.parseAmazonDateFormat(intent.slots.MyDate.value)
-        : moment(),
+    var src = getDateFromSlotOrNow(intent),
         args = ['-d', src.format('YYYY')],
         srcDateSsml = hebcal.formatDateSsml(src),
         srcDateText = src.format('MMMM Do YYYY');
@@ -294,7 +328,7 @@ function getOmerResponse(intent, session, callback) {
             return re.test(evt.name) && evt.dt.isSameOrAfter(now, 'day');
         });
         console.log("Filtered " + events.length + " events to " + omerEvents.length + " future");
-        if (omerEvents.length == 0) {
+        if (omerEvents.length === 0) {
             return callback({}, respond('Interal Error', 'Cannot find Omer in event list.'));
         }
         var evt = omerEvents[0];
@@ -381,13 +415,14 @@ function getHolidayResponse(intent, session, callback) {
             }
         });
         if (found.length) {
-            var holiday = hebcal.getHolidayBasename(found[0].name);
+            var evt = found[0],
+                holiday = hebcal.getHolidayBasename(evt.name);
             var ipa = hebcal.holiday2ipa[holiday];
-            var phoneme = ipa
-                ? '<phoneme alphabet="ipa" ph="' + ipa + '">' + holiday + '</phoneme>'
-                : holiday;
-            var observedDt = hebcal.dayEventObserved(found[0]),
-                observedWhen = hebcal.beginsWhen(found[0].name);
+            var phoneme = ipa ?
+                '<phoneme alphabet="ipa" ph="' + ipa + '">' + holiday + '</phoneme>' :
+                holiday;
+            var observedDt = hebcal.dayEventObserved(evt),
+                observedWhen = hebcal.beginsWhen(evt.name);
             var dateSsml = hebcal.formatDateSsml(observedDt),
                 dateText = observedDt.format('dddd, MMMM Do YYYY');
             var begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began',
