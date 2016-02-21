@@ -158,7 +158,7 @@ var hebcal = {
     },
 
     init: function() {
-        setDefaultTimeZone(this.defaultTimezone);
+        this.setDefaultTimeZone(this.defaultTimezone);
         for (var k in this.month2ipa) {
             var rck = "Rosh Chodesh " + k;
             this.holiday2ipa[rck] = this.roshChodeshIpa + this.month2ipa[k];
@@ -183,6 +183,27 @@ var hebcal = {
             ssml += ', ' + year.substr(0,2) + ' ' + year.substr(2);
         }
         return ssml;
+    },
+
+    strWithShabbatShalom: function(str, isTodayShabbat, ssml) {
+        var ss;
+        if (!isTodayShabbat || !str || !str.length) {
+            return str;
+        }
+        ss = str;
+        if (str.charAt(str.length - 1) !== '.') {
+            ss += '.';
+        }
+        ss += ' ';
+        if (ssml) {
+            ss += '<phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
+        }
+        ss += 'Shabbat Shalom';
+        if (ssml) {
+            ss += '</phoneme>';
+        }
+        ss += '.';
+        return ss;
     },
 
     getHolidayBasename: function(str) {
@@ -398,7 +419,7 @@ var hebcal = {
 
         if (!this.sqlite3) {
             this.sqlite3 = require('sqlite3').verbose();
-            this.zipsDb = new this.sqlite3.Database('zips.sqlite3', sqlite3.OPEN_READONLY);
+            this.zipsDb = new this.sqlite3.Database('zips.sqlite3', this.sqlite3.OPEN_READONLY);
         }
 
         var sql = "SELECT CityMixedCase,State,Latitude,Longitude,TimeZone,DayLightSaving \
@@ -408,7 +429,7 @@ var hebcal = {
             if (err) {
                 callback(err);
             } else if (!row) {
-                callback("ZIP code '" + zipCode + "' not found.");
+                callback(null, null);
             } else {
                 var tzid = self.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
                 var cityName = row.CityMixedCase + ', ' + row.State;
@@ -422,7 +443,48 @@ var hebcal = {
                 callback(null, result);
             }
         });
+    },
+
+    // dynamodb
+    /*
+    var AWS = require("aws-sdk");
+
+    AWS.config.update({
+      region: "us-east-1",
+      endpoint: "http://localhost:8000"
+    });
+
+    var docClient = new AWS.DynamoDB.DocumentClient();
+    lookupUser(docClient, session.user.userId, function(err, data) {
+    });
+    */
+    lookupUser: function(docClient, userId, callback) {
+        var params = {
+            TableName: "HebcalUsers",
+            Key: {
+                userId: userId
+            }
+        };
+        docClient.get(params, callback);
+    },
+
+    saveUser: function(docClient, user, callback) {
+        var params = {
+            TableName: "HebcalUsers",
+            Key: {
+                userId: user.userId,
+                zipCode: user.zipCode,
+                latitude: user.latitude,
+                longitude: user.longitude,
+                tzid: user.tzid,
+                cityName: user.cityName
+            }
+        };
+        docClient.put(params, callback);
     }
 };
+
+hebcal.init();
+// console.log(JSON.stringify(hebcal, null, 2));
 
 module.exports = hebcal;
