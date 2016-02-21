@@ -1,6 +1,4 @@
-var spawn = require('child_process').spawn,
-    readline = require('readline'),
-    moment = require('moment-timezone');
+var moment = require('moment-timezone');
 
 var hebcal = require('./hebcal-app');
 
