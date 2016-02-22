@@ -394,6 +394,22 @@ var hebcal = {
         };
     },
 
+    getCandleLightingArgs: function(location, extraArgs) {
+        var ll = this.latlongToHebcal(location.latitude, location.longitude);
+        var args = [
+            '-c',
+            '-E',
+            '-h',
+            '-x',
+            '-L', ll.longDeg + ',' + ll.longMin,
+            '-l', ll.latDeg  + ',' + ll.latMin,
+            '-z', location.tzid,
+            '-m', '50'
+        ];
+        this.setDefaultTimeZone(location.tzid);
+        return extraArgs ? args.concat(extraArgs) : args;
+    },
+
     getUsaTzid: function(state,tz,dst) {
         if (state && state === 'AK' && tz === 10) {
             return 'America/Adak';
@@ -464,6 +480,7 @@ var hebcal = {
             }
         };
         var dynamodb = this.getDynamoDB();
+        console.log("Getting from DynamoDB userId=" + userId);
         dynamodb.getItem(params, function (err, data) {
             if (err) {
                 console.log(err, err.stack);
@@ -471,7 +488,7 @@ var hebcal = {
             } else if (data.Item === undefined) {
                 callback(null);
             } else {
-                console.log('got user from dynamodb!');
+                console.log("SUCCESS Got from DynamoDB userId=" + userId);
                 callback(JSON.parse(data.Item.Data.S));
             }
         });
@@ -493,21 +510,16 @@ var hebcal = {
             }
         };
         var dynamodb = this.getDynamoDB();
-        console.log("putting " + JSON.stringify(params));
+        console.log("Storing in DynamoDB userId=" + userId);
         dynamodb.putItem(params, function (err, data) {
             if (err) {
                 console.log("ERROR dynamodb.putItem");
                 console.log(err, err.stack);
-            } else {
-                console.log("OK dynamodb.putItem");
-                console.log(JSON.stringify(data, null, 2));
             }
             if (callback) {
-                console.log("Calling callback dynamodb.putItem");
                 callback();
             }
         });
-        console.log("returning from saveUser");
     }
 };
 
@@ -525,7 +537,20 @@ hebcal.lookupZipCode('94306', function(err, data) {
     }
 });
 
-hebcal.lookupUser('amzn1.echo-sdk-account.FOOBAR',
+hebcal.saveUser('amzn1.echo-sdk-account.QUUX_FOOBAR', {     
+    "zipCode": "12345",
+    "latitude": 42.8145,
+    "longitude": -73.9403,
+    "tzid": "America/New_York",
+    "cityName": "Schenectady, NY"
+},
+function() {
+    console.log("Got called back!!");
+});
+
+    console.log("Immediate return");
+
+hebcal.lookupUser('amzn1.echo-sdk-account.QUUX_FOOBAR',
 function(err, data) {
     if (err) {
         console.error("Unable to query. Error:", JSON.stringify(err, null, 2));

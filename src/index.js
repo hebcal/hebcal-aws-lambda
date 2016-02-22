@@ -170,24 +170,10 @@ function hasCandleLightingZipCode(intent, session) {
 
 function getCandleLightingResponse(intent, session, callback) {
     var friday = moment().day('Friday'),
+        fridayStr = friday.format('YYYY-MM-DD'),
         friYear = friday.format('YYYY');
     var location = hasCandleLightingZipCode(intent, session);
     var sessionAttributes = session && session.attributes ? session.attributes : {};
-
-    var getHebcalArgs = function(latitude, longitude, tzid) {
-        var ll = hebcal.latlongToHebcal(latitude, longitude);
-        var args = [
-            '-c',
-            '-E',
-            '-L', ll.longDeg + ',' + ll.longMin,
-            '-l', ll.latDeg  + ',' + ll.latMin,
-            '-z', tzid,
-            '-m', '50',
-            friYear
-        ];
-        hebcal.setDefaultTimeZone(tzid);
-        return args;
-    };
 
     var hebcalEventsCallback = function(err, events) {
         if (err) {
@@ -195,7 +181,7 @@ function getCandleLightingResponse(intent, session, callback) {
         }
         var found = events.filter(function(evt) {
             return evt.name === 'Candle lighting' &&
-                evt.dt.isSame(friday, 'day');
+                evt.dt.format('YYYY-MM-DD') === fridayStr;
         });
         if (found.length) {
             var evt = found[0],
@@ -206,40 +192,42 @@ function getCandleLightingResponse(intent, session, callback) {
                 evt.name + ' on Friday, in ' + location.cityName + ', is at ' + timeText + '.',
                 true));
         } else {
+            console.log("Found NO events with date=" + fridayStr);
             callback(sessionAttributes, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not get candle-lighting times for " + location.cityName));
         }
     };
 
-    var args;
-    if (location.latitude) {
-        console.log("Skipping zipCode SQLite lookup! " + JSON.stringify(location));
-        args = getHebcalArgs(location.latitude, location.longitude,
-            location.tzid);
-        console.log("Invoking1 Hebcal with args=" + JSON.stringify(args));
+    var myInvokeHebcal = function(location) {
+        var args = hebcal.getCandleLightingArgs(location, friYear);
         hebcal.invokeHebcal(args, hebcalEventsCallback);
+    };
+
+    if (location.latitude) {
+        console.log("Skipping SQLite lookup " + JSON.stringify(location));
+        myInvokeHebcal(location);
     } else {
-        console.log("Need to lookup zipCode " + location.zipCode);
-        hebcal.lookupZipCode(location.zipCode, function(err, data) {
-            if (err) {
-                return callback(sessionAttributes, respond('Internal Error', err));
-            } else if (!data) {
-                return getWhichZipCodeResponse(callback,
-                    'We could not find ZIP code ' + location.zipCode + '. ');
-            }
-            location = data;
-            // save location in this session and persist in DynamoDB
-            sessionAttributes.location = data;
-            console.log("Calling saveUser");
-            hebcal.saveUser(session.user.userId, data,
-                function() {
-                    console.log("SaveUser callback called!");
+        hebcal.lookupUser(session.user.userId, function(data) {
+            if (data) {
+                location = data;
+                sessionAttributes.location = data;
+                myInvokeHebcal(location);
+            } else {
+                console.log("Need to lookup zipCode " + location.zipCode);
+                hebcal.lookupZipCode(location.zipCode, function(err, data) {
+                    if (err) {
+                        return callback(sessionAttributes, respond('Internal Error', err));
+                    } else if (!data) {
+                        return getWhichZipCodeResponse(callback,
+                            'We could not find ZIP code ' + location.zipCode + '. ');
+                    }
+                    location = data;
+                    // save location in this session and persist in DynamoDB
+                    sessionAttributes.location = data;
+                    hebcal.saveUser(session.user.userId, data);
+                    myInvokeHebcal(location);
                 });
-            console.log("Back from saveUser");
-            args = getHebcalArgs(location.latitude, location.longitude,
-                location.tzid);
-            console.log("Invoking2 Hebcal with args=" + JSON.stringify(args));
-            hebcal.invokeHebcal(args, hebcalEventsCallback);
+            }
         });
     }
 }
