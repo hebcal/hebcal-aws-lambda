@@ -7,8 +7,6 @@ GetHolidayDate give me the date of {Holiday} in {MyYear}
 GetHolidayDate tell me the date of {Holiday} in {MyYear}
 
 GetHoliday {Holiday}
-GetHoliday about {Holiday}
-GetHoliday for {Holiday}
 GetHoliday when is {Holiday}
 GetHoliday when {Holiday} is
 GetHoliday when is {Holiday} this year
@@ -26,16 +24,40 @@ GetHolidayNextYear what the date of the next {Holiday} is
 GetHebrewDate convert {MyDate}
 GetHebrewDate convert {MyDate} to Hebrew calendar
 GetHebrewDate convert {MyDate} to Hebrew date
-GetHebrewDate for the Hebrew date {MyDate}
+GetHebrewDate convert {MyDate} to Hebrew day
+GetHebrewDate give me the Hebrew calendar for {MyDate}
+GetHebrewDate give me the Hebrew calendar {MyDate}
 GetHebrewDate give me the Hebrew date for {MyDate}
 GetHebrewDate give me the Hebrew date {MyDate}
+GetHebrewDate give me today's Hebrew date
+GetHebrewDate give me today's Hebrew day
 GetHebrewDate give me {MyDate} as a Hebrew date
+GetHebrewDate give me {MyDate} on the Hebrew calendar
 GetHebrewDate Hebrew date {MyDate}
 GetHebrewDate Hebrew day {MyDate}
+GetHebrewDate tell me the Hebrew calendar for {MyDate}
+GetHebrewDate tell me the Hebrew calendar {MyDate}
 GetHebrewDate tell me the Hebrew date for {MyDate}
 GetHebrewDate tell me the Hebrew date {MyDate}
+GetHebrewDate tell me today's date
+GetHebrewDate tell me today's day
+GetHebrewDate tell me today's Hebrew date
+GetHebrewDate tell me today's Hebrew day
+GetHebrewDate the date
+GetHebrewDate the date for {MyDate}
+GetHebrewDate the date today
+GetHebrewDate the day
+GetHebrewDate the day for {MyDate}
+GetHebrewDate the Hebrew calendar
+GetHebrewDate the Hebrew calendar for {MyDate}
+GetHebrewDate the Hebrew date
+GetHebrewDate the Hebrew date for {MyDate}
+GetHebrewDate the Hebrew day
+GetHebrewDate the Hebrew day for {MyDate}
+GetHebrewDate today
 GetHebrewDate today's date
 GetHebrewDate today's Hebrew date
+GetHebrewDate tonight
 GetHebrewDate what Hebrew day is {MyDate}
 GetHebrewDate what is the date
 GetHebrewDate what is the date today
@@ -43,6 +65,7 @@ GetHebrewDate what is the Hebrew date
 GetHebrewDate what is the Hebrew date on {MyDate}
 GetHebrewDate what is the Hebrew date today
 GetHebrewDate what is the Hebrew date {MyDate}
+GetHebrewDate what is the Hebrew day
 GetHebrewDate what is today's date
 GetHebrewDate what is today's Hebrew date
 GetHebrewDate what is {MyDate} Hebrew date
@@ -50,6 +73,8 @@ GetHebrewDate what is {MyDate} on the Hebrew calendar
 GetHebrewDate what was the Hebrew date {MyDate}
 GetHebrewDate {MyDate} date
 GetHebrewDate {MyDate} Hebrew date
+GetHebrewDate {MyDate} Hebrew day
+GetHebrewDate {MyDate} on the Hebrew calendar
 
 GetParsha give me this week's Torah portion
 GetParsha give me this week's Torah reading
@@ -81,40 +106,34 @@ GetParsha what is this week's Torah reading
 GetParsha what is this week's parasha
 GetParsha what is this week's parsha
 
-GetOmer tell me the day of the Omer
-GetOmer what day of the Omer is it
-GetOmer what is the Omer count
-GetOmer give me the Omer count
-GetOmer tell me the Omer count
-GetOmer what is the day of the Omer
-GetOmer what's the day of the Omer
-GetOmer I would like the day of the Omer
 GetOmer day of the Omer
+GetOmer give me the Omer count
+GetOmer I would like the day of the Omer
+GetOmer Omer count
+GetOmer tell me the day of the Omer
+GetOmer tell me the Omer count
+GetOmer the Omer count
+GetOmer what day of the Omer is it
+GetOmer what is the day of the Omer
+GetOmer what is the Omer count
+GetOmer what's the day of the Omer
 
-GetCandles about candle lighting in {ZipCode}
-GetCandles about candle lighting time in {ZipCode}
-GetCandles about Shabbat
-GetCandles about Shabbat in {ZipCode}
-GetCandles about Shabbat time in {ZipCode}
-GetCandles about Shabbos
-GetCandles about Shabbos in {ZipCode}
-GetCandles about Shabbos time in {ZipCode}
 GetCandles candle lighting in {ZipCode}
 GetCandles candle lighting time in {ZipCode}
 GetCandles candle lighting times
-GetCandles for candle lighting in {ZipCode}
-GetCandles for candle lighting time in {ZipCode}
-GetCandles for Shabbat in {ZipCode}
-GetCandles for Shabbat time in {ZipCode}
-GetCandles for Shabbat times
-GetCandles for Shabbos in {ZipCode}
-GetCandles for Shabbos time in {ZipCode}
-GetCandles for Shabbos times
 GetCandles give me candle lighting for {ZipCode}
 GetCandles give me candle lighting time
 GetCandles give me candle lighting time for {ZipCode}
+GetCandles Shabbat
 GetCandles Shabbat in {ZipCode}
+GetCandles Shabbat time in {ZipCode}
+GetCandles Shabbat time
 GetCandles Shabbat times
+GetCandles Shabbos
+GetCandles Shabbos in {ZipCode}
+GetCandles Shabbos time in {ZipCode}
+GetCandles Shabbos time
+GetCandles Shabbos times
 GetCandles tell me candle lighting for {ZipCode}
 GetCandles tell me candle lighting time
 GetCandles tell me candle lighting time for {ZipCode}
@@ -160,12 +179,10 @@ GetCandles when Shabbos starts
 GetCandles when Shabbos starts in {ZipCode}
 GetCandles {ZipCode}
 
-GetDafYomi about daf yomi
 GetDafYomi daf yomi
-GetDafYomi for daf yomi
-GetDafYomi for the daf yomi
-GetDafYomi for today's daf yomi
 GetDafYomi give me the daf yomi
 GetDafYomi I would like the daf yomi
 GetDafYomi tell me the daf yomi
+GetDafYomi the daf yomi
+GetDafYomi today's daf yomi
 GetDafYomi what is the daf yomi
