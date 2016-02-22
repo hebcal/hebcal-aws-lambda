@@ -109,14 +109,20 @@ GetParsha what is this week's parsha
 GetOmer day of the Omer
 GetOmer give me the Omer count
 GetOmer I would like the day of the Omer
+GetOmer last night's Omer count
 GetOmer Omer count
 GetOmer tell me the day of the Omer
 GetOmer tell me the Omer count
 GetOmer the Omer count
+GetOmer the Omer count last night
+GetOmer the Omer count today
+GetOmer the Omer count today
+GetOmer today's Omer count
 GetOmer what day of the Omer is it
 GetOmer what is the day of the Omer
 GetOmer what is the Omer count
 GetOmer what's the day of the Omer
+GetOmer yesterday's Omer count
 
 GetCandles candle lighting in {ZipCode}
 GetCandles candle lighting time in {ZipCode}
@@ -179,10 +185,42 @@ GetCandles when Shabbos starts
 GetCandles when Shabbos starts in {ZipCode}
 GetCandles {ZipCode}
 
+GetCandles candle lighting in {CityName}
+GetCandles candle lighting time in {CityName}
+GetCandles give me candle lighting for {CityName}
+GetCandles give me candle lighting time for {CityName}
+GetCandles Shabbat in {CityName}
+GetCandles Shabbat time in {CityName}
+GetCandles Shabbos in {CityName}
+GetCandles Shabbos time in {CityName}
+GetCandles tell me candle lighting for {CityName}
+GetCandles tell me candle lighting time for {CityName}
+GetCandles what time do we light candles in {CityName}
+GetCandles when do we light candles in {CityName}
+GetCandles when does Shabbat begin in {CityName}
+GetCandles when does Shabbat start in {CityName}
+GetCandles when does Shabbos begin in {CityName}
+GetCandles when does Shabbos start in {CityName}
+GetCandles when is candle lighting in {CityName}
+GetCandles when is candle lighting time for {CityName}
+GetCandles when is Shabbat in {CityName}
+GetCandles when is Shabbos in {CityName}
+GetCandles when Shabbat begins in {CityName}
+GetCandles when Shabbat starts in {CityName}
+GetCandles when Shabbos begins in {CityName}
+GetCandles when Shabbos starts in {CityName}
+GetCandles {CityName}
+
 GetDafYomi daf yomi
+GetDafYomi daf yomi today
 GetDafYomi give me the daf yomi
+GetDafYomi give me today's daf yomi
 GetDafYomi I would like the daf yomi
+GetDafYomi I would like today's daf yomi
 GetDafYomi tell me the daf yomi
+GetDafYomi tell me today's daf yomi
 GetDafYomi the daf yomi
+GetDafYomi the daf yomi today
 GetDafYomi today's daf yomi
 GetDafYomi what is the daf yomi
+GetDafYomi what is the daf yomi today

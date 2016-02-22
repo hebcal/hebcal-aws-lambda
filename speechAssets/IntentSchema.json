@@ -50,6 +50,10 @@
       "intent": "GetCandles",
       "slots": [
         {
+          "name": "CityName",
+          "type": "AMAZON.US_CITY"
+        },
+        {
           "name": "ZipCode",
           "type": "AMAZON.NUMBER"
         }
