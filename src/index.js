@@ -73,7 +73,7 @@ function onIntent(intentRequest, session, callback) {
     } else if ("GetHebrewDate" === intentName) {
         getHebrewDateResponse(intent, session, callback);
     } else if ("GetCandles" === intentName) {
-        if (hasCandleLightingZipCode(intent, sesion)) {
+        if (hasCandleLightingZipCode(intent, session)) {
             getCandleLightingResponse(intent, session, callback);
         } else {
             getWhichZipCodeResponse(callback);
@@ -153,7 +153,7 @@ function getWhichZipCodeResponse(callback, prefixText) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function hasCandleLightingZipCode(intent, sesion) {
+function hasCandleLightingZipCode(intent, session) {
     if (session && session.attributes && session.attributes.location) {
         return session.attributes.location;
     } else if (intent.slots &&
@@ -171,7 +171,7 @@ function hasCandleLightingZipCode(intent, sesion) {
 function getCandleLightingResponse(intent, session, callback) {
     var friday = moment().day('Friday'),
         friYear = friday.format('YYYY');
-    var location = hasCandleLightingZipCode(intent, sesion);
+    var location = hasCandleLightingZipCode(intent, session);
     var sessionAttributes = session && session.attributes ? session.attributes : {};
 
     var getHebcalArgs = function(latitude, longitude, tzid) {
@@ -213,10 +213,12 @@ function getCandleLightingResponse(intent, session, callback) {
 
     var args;
     if (location.latitude) {
+        console.log("Skipping zipCode SQLite lookup! " + JSON.stringify(location));
         args = getHebcalArgs(location.latitude, location.longitude,
             location.tzid);
         hebcal.invokeHebcal(args, hebcalEventsCallback);
     } else {
+        console.log("Need to lookup zipCode " + location.zipCode);
         hebcal.lookupZipCode(location.zipCode, function(err, data) {
             if (err) {
                 return callback(sessionAttributes, respond('Internal Error', err));
