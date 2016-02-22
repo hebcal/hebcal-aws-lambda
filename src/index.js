@@ -216,6 +216,7 @@ function getCandleLightingResponse(intent, session, callback) {
         console.log("Skipping zipCode SQLite lookup! " + JSON.stringify(location));
         args = getHebcalArgs(location.latitude, location.longitude,
             location.tzid);
+        console.log("Invoking1 Hebcal with args=" + JSON.stringify(args));
         hebcal.invokeHebcal(args, hebcalEventsCallback);
     } else {
         console.log("Need to lookup zipCode " + location.zipCode);
@@ -227,9 +228,17 @@ function getCandleLightingResponse(intent, session, callback) {
                     'We could not find ZIP code ' + location.zipCode + '. ');
             }
             location = data;
+            // save location in this session and persist in DynamoDB
             sessionAttributes.location = data;
+            console.log("Calling saveUser");
+            hebcal.saveUser(session.user.userId, data,
+                function() {
+                    console.log("SaveUser callback called!");
+                });
+            console.log("Back from saveUser");
             args = getHebcalArgs(location.latitude, location.longitude,
                 location.tzid);
+            console.log("Invoking2 Hebcal with args=" + JSON.stringify(args));
             hebcal.invokeHebcal(args, hebcalEventsCallback);
         });
     }

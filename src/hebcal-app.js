@@ -443,50 +443,71 @@ var hebcal = {
     },
 
     // dynamodb
-    AWS: null,
-    docClient: null,
-    dynamoTableName: 'HebcalUsers',
+    dynamodb: null,
+    dynamoTableName: 'HebcalUsers2',
 
-    getDocClient: function() {
-        if (!this.docClient) {
-            this.AWS = require('aws-sdk');
-
-            this.AWS.config.update({
-              region: "us-east-1",
-//              endpoint: "http://localhost:8000"
-            });
-
-            this.docClient = new this.AWS.DynamoDB.DocumentClient();
+    getDynamoDB: function() {
+        if (!this.dynamodb) {
+            var AWS = require('aws-sdk');
+            this.dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         }
-
-        return this.docClient;
+        return this.dynamodb;
     },
 
     lookupUser: function(userId, callback) {
         var params = {
             TableName: this.dynamoTableName,
             Key: {
-                userId: userId
+                UserId: {
+                    S: userId
+                }
             }
         };
-        var docClient = this.getDocClient();
-        docClient.get(params, callback);
+        var dynamodb = this.getDynamoDB();
+        dynamodb.getItem(params, function (err, data) {
+            if (err) {
+                console.log(err, err.stack);
+                callback(null);
+            } else if (data.Item === undefined) {
+                callback(null);
+            } else {
+                console.log('got user from dynamodb!');
+                callback(JSON.parse(data.Item.Data.S));
+            }
+        });
     },
 
-    saveUser: function(user, callback) {
+    saveUser: function(userId, data, callback) {
         var params = {
             TableName: this.dynamoTableName,
-            Key: {
-                userId: user.userId,
-                zipCode: user.zipCode,
-                latitude: user.latitude,
-                longitude: user.longitude,
-                tzid: user.tzid,
-                cityName: user.cityName
+            Item: {
+                UserId: {
+                    S: userId
+                },
+                Data: {
+                    S: JSON.stringify(data)
+                },
+                Timestamp: {
+                    N: Date.now().toString()
+                }
             }
         };
-        var docClient = this.getDocClient();
-        docClient.put(params, callback);
+        var dynamodb = this.getDynamoDB();
+        console.log("putting " + JSON.stringify(params));
+        dynamodb.putItem(params, function (err, data) {
+            if (err) {
+                console.log("ERROR dynamodb.putItem");
+                console.log(err, err.stack);
+            } else {
+                console.log("OK dynamodb.putItem");
+                console.log(JSON.stringify(data, null, 2));
+            }
+            if (callback) {
+                console.log("Calling callback dynamodb.putItem");
+                callback();
+            }
+        });
+        console.log("returning from saveUser");
     }
 };
 
