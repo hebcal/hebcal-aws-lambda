@@ -98,7 +98,7 @@ function onSessionEnded(sessionEndedRequest, session) {
 // --------------- Functions that control the skill's behavior -----------------------
 
 function getWelcomeResponse(callback, isHelpIntent) {
-    var repromptText = "You can ask about holidays, the Torah portion, or Hebrew dates.";
+    var repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
     var nag = ' What will it be?';
     var args = ['-t'];
     hebcal.invokeHebcal(args, function(err, events) {
