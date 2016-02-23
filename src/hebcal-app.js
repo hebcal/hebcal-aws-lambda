@@ -152,14 +152,96 @@ var hebcal = {
         '15' : 'Pacific/Palau'
     },
 
+    stateNames: {
+        "AK": "Alaska",
+        "AL": "Alabama",
+        "AR": "Arkansas",
+        "AZ": "Arizona",
+        "CA": "California",
+        "CO": "Colorado",
+        "CT": "Connecticut",
+        "DC": "Washington, D.C.",
+        "DE": "Delaware",
+        "FL": "Florida",
+        "GA": "Georgia",
+        "HI": "Hawaii",
+        "IA": "Iowa",
+        "ID": "Idaho",
+        "IL": "Illinois",
+        "IN": "Indiana",
+        "KS": "Kansas",
+        "KY": "Kentucky",
+        "LA": "Louisiana",
+        "MA": "Massachusetts",
+        "MD": "Maryland",
+        "ME": "Maine",
+        "MI": "Michigan",
+        "MN": "Minnesota",
+        "MO": "Missouri",
+        "MS": "Mississippi",
+        "MT": "Montana",
+        "NC": "North Carolina",
+        "ND": "North Dakota",
+        "NE": "Nebraska",
+        "NH": "New Hampshire",
+        "NJ": "New Jersey",
+        "NM": "New Mexico",
+        "NV": "Nevada",
+        "NY": "New York",
+        "OH": "Ohio",
+        "OK": "Oklahoma",
+        "OR": "Oregon",
+        "PA": "Pennsylvania",
+        "RI": "Rhode Island",
+        "SC": "South Carolina",
+        "SD": "South Dakota",
+        "TN": "Tennessee",
+        "TX": "Texas",
+        "UT": "Utah",
+        "VA": "Virginia",
+        "VT": "Vermont",
+        "WA": "Washington",
+        "WI": "Wisconsin",
+        "WV": "West Virginia",
+        "WY": "Wyoming"
+    },
+
     defaultTimezone: 'America/New_York',
 
+    usCities: {},
+
     init: function() {
+        var self = this;
+        var usCitiesArray = require('./cities.json');
         this.setDefaultTimeZone(this.defaultTimezone);
         for (var k in this.month2ipa) {
             var rck = "Rosh Chodesh " + k;
             this.holiday2ipa[rck] = this.roshChodeshIpa + this.month2ipa[k];
         }
+        usCitiesArray.forEach(function(str) {
+            var f = str.split('|'),
+                cityName = f[0],
+                city = {
+                    cityName: cityName + ', ' + f[1],
+                    name: cityName,
+                    state: f[1],
+                    latitude: +f[2],
+                    longitude: +f[3],
+                    tzid: f[4]
+                },
+                cityLc = cityName.toLowerCase(),
+                stateLc = self.stateNames[city.state].toLowerCase();
+            self.usCities[cityLc] = city;
+            self.usCities[cityLc + ' ' + stateLc] = city;
+        });
+        usCitiesArray = null;
+        var nyc = this.usCities["new york city"];
+        this.usCities["new york"] = nyc;
+        this.usCities["new york new york"] = nyc;
+        this.usCities.nyc = nyc;
+        this.usCities["n y c"] = nyc;
+        this.usCities.la = this.usCities["los angeles"];
+//        console.log(JSON.stringify(self.cities, null, 2));
     },
 
     setDefaultTimeZone: function(tzid) {

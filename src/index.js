@@ -73,11 +73,7 @@ function onIntent(intentRequest, session, callback) {
     } else if ("GetHebrewDate" === intentName) {
         getHebrewDateResponse(intent, session, callback);
     } else if ("GetCandles" === intentName) {
-        if (hasCandleLightingZipCode(intent, session)) {
-            getCandleLightingResponse(intent, session, callback);
-        } else {
-            getWhichZipCodeResponse(callback);
-        }
+        getCandleLightingResponse(intent, session, callback);
     } else if ("GetOmer" === intentName) {
         getOmerResponse(intent, session, callback);
     } else if ("GetDafYomi" === intentName) {
@@ -153,9 +149,11 @@ function getWhichZipCodeResponse(callback, prefixText) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function hasCandleLightingZipCode(intent, session) {
+function userSpecifiedLocation(intent, session) {
     if (session && session.attributes && session.attributes.location) {
         return session.attributes.location;
+    } else if (intent.slots && intent.slots.CityName && intent.slots.CityName.value) {
+        return hebcal.usCities[intent.slots.CityName.value.toLowerCase()];
     } else if (intent.slots &&
         intent.slots.ZipCode &&
         intent.slots.ZipCode.value &&
@@ -172,7 +170,7 @@ function getCandleLightingResponse(intent, session, callback) {
     var friday = moment().day('Friday'),
         fridayStr = friday.format('YYYY-MM-DD'),
         friYear = friday.format('YYYY');
-    var location = hasCandleLightingZipCode(intent, session);
+    var location = userSpecifiedLocation(intent, session);
     var sessionAttributes = session && session.attributes ? session.attributes : {};
 
     var hebcalEventsCallback = function(err, events) {
@@ -187,8 +185,13 @@ function getCandleLightingResponse(intent, session, callback) {
             var evt = found[0],
                 dateText = evt.dt.format('dddd, MMMM Do YYYY'),
                 timeText = evt.dt.format('h:mma');
+                cardText = evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + location.cityName;
+            if (location.zipCode) {
+                cardText += ' ' + location.zipCode;
+            }
+            cardText += '.';
             callback(sessionAttributes, respond(evt.name + ' ' + timeText,
-                evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + location.cityName + ' ' + location.zipCode + '.',
+                cardText,
                 evt.name + ' on Friday, in ' + location.cityName + ', is at ' + timeText + '.',
                 true));
         } else {
@@ -205,7 +208,24 @@ function getCandleLightingResponse(intent, session, callback) {
 
     if (location.latitude) {
         console.log("Skipping SQLite lookup " + JSON.stringify(location));
+        sessionAttributes.location = location;
+        hebcal.saveUser(session.user.userId, location);
         myInvokeHebcal(location);
+    } else if (location.zipCode) {
+        console.log("Need to lookup zipCode " + location.zipCode);
+        hebcal.lookupZipCode(location.zipCode, function(err, data) {
+            if (err) {
+                return callback(sessionAttributes, respond('Internal Error', err));
+            } else if (!data) {
+                return getWhichZipCodeResponse(callback,
+                    'We could not find ZIP code ' + location.zipCode + '. ');
+            }
+            location = data;
+            // save location in this session and persist in DynamoDB
+            sessionAttributes.location = data;
+            hebcal.saveUser(session.user.userId, data);
+            myInvokeHebcal(location);
+        });
     } else {
         hebcal.lookupUser(session.user.userId, function(data) {
             if (data) {
@@ -213,20 +233,7 @@ function getCandleLightingResponse(intent, session, callback) {
                 sessionAttributes.location = data;
                 myInvokeHebcal(location);
             } else {
-                console.log("Need to lookup zipCode " + location.zipCode);
-                hebcal.lookupZipCode(location.zipCode, function(err, data) {
-                    if (err) {
-                        return callback(sessionAttributes, respond('Internal Error', err));
-                    } else if (!data) {
-                        return getWhichZipCodeResponse(callback,
-                            'We could not find ZIP code ' + location.zipCode + '. ');
-                    }
-                    location = data;
-                    // save location in this session and persist in DynamoDB
-                    sessionAttributes.location = data;
-                    hebcal.saveUser(session.user.userId, data);
-                    myInvokeHebcal(location);
-                });
+                return getWhichZipCodeResponse(callback);
             }
         });
     }
