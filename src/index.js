@@ -141,8 +141,8 @@ function getWhichHolidayResponse(callback) {
 }
 
 function getWhichZipCodeResponse(callback, prefixText) {
-    var cardTitle = "What ZIP code?";
-    var repromptText = "Which ZIP code for candle lighting times?";
+    var cardTitle = "What City or ZIP code?";
+    var repromptText = "Which city or ZIP code for candle lighting times?";
     var speechOutput = prefixText ? (prefixText + repromptText) : repromptText;
     var shouldEndSession = false;
     callback({prev:'getWhichZipCodeResponse'},
@@ -153,7 +153,11 @@ function userSpecifiedLocation(intent, session) {
     if (session && session.attributes && session.attributes.location) {
         return session.attributes.location;
     } else if (intent.slots && intent.slots.CityName && intent.slots.CityName.value) {
-        return hebcal.usCities[intent.slots.CityName.value.toLowerCase()];
+        var location = hebcal.usCities[intent.slots.CityName.value.toLowerCase()];
+        return location ? location : {
+                cityName: intent.slots.CityName.value,
+                cityNotFound: true
+            };
     } else if (intent.slots &&
         intent.slots.ZipCode &&
         intent.slots.ZipCode.value &&
@@ -172,6 +176,11 @@ function getCandleLightingResponse(intent, session, callback) {
         friYear = friday.format('YYYY');
     var location = userSpecifiedLocation(intent, session);
     var sessionAttributes = session && session.attributes ? session.attributes : {};
+
+    if (location && location.cityNotFound) {
+        return getWhichZipCodeResponse(callback,
+            "Sorry, we don't know where " + location.cityName + " is. ");
+    }
 
     var hebcalEventsCallback = function(err, events) {
         if (err) {
@@ -206,12 +215,12 @@ function getCandleLightingResponse(intent, session, callback) {
         hebcal.invokeHebcal(args, hebcalEventsCallback);
     };
 
-    if (location.latitude) {
+    if (location && location.latitude) {
         console.log("Skipping SQLite lookup " + JSON.stringify(location));
         sessionAttributes.location = location;
         hebcal.saveUser(session.user.userId, location);
         myInvokeHebcal(location);
-    } else if (location.zipCode) {
+    } else if (location && location.zipCode) {
         console.log("Need to lookup zipCode " + location.zipCode);
         hebcal.lookupZipCode(location.zipCode, function(err, data) {
             if (err) {
