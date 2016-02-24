@@ -1,5 +1,5 @@
 ZIPFILE=../hebcal-lambda.zip
-ZIPCONTENTS=node_modules hebcal hebcal-app.js index.js zips.sqlite3 cities.json
+ZIPCONTENTS=node_modules hebcal hebcal-app.js index.js zips.json cities.json
 
 all: $(ZIPFILE)
 

@@ -506,38 +506,47 @@ var hebcal = {
         }
     },
 
-    sqlite3: null,
     zipsDb: null,
 
-    lookupZipCode: function(zipCode, callback) {
-        var self = this;
-
-        if (!this.sqlite3) {
-            this.sqlite3 = require('sqlite3').verbose();
-            this.zipsDb = new this.sqlite3.Database('zips.sqlite3', this.sqlite3.OPEN_READONLY);
+    loadZipsDb: function() {
+        var arr = require('./zips.json'),
+            db = {};
+        for (var i = 0; i < arr.length; ++i) {
+            var f = arr[i].split('|'),
+                zipCode = f[0];
+            db[zipCode] = {
+                State: f[1],
+                CityMixedCase: f[2],
+                Latitude: +f[3],
+                Longitude: +f[4],
+                TimeZone: +f[5],
+                DayLightSaving: f[6]
+            };
         }
+        console.log("Loaded " + arr.length + " ZIP codes");
+        arr = null;
+        return db;
+    },
 
-        var sql = "SELECT CityMixedCase,State,Latitude,Longitude,TimeZone,DayLightSaving" +
-            " FROM ZIPCodes_Primary WHERE ZipCode = '" + zipCode + "'";
-
-        this.zipsDb.get(sql, function(err, row) {
-            if (err) {
-                callback(err);
-            } else if (!row) {
-                callback(null, null);
-            } else {
-                var tzid = self.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
-                var cityName = row.CityMixedCase + ', ' + row.State;
-                var result = {
-                    zipCode: zipCode,
-                    latitude: row.Latitude,
-                    longitude: row.Longitude,
-                    tzid: tzid,
-                    cityName: cityName
-                };
-                callback(null, result);
-            }
-        });
+    lookupZipCode: function(zipCode, callback) {
+        if (!this.zipsDb) {
+            this.zipsDb = this.loadZipsDb();
+        }
+        var row = this.zipsDb[zipCode];
+        if (!row) {
+            callback(null, null);
+        } else {
+            var tzid = this.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
+            var cityName = row.CityMixedCase + ', ' + row.State;
+            var result = {
+                zipCode: zipCode,
+                latitude: row.Latitude,
+                longitude: row.Longitude,
+                tzid: tzid,
+                cityName: cityName
+            };
+            callback(null, result);
+        }
     },
 
     // dynamodb
@@ -570,7 +579,7 @@ var hebcal = {
             } else if (data.Item === undefined) {
                 callback(null);
             } else {
-                console.log("SUCCESS Got from DynamoDB userId=" + userId);
+                console.log("SUCCESS Got from DynamoDB userId=" + userId + ",data=" + data.Item.Data.S);
                 callback(JSON.parse(data.Item.Data.S));
             }
         });
@@ -592,7 +601,7 @@ var hebcal = {
             }
         };
         var dynamodb = this.getDynamoDB();
-        console.log("Storing in DynamoDB userId=" + userId);
+        console.log("Storing in DynamoDB userId=" + userId + ",data=" + params.Item.Data.S);
         dynamodb.putItem(params, function (err, data) {
             if (err) {
                 console.log("ERROR dynamodb.putItem");
