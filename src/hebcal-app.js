@@ -508,20 +508,27 @@ var hebcal = {
 
     zipsDb: null,
 
+    parseZipCodeRow: function(str) {
+        var f = str.split('|');
+        return {
+            ZipCode: f[0],
+            State: f[1],
+            CityMixedCase: f[2],
+            Latitude: +f[3],
+            Longitude: +f[4],
+            TimeZone: +f[5],
+            DayLightSaving: f[6]
+        };
+    },
+
     loadZipsDb: function() {
         var arr = require('./zips.json'),
             db = {};
         for (var i = 0; i < arr.length; ++i) {
-            var f = arr[i].split('|'),
-                zipCode = f[0];
-            db[zipCode] = {
-                State: f[1],
-                CityMixedCase: f[2],
-                Latitude: +f[3],
-                Longitude: +f[4],
-                TimeZone: +f[5],
-                DayLightSaving: f[6]
-            };
+            var str = arr[i],
+                pipe = str.indexOf('|'),
+                zipCode = str.substr(0, pipe);
+            db[zipCode] = str;
         }
         console.log("Loaded " + arr.length + " ZIP codes");
         arr = null;
@@ -532,10 +539,11 @@ var hebcal = {
         if (!this.zipsDb) {
             this.zipsDb = this.loadZipsDb();
         }
-        var row = this.zipsDb[zipCode];
-        if (!row) {
+        var row0 = this.zipsDb[zipCode];
+        if (!row0) {
             callback(null, null);
         } else {
+            var row = this.parseZipCodeRow(row0);
             var tzid = this.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
             var cityName = row.CityMixedCase + ', ' + row.State;
             var result = {
@@ -555,6 +563,7 @@ var hebcal = {
 
     getDynamoDB: function() {
         if (!this.dynamodb) {
+            console.log("Lazily loading aws-sdk and creating DynamoDB");
             var AWS = require('aws-sdk');
             this.dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         }
