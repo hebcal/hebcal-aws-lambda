@@ -7,10 +7,11 @@ var hebcal = require('./hebcal-app');
 exports.handler = function (event, context) {
     console.log("MAIN event=" + JSON.stringify(event));
     try {
+/*
         if (event.session.application && event.session.application.applicationId && event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {
              context.fail("Invalid Application ID=" + event.session.application.applicationId);
         }
-
+*/
         if (event.session.new) {
             onSessionStarted({requestId: event.request.requestId}, event.session);
         }
@@ -282,7 +283,7 @@ function getDateFromSlotOrNow(intent) {
 
 function getHebrewDateResponse(intent, session, callback) {
     var src = getDateFromSlotOrNow(intent),
-        args = ['-d', src.format('YYYY')],
+        args = ['-d', '-h', '-x', src.format('YYYY')],
         srcDateSsml = hebcal.formatDateSsml(src),
         srcDateText = src.format('MMMM Do YYYY');
     hebcal.invokeHebcal(args, function(err, events) {
@@ -332,7 +333,7 @@ function getDafYomiResponse(intent, session, callback) {
 }
 
 function getOmerResponse(intent, session, callback) {
-    var args = ['-o', '--years', '2'];
+    var args = ['-o', '-h', '-x', '--years', '2'];
     hebcal.invokeHebcal(args, function(err, events) {
         var now = moment();
         if (err) {
