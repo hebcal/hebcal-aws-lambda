@@ -47,6 +47,14 @@ function onSessionStarted(sessionStartedRequest, session) {
  * Called when the user launches the skill without specifying what they want.
  */
 function onLaunch(launchRequest, session, callback) {
+    if (!session.attributes || !session.attributes.location) {
+        hebcal.lookupUser(session.user.userId, function(data) {
+            if (data) {
+                session.attributes = session.attributes || {};
+                session.attributes.location = data;
+            }
+        });
+    }
     // Dispatch to your skill's launch.
     getWelcomeResponse(callback, false);
 }
@@ -57,10 +65,6 @@ function onLaunch(launchRequest, session, callback) {
 function onIntent(intentRequest, session, callback) {
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
-
-    if (session && session.attributes) {
-        console.log("sessionAttributes=" + JSON.stringify(session.attributes));
-    }
 
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
@@ -172,7 +176,8 @@ function userSpecifiedLocation(intent, session) {
 }
 
 function getCandleLightingResponse(intent, session, callback) {
-    var friday = moment().day('Friday'),
+    var now = moment(),
+        friday = now.day('Friday'),
         fridayStr = friday.format('YYYY-MM-DD'),
         friYear = friday.format('YYYY');
     var location = userSpecifiedLocation(intent, session);
@@ -194,15 +199,23 @@ function getCandleLightingResponse(intent, session, callback) {
         if (found.length) {
             var evt = found[0],
                 dateText = evt.dt.format('dddd, MMMM Do YYYY'),
-                timeText = evt.dt.format('h:mma');
+                timeText = evt.dt.format('h:mma'),
+                whenSpeech,
                 cardText = evt.name + ' is at ' + timeText + ' on ' + dateText + ' in ' + location.cityName;
             if (location.zipCode) {
                 cardText += ' ' + location.zipCode;
             }
             cardText += '.';
+            if (now.day() === 5) {
+                whenSpeech = 'tonight';
+            } else if (now.day() === 6) {
+                whenSpeech = 'next Friday night';
+            } else {
+                whenSpeech = 'on Friday';
+            }
             callback(sessionAttributes, respond(evt.name + ' ' + timeText,
                 cardText,
-                evt.name + ' on Friday, in ' + location.cityName + ', is at ' + timeText + '.',
+                evt.name + ' ' + whenSpeech + ', in ' + location.cityName + ', is at ' + timeText + '.',
                 true));
         } else {
             console.log("Found NO events with date=" + fridayStr);
@@ -463,7 +476,8 @@ function getHolidayResponse(intent, session, callback) {
 }
 
 function respond(title, cardText, ssmlContent, addShabbatShalom) {
-    var isTodayShabbat = addShabbatShalom ? moment().day() === 6 : false;
+    var dow = moment().day(),
+        isTodayShabbat = addShabbatShalom ? (dow === 5 || dow === 6) : false;
     var cardText2 = hebcal.strWithShabbatShalom(cardText, isTodayShabbat, false),
         ssmlContent2 = hebcal.strWithShabbatShalom(ssmlContent, isTodayShabbat, true);
     var outputSpeech = ssmlContent2 ? {
