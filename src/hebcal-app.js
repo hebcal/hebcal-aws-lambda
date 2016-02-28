@@ -275,7 +275,7 @@ var hebcal = {
         }
         ss += ' ';
         if (ssml) {
-            ss += '<phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
+            ss += '<break type="x-strong"/><phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
         }
         ss += 'Shabbat Shalom';
         if (ssml) {
@@ -393,8 +393,8 @@ var hebcal = {
         var m = moment(str);
         if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W') ||
             (str.length == 11 && str.substr(8) == '-WE')) {
-            return m.day('Saturday');
-        } 
+            m.day(6); // advance to Saturday
+        }
         return m;
     },
 
