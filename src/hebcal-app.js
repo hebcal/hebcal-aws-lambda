@@ -127,13 +127,20 @@ var hebcal = {
 
     holidayAlias: {
         'lag baomer': 'lag b\'omer',
+        'lag ba omer': 'lag b\'omer',
         'tu bishvat': 'tu b\'shvat',
+        'tu bi shvat': 'tu b\'shvat',
         'hanukkah': 'chanukah',
         'passover': 'pesach',
         'sukkos': 'sukkot',
         'sukkoth': 'sukkot',
         'simchas torah': 'simchat torah',
         "ta'anis bechoros": "ta'anit bechorot",
+        "ta anis bechoros": "ta'anit bechorot",
+        "ta anit bechoros": "ta'anit bechorot",
+        'tish a bav': "tish'a b'av",
+        'tish a b av': "tish'a b'av",
+        'yom ha atzma ut': 'yom haatzma\'ut',
         'shavuos': 'shavuot'
     },
 
