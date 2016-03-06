@@ -405,6 +405,17 @@ var hebcal = {
         return m;
     },
 
+    getUpcomingFriday: function(now) {
+        var dow = now.day();
+        if (dow === 5) {
+            return now;
+        } else if (dow === 6) {
+            return now.clone().day(12); // Friday next week
+        } else {
+            return now.clone().day(5); // Friday later this week
+        }
+    },
+
     invokeHebcal: function(args, callback) {
         var proc, rd, events = [];
         var evtTimeRe = /(\d+:\d+)$/;

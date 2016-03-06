@@ -171,20 +171,9 @@ function userSpecifiedLocation(intent, session) {
     }
 }
 
-function getUpcomingFriday(now) {
-    var dow = now.day();
-    if (dow === 5) {
-        return now;
-    } else if (dow === 6) {
-        return now.clone().day(12); // Friday next week
-    } else {
-        return now.clone().day(5); // Friday later this week
-    }
-}
-
 function getCandleLightingResponse(intent, session, callback) {
     var now = moment(),
-        friday = getUpcomingFriday(now),
+        friday = hebcal.getUpcomingFriday(now),
         fridayStr = friday.format('YYYY-MM-DD'),
         friYear = friday.format('YYYY');
     var location = userSpecifiedLocation(intent, session);
@@ -285,12 +274,24 @@ function getParshaResponse(intent, session, callback) {
         });
         if (found.length) {
             var todayOrThisWeek = (moment().day() === 6) ? 'Today' : 'This week';
+            var prefixText = todayOrThisWeek + "'s Torah portion is ";
             var result = hebcal.getParashaOrHolidayName(found[0].name);
             var phoneme = '<phoneme alphabet="ipa" ph="' + result.ipa + '">' + result.name + '</phoneme>';
+            var specialShabbat = events.filter(function(evt) {
+                return evt.dt.isSame(saturday, 'day') &&
+                    evt.name.indexOf('Shabbat ') === 0;
+            });
+            var suffixText = '';
+            if (specialShabbat.length) {
+                suffixText = ' It is also ' + specialShabbat[0].name + '.';
+            }
             callback(sessionAttributes, respond(result.title,
-                todayOrThisWeek + "'s Torah portion is " + result.name + '.',
-                todayOrThisWeek + "'s Torah portion is " + phoneme,
+                prefixText + result.name + '.' + suffixText,
+                prefixText + phoneme + '.' + suffixText,
                 true));
+        } else {
+            callback(sessionAttributes, respond('Internal Error - ' + intent.name,
+                "Sorry, we could find the weekly Torah portion."));
         }
     });
 }
