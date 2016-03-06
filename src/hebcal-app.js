@@ -282,7 +282,7 @@ var hebcal = {
         }
         ss += ' ';
         if (ssml) {
-            ss += '<break type="x-strong"/><phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
+            ss += '<break time="0.3s"/><phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
         }
         ss += 'Shabbat Shalom';
         if (ssml) {

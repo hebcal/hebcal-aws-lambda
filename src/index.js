@@ -500,6 +500,7 @@ function respond(title, cardText, ssmlContent, addShabbatShalom) {
         type: 'PlainText',
         text: cardText2
     };
+    console.log("RESPONSE: " + cardText2);
     return {
         outputSpeech: outputSpeech,
         card: {
