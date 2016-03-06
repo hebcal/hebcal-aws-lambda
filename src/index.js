@@ -283,7 +283,7 @@ function getParshaResponse(intent, session, callback) {
             });
             var suffixText = '';
             if (specialShabbat.length) {
-                suffixText = ' It is also ' + specialShabbat[0].name + '.';
+                suffixText = ' Note the special reading for ' + specialShabbat[0].name + '.';
             }
             callback(sessionAttributes, respond(result.title,
                 prefixText + result.name + '.' + suffixText,
