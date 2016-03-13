@@ -256,6 +256,13 @@ var hebcal = {
         process.env.TZ = tzid;
     },
 
+    getPhonemeTag: function(ipa, innerText) {
+        if (!ipa) {
+            return innerText;
+        }
+        return '<phoneme alphabet="ipa" ph="' + ipa + '">' + innerText + '</phoneme>';
+    },
+
     hebrewDateSSML: function(str, suppressYear) {
         var re = /^(\d+)\w+ of ([^,]+), (\d+)$/,
             matches = str.match(re),
@@ -263,7 +270,7 @@ var hebcal = {
             month = matches[2],
             year = matches[3],
             ipa = this.month2ipa[month],
-            phoneme = '<phoneme alphabet="ipa" ph="' + ipa + '">' + month + '</phoneme>',
+            phoneme = this.getPhonemeTag(ipa, month),
             ssml = '<say-as interpret-as="ordinal">' + day + '</say-as> of ' + phoneme;
         if (!suppressYear) {
             ssml += ', ' + year.substr(0,2) + ' ' + year.substr(2);
@@ -273,6 +280,7 @@ var hebcal = {
 
     strWithShabbatShalom: function(str, isTodayShabbat, ssml) {
         var ss;
+        var shabbatShalomText = 'Shabbat Shalom';
         if (!isTodayShabbat || !str || !str.length) {
             return str;
         }
@@ -282,11 +290,10 @@ var hebcal = {
         }
         ss += ' ';
         if (ssml) {
-            ss += '<break time="0.3s"/><phoneme alphabet="ipa" ph="ʃəˈbɑːt ʃɑːˈlom">';
-        }
-        ss += 'Shabbat Shalom';
-        if (ssml) {
-            ss += '</phoneme>';
+            ss += '<break time="0.3s"/>';
+            ss += this.getPhonemeTag("ʃəˈbɑːt ʃɑːˈlom", shabbatShalomText);
+        } else {
+            ss += shabbatShalomText;
         }
         ss += '.';
         return ss;

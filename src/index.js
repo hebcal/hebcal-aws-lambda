@@ -271,6 +271,7 @@ function getParshaResponse(intent, session, callback) {
         var saturdayEvents = events.filter(function(evt) {
             return evt.dt.isSame(saturday, 'day');
         });
+        console.log("Got " + saturdayEvents.length + " Saturday events");
         var found = saturdayEvents.filter(function(evt) {
             return evt.name.search(re) != -1;
         });
@@ -278,7 +279,7 @@ function getParshaResponse(intent, session, callback) {
             var todayOrThisWeek = (moment().day() === 6) ? 'Today' : 'This week';
             var prefixText = todayOrThisWeek + "'s Torah portion is ";
             var result = hebcal.getParashaOrHolidayName(found[0].name);
-            var phoneme = '<phoneme alphabet="ipa" ph="' + result.ipa + '">' + result.name + '</phoneme>';
+            var phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
             var specialShabbat = saturdayEvents.filter(function(evt) {
                 return evt.name.indexOf('Shabbat ') === 0;
             });
@@ -286,7 +287,7 @@ function getParshaResponse(intent, session, callback) {
             if (specialShabbat.length) {
                 var suffixStart = ' Note the special reading for ';
                 var result2 = hebcal.getParashaOrHolidayName(specialShabbat[0].name);
-                var phoneme2 = '<phoneme alphabet="ipa" ph="' + result2.ipa + '">' + result2.name + '</phoneme>';
+                var phoneme2 = hebcal.getPhonemeTag(result2.ipa, result2.name);
                 suffixText = suffixStart + specialShabbat[0].name + '.';
                 suffixSsml = suffixStart + phoneme2 + '.';
             }
@@ -466,9 +467,7 @@ function getHolidayResponse(intent, session, callback) {
             var evt = found[0],
                 holiday = hebcal.getHolidayBasename(evt.name);
             var ipa = hebcal.holiday2ipa[holiday];
-            var phoneme = ipa ?
-                '<phoneme alphabet="ipa" ph="' + ipa + '">' + holiday + '</phoneme>' :
-                holiday;
+            var phoneme = hebcal.getPhonemeTag(ipa, holiday);
             var observedDt = hebcal.dayEventObserved(evt),
                 observedWhen = hebcal.beginsWhen(evt.name);
             var dateSsml = hebcal.formatDateSsml(observedDt),
