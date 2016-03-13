@@ -268,18 +268,19 @@ function getParshaResponse(intent, session, callback) {
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
-        var found = events.filter(function(evt) {
-            return evt.dt.isSame(saturday, 'day') &&
-                evt.name.search(re) != -1;
+        var saturdayEvents = events.filter(function(evt) {
+            return evt.dt.isSame(saturday, 'day');
+        });
+        var found = saturdayEvents.filter(function(evt) {
+            return evt.name.search(re) != -1;
         });
         if (found.length) {
             var todayOrThisWeek = (moment().day() === 6) ? 'Today' : 'This week';
             var prefixText = todayOrThisWeek + "'s Torah portion is ";
             var result = hebcal.getParashaOrHolidayName(found[0].name);
             var phoneme = '<phoneme alphabet="ipa" ph="' + result.ipa + '">' + result.name + '</phoneme>';
-            var specialShabbat = events.filter(function(evt) {
-                return evt.dt.isSame(saturday, 'day') &&
-                    evt.name.indexOf('Shabbat ') === 0;
+            var specialShabbat = saturdayEvents.filter(function(evt) {
+                return evt.name.indexOf('Shabbat ') === 0;
             });
             var suffixText = '', suffixSsml = '';
             if (specialShabbat.length) {
