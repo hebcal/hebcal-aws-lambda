@@ -281,13 +281,17 @@ function getParshaResponse(intent, session, callback) {
                 return evt.dt.isSame(saturday, 'day') &&
                     evt.name.indexOf('Shabbat ') === 0;
             });
-            var suffixText = '';
+            var suffixText = '', suffixSsml = '';
             if (specialShabbat.length) {
-                suffixText = ' Note the special reading for ' + specialShabbat[0].name + '.';
+                var suffixStart = ' Note the special reading for ';
+                var result2 = hebcal.getParashaOrHolidayName(specialShabbat[0].name);
+                var phoneme2 = '<phoneme alphabet="ipa" ph="' + result2.ipa + '">' + result2.name + '</phoneme>';
+                suffixText = suffixStart + specialShabbat[0].name + '.';
+                suffixSsml = suffixStart + phoneme2 + '.';
             }
             callback(sessionAttributes, respond(result.title,
                 prefixText + result.name + '.' + suffixText,
-                prefixText + phoneme + '.' + suffixText,
+                prefixText + phoneme + '.' + suffixSsml,
                 true));
         } else {
             callback(sessionAttributes, respond('Internal Error - ' + intent.name,
