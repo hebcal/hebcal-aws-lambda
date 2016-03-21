@@ -70,6 +70,7 @@ function onIntent(intentRequest, session, callback) {
         if (!err) {
             var specialGreeting = hebcal.getSpecialGreeting(events);
             if (specialGreeting) {
+                session.attributes = session.attributes || {};
                 session.attributes.specialGreeting = specialGreeting;
             }
         }
@@ -509,8 +510,9 @@ function getHolidayResponse(intent, session, callback) {
 }
 
 function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
-    var cardText2 = hebcal.strWithSpecialGreeting(cardText, false, addShabbatShalom, session.attributes.specialGreeting),
-        ssmlContent2 = hebcal.strWithSpecialGreeting(ssmlContent, true, addShabbatShalom, session.attributes.specialGreeting);
+    var specialGreeting = session && session.attributes ? session.attributes.specialGreeting : undefined;
+    var cardText2 = hebcal.strWithSpecialGreeting(cardText, false, addShabbatShalom, specialGreeting),
+        ssmlContent2 = hebcal.strWithSpecialGreeting(ssmlContent, true, addShabbatShalom, specialGreeting);
     var outputSpeech = ssmlContent2 ? {
         type: 'SSML',
         ssml: '<speak>' + ssmlContent2 + '</speak>'
