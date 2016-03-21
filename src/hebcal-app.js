@@ -264,8 +264,7 @@ var hebcal = {
     },
 
     hebrewDateSSML: function(str, suppressYear) {
-        var re = /^(\d+)\w+ of ([^,]+), (\d+)$/,
-            matches = str.match(re),
+        var matches = str.match(this.reHebrewDate),
             day = matches[1],
             month = matches[2],
             year = matches[3],
@@ -278,10 +277,14 @@ var hebcal = {
         return ssml;
     },
 
-    strWithShabbatShalom: function(str, isTodayShabbat, ssml) {
+    strWithSpecialGreeting: function(str, ssml, addShabbatShalom, specialGreeting) {
+        var dow = moment().day(),
+            isTodayShabbat = addShabbatShalom ? (dow === 5 || dow === 6) : false,
+            isTodaySpecial = typeof specialGreeting === 'string',
+            suffixNeeded = isTodayShabbat || isTodaySpecial;
         var ss;
         var shabbatShalomText = 'Shabbat Shalom';
-        if (!isTodayShabbat || !str || !str.length) {
+        if (!suffixNeeded || !str || !str.length) {
             return str;
         }
         ss = str;
@@ -294,6 +297,12 @@ var hebcal = {
             ss += this.getPhonemeTag("ʃəˈbɑːt ʃɑːˈlom", shabbatShalomText);
         } else {
             ss += shabbatShalomText;
+        }
+        if (isTodaySpecial) {
+            if (isTodayShabbat) {
+                ss += ' and ';
+            }
+            ss += specialGreeting;
         }
         ss += '.';
         return ss;
@@ -484,6 +493,41 @@ var hebcal = {
                 ipa: this.holiday2ipa[holiday]
             };
         }
+    },
+
+    reOmer: /^(\d+)\w+ day of the Omer$/,
+
+    reHebrewDate: /^(\d+)\w+ of ([^,]+), (\d+)$/,
+
+    getSpecialGreeting: function(events) {
+        var self = this;
+        var fastDays = "Tzom Gedaliah,Asara B'Tevet,Ta'anit Esther,Ta'anit Bechorot,Tzom Tammuz,Tish'a B'Av,Erev Tish'a B'Av".split(',');
+        var ignoreDays = "Yom HaShoah,Yom HaZikaron,Pesach Sheni,Leil Selichot".split(',');
+        var specialGreeting;
+        events.forEach(function(evt) {
+            if (self.reHebrewDate.test(evt.name) || self.reOmer.test(evt.name)) {
+                // ignore Hebrew date and Omer
+            } else if (evt.name.indexOf('Shabbat ') === 0 || ignoreDays.indexOf(evt.name) != -1) {
+                // no Chag Sameach on these days
+            } else if (evt.name.indexOf('Rosh Chodesh ') === 0) {
+                specialGreeting = 'Chodesh Tov';
+            } else if (fastDays.indexOf(evt.name) != -1) {
+                specialGreeting = 'Tzom Kal';
+            } else if (evt.name.indexOf(" (CH''M)") != -1) {
+                specialGreeting = "Mo'adim L'Simcha";
+            } else if (evt.name.indexOf('Chanukah') === 0) {
+                specialGreeting = 'Chag Urim Sameach';
+            } else if (evt.name.indexOf('Pesach') != -1) {
+                specialGreeting = "Chag Kasher v'Sameach";
+            } else if (evt.name.indexOf('Rosh Hashana') === 0) {
+                specialGreeting = "Shana Tovah";
+            } else if (evt.name === 'Yom Kippur' || evt.name === 'Erev Yom Kippur') {
+                specialGreeting = "G'mar Chatimah Tovah";
+            } else {
+                specialGreeting = "Chag Sameach";
+            }
+        });
+        return specialGreeting;
     },
 
     latlongToHebcal: function(latitude,longitude) {

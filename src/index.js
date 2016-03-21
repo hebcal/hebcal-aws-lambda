@@ -66,6 +66,15 @@ function onIntent(intentRequest, session, callback) {
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
 
+    hebcal.invokeHebcal(['-t'], function(err, events) {
+        if (!err) {
+            var specialGreeting = hebcal.getSpecialGreeting(events);
+            if (specialGreeting) {
+                session.attributes.specialGreeting = specialGreeting;
+            }
+        }
+    });
+
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
         if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value) {
@@ -212,7 +221,8 @@ function getCandleLightingResponse(intent, session, callback) {
             callback(sessionAttributes, respond(evt.name + ' ' + timeText,
                 cardText,
                 evt.name + ' ' + whenSpeech + ', in ' + location.cityName + ', is at ' + timeText + '.',
-                true));
+                true,
+                session));
         } else {
             console.log("Found NO events with date=" + fridayStr);
             callback(sessionAttributes, respond('Internal Error - ' + intent.name,
@@ -294,7 +304,8 @@ function getParshaResponse(intent, session, callback) {
             callback(sessionAttributes, respond(result.title,
                 prefixText + result.name + '.' + suffixText,
                 prefixText + phoneme + '.' + suffixSsml,
-                true));
+                true,
+                session));
         } else {
             callback(sessionAttributes, respond('Internal Error - ' + intent.name,
                 "Sorry, we could find the weekly Torah portion."));
@@ -332,7 +343,8 @@ function getHebrewDateResponse(intent, session, callback) {
             callback(sessionAttributes, respond(name,
                 srcDateText + isOrWasThe + name + '.',
                 srcDateSsml + isOrWasThe + speech,
-                true));
+                true,
+                session));
         } else {
             callback(sessionAttributes, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not convert " + srcDateText + " to Hebrew calendar.",
@@ -352,8 +364,9 @@ function getDafYomiResponse(intent, session, callback) {
         events.forEach(function(evt) {
             if (evt.name.indexOf('Daf Yomi:') === 0) {
                 var daf = evt.name.substr(10);
+                var cardText = "Today's Daf Yomi is " + daf;
                 found = true;
-                return callback(sessionAttributes, respond(daf, "Today's Daf Yomi is " + daf));
+                return callback(sessionAttributes, respond(daf, cardText, null, true, session));
             }
         });
         if (!found) {
@@ -371,9 +384,8 @@ function getOmerResponse(intent, session, callback) {
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
-        var re = /^(\d+)\w+ day of the Omer$/;
         var omerEvents = events.filter(function(evt) {
-            return re.test(evt.name) && evt.dt.isSameOrAfter(now, 'day');
+            return hebcal.reOmer.test(evt.name) && evt.dt.isSameOrAfter(now, 'day');
         });
         console.log("Filtered " + events.length + " events to " + omerEvents.length + " future");
         if (omerEvents.length === 0) {
@@ -395,7 +407,8 @@ function getOmerResponse(intent, session, callback) {
             return callback(sessionAttributes, respond(evt.name,
                 'Today is the ' + evt.name + '.',
                 speech,
-                true));
+                true,
+                session));
         } else {
             var observedDt = hebcal.dayEventObserved(evt),
                 dateSsml = hebcal.formatDateSsml(observedDt),
@@ -404,7 +417,8 @@ function getOmerResponse(intent, session, callback) {
             callback(sessionAttributes, respond('Counting of the Omer',
                 prefix + dateText + '.',
                 prefix + dateSsml,
-                true));
+                true,
+                session));
         }
     });
 }
@@ -485,7 +499,8 @@ function getHolidayResponse(intent, session, callback) {
             callback(sessionAttributes, respond(title,
                 holiday + beginsOn + dateText + '.',
                 phoneme + beginsOn + dateSsml,
-                true));
+                true,
+                session));
         } else {
             callback(sessionAttributes, respond(intent.slots.Holiday.value,
                 'Sorry, we could not find the date for ' + intent.slots.Holiday.value + '.'));
@@ -493,11 +508,9 @@ function getHolidayResponse(intent, session, callback) {
     });
 }
 
-function respond(title, cardText, ssmlContent, addShabbatShalom) {
-    var dow = moment().day(),
-        isTodayShabbat = addShabbatShalom ? (dow === 5 || dow === 6) : false;
-    var cardText2 = hebcal.strWithShabbatShalom(cardText, isTodayShabbat, false),
-        ssmlContent2 = hebcal.strWithShabbatShalom(ssmlContent, isTodayShabbat, true);
+function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
+    var cardText2 = hebcal.strWithSpecialGreeting(cardText, false, addShabbatShalom, session.attributes.specialGreeting),
+        ssmlContent2 = hebcal.strWithSpecialGreeting(ssmlContent, true, addShabbatShalom, session.attributes.specialGreeting);
     var outputSpeech = ssmlContent2 ? {
         type: 'SSML',
         ssml: '<speak>' + ssmlContent2 + '</speak>'
