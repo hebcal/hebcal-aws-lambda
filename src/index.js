@@ -68,10 +68,10 @@ function onIntent(intentRequest, session, callback) {
 
     hebcal.invokeHebcal(['-t'], function(err, events) {
         if (!err) {
-            var specialGreeting = hebcal.getSpecialGreeting(events);
-            if (specialGreeting) {
+            var arr = hebcal.getSpecialGreetings(events);
+            if (arr.length) {
                 session.attributes = session.attributes || {};
-                session.attributes.specialGreeting = specialGreeting;
+                session.attributes.specialGreeting = arr.join(' and ');
             }
         }
     });
