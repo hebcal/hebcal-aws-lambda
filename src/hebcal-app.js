@@ -294,8 +294,10 @@ var hebcal = {
         ss += ' ';
         if (ssml) {
             ss += '<break time="0.3s"/>';
-            ss += this.getPhonemeTag("ʃəˈbɑːt ʃɑːˈlom", shabbatShalomText);
-        } else {
+            if (isTodayShabbat) {
+                ss += this.getPhonemeTag("ʃəˈbɑːt ʃɑːˈlom", shabbatShalomText);
+            }
+        } else if (isTodayShabbat) {
             ss += shabbatShalomText;
         }
         if (isTodaySpecial) {

@@ -23,11 +23,20 @@ exports.handler = function (event, context) {
                     context.succeed(buildResponse(sessionAttributes, speechletResponse));
                 });
         } else if (event.request.type === "IntentRequest") {
-            onIntent(event.request,
-                event.session,
-                function callback(sessionAttributes, speechletResponse) {
-                    context.succeed(buildResponse(sessionAttributes, speechletResponse));
-                });
+            hebcal.invokeHebcal(['-t'], function(err, events) {
+                if (!err) {
+                    var arr = hebcal.getSpecialGreetings(events);
+                    if (arr.length) {
+                        event.session.attributes = event.session.attributes || {};
+                        event.session.attributes.specialGreeting = arr.join(' and ');
+                    }
+                }
+                onIntent(event.request,
+                    event.session,
+                    function callback(sessionAttributes, speechletResponse) {
+                        context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                    });
+            });
         } else if (event.request.type === "SessionEndedRequest") {
             onSessionEnded(event.request, event.session);
             context.succeed();
@@ -65,16 +74,6 @@ function onLaunch(launchRequest, session, callback) {
 function onIntent(intentRequest, session, callback) {
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
-
-    hebcal.invokeHebcal(['-t'], function(err, events) {
-        if (!err) {
-            var arr = hebcal.getSpecialGreetings(events);
-            if (arr.length) {
-                session.attributes = session.attributes || {};
-                session.attributes.specialGreeting = arr.join(' and ');
-            }
-        }
-    });
 
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
