@@ -280,7 +280,7 @@ var hebcal = {
     strWithSpecialGreeting: function(str, ssml, addShabbatShalom, specialGreeting) {
         var dow = moment().day(),
             isTodayShabbat = addShabbatShalom ? (dow === 5 || dow === 6) : false,
-            isTodaySpecial = typeof specialGreeting === 'string',
+            isTodaySpecial = typeof specialGreeting === 'object' && specialGreeting.length,
             suffixNeeded = isTodayShabbat || isTodaySpecial;
         var ss;
         var shabbatShalomText = 'Shabbat Shalom';
@@ -304,7 +304,11 @@ var hebcal = {
             if (isTodayShabbat) {
                 ss += ' and ';
             }
-            ss += specialGreeting;
+            var ipaGreetings = specialGreeting.map(function(x) {
+                var ipa = this.greeting2ipa[x];
+                return this.getPhonemeTag(ipa, x);
+            }, this);
+            ss += ipaGreetings.join(' and ');
         }
         ss += '.';
         return ss;
@@ -504,6 +508,18 @@ var hebcal = {
     fastHolidays: "Tzom Gedaliah,Asara B'Tevet,Ta'anit Esther,Ta'anit Bechorot,Tzom Tammuz,Tish'a B'Av".split(','),
 
     noGreetingHolidays: "Yom HaShoah,Yom HaZikaron,Pesach Sheni,Leil Selichot".split(','),
+
+    greeting2ipa: {
+        "Chodesh Tov": "ˈχodəʃ tov",
+        "Tzom Kal": "tsom kal",
+        "Mo'adim L'Simcha": null,
+        "Chag Urim Sameach": "χɑːɡ uːʁˈim sɑːˈmeɪɑːχ",
+        "Chag Kasher v'Sameach": "χɑːɡ kɑːˈʃer və sɑːˈmeɪɑːχ",
+        "Shavua Tov": "ʃɑːˈvuɑː tov",
+        "Shana Tovah": "ʃɑːˈnɑː toˈvɑː",
+        "G'mar Chatimah Tovah": null,
+        "Chag Sameach": "χɑːɡ sɑːˈmeɪɑːχ"
+    },
 
     getGreetingForHoliday: function(evt) {
         var str = evt.name;
@@ -708,11 +724,12 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
-hebcal.invokeHebcal(['3', '2016'], function(err, events) {
+hebcal.invokeHebcal(['-t'], function(err, events) {
     console.log("Foobar");
     if (!err) {
         var arr = hebcal.getSpecialGreetings(events);
         console.log(arr);
+        console.log(hebcal.strWithSpecialGreeting("Hello.", true, false, arr));
         console.log("Quux");
     }
 });

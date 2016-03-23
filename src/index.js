@@ -28,7 +28,7 @@ exports.handler = function (event, context) {
                     var arr = hebcal.getSpecialGreetings(events);
                     if (arr.length) {
                         event.session.attributes = event.session.attributes || {};
-                        event.session.attributes.specialGreeting = arr.join(' and ');
+                        event.session.attributes.specialGreeting = arr;
                     }
                 }
                 onIntent(event.request,
