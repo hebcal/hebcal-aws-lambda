@@ -304,10 +304,13 @@ var hebcal = {
             if (isTodayShabbat) {
                 ss += ' and ';
             }
-            var ipaGreetings = specialGreeting.map(function(x) {
-                var ipa = this.greeting2ipa[x];
-                return this.getPhonemeTag(ipa, x);
-            }, this);
+            var ipaGreetings = specialGreeting;
+            if (ssml) {
+                ipaGreetings = specialGreeting.map(function(x) {
+                    var ipa = this.greeting2ipa[x];
+                    return this.getPhonemeTag(ipa, x);
+                }, this);
+            }
             ss += ipaGreetings.join(' and ');
         }
         ss += '.';
