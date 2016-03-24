@@ -511,7 +511,7 @@ var hebcal = {
 
     greeting2ipa: {
         "Chodesh Tov": "ˈχodəʃ tov",
-        "Tzom Kal": "tsom kal",
+        "Tzom Kal": "tsom kɑːl",
         "Mo'adim L'Simcha": null,
         "Chag Urim Sameach": "χɑːɡ uːʁˈim sɑːˈmeɪɑːχ",
         "Chag Kasher v'Sameach": "χɑːɡ kɑːˈʃer və sɑːˈmeɪɑːχ",
