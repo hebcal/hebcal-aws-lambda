@@ -3,227 +3,18 @@ var spawn = require('child_process').spawn,
     readline = require('readline'),
     moment = require('moment-timezone');
 
+var config = require('./config.json');
+
 var hebcal = {
-    roshChodeshIpa: "ˈʁoʔʃ ˈχodəʃ ",
-
-    parsha2ipa: {
-        "Achrei Mot": "ʔäχaʁej mot",
-        "Balak": "bɑːlɑːk",
-        "Bamidbar": "bɑːmidØbɑːʁ",
-        "Bechukotai": "bəχukotäj",
-        "Beha'alotcha": "bØhäʕalotØχä",
-        "Behar": "bəhɑːʁ",
-        "Bereshit": "bəˈʁeɪʃit",
-        "Beshalach": "bəʃɑːˈlɑːχ",
-        "Bo": "boʔ",
-        "Chayei Sara": "χäjeɪ sɑːˈʁɑː",
-        "Chukat": "χukɑːt",
-        "Devarim": "dəvɑːʁˈim",
-        "Eikev": "ʕeɪkev",
-        "Emor": "ʔeɪmoʁ",
-        "Ha'Azinu": "hɑːʔˈɑːˈzinu",
-        "Kedoshim": "kØdoʃˈim",
-        "Ki Tavo": "ki ˈtɑːvoʔ",
-        "Ki Teitzei": "ki ˈteɪʦeɪʔ",
-        "Ki Tisa": "ki ˈtisɑː",
-        "Korach": "koʁäχ",
-        "Lech-Lecha": "ˈleχ ləˈχɑː",
-        "Masei": "mäsØˈeɪ",
-        "Matot": "mätot",
-        "Metzora": "mØʦoʁäʕ",
-        "Miketz": "mikeɪʦ",
-        "Mishpatim": "miʃØpɑːtˈim",
-        "Nasso": "nɑːso",
-        "Nitzavim": "niʦävˈim",
-        "Noach": "noˈäχ",
-        "Pekudei": "pəkuˈdeɪ",
-        "Pinchas": "ˈpinχɑːs",
-        "Re'eh": "ʁØˈeɪ",
-        "Sh'lach": "ˈʃØläχ ləˈχä",
-        "Shemot": "ʃØmot",
-        "Shmini": "ʃׁØmini",
-        "Shoftim": "ʃofØtˈim",
-        "Tazria": "ˈtɑːzʁijɑː",
-        "Terumah": "təˈʁumäh",
-        "Tetzaveh": "təˈʦäˈve",
-        "Toldot": "ˈtolØˈdot",
-        "Tzav": "ˈʦɑːv",
-        "Vaera": "vɑːˈeɪʁɑː",
-        "Vaetchanan": "vɑːetχäˈnɑːn",
-        "Vayakhel": "vɑːjäkØheɪl",
-        "Vayechi": "vɑːˈjəχi",
-        "Vayeilech": "vɑːˈjeɪleχ",
-        "Vayera": "vɑːˈjeɪʁäʔ",
-        "Vayeshev": "vɑːˈjeɪʃev",
-        "Vayetzei": "vɑːˈjeɪʦeɪ",
-        "Vayigash": "vɑːjiˈgɑːʃ",
-        "Vayikra": "vɑːˈjikØʁɑː",
-        "Vayishlach": "vɑːjiʃØˈläχ",
-        "Vezot Haberakhah": "vəˈzot häˈbəʁäχäh",
-        "Yitro": "jitØˈʁo"
-    },
-
-    month2ipa: {
-        "Adar": "ɑːˈdɑːʁ",
-        "Adar I": "ɑːˈdɑːʁ rijˈʃon",
-        "Adar II": "ɑːˈdɑːʁ ʃeɪˈnj",
-        "Av": "ˈɑːv",
-        "Cheshvan": "ˈχeʃØvɑːn",
-        "Elul": "ˈelul",
-        "Iyyar": "iˈjɑːʁ",
-        "Kislev": "ˈkisØlev",
-        "Nisan": "nijˈsɑːn",
-        "Sh'vat": "ʃəˈvɑːt",
-        "Sivan": "sijˈvɑːn",
-        "Tamuz": "tɑːˈmuz",
-        "Tevet": "ˈtevet",
-        "Tishrei": "ˈtiʃʁeɪ"
-    },
-
-
-    holiday2ipa: {
-        "Asara B'Tevet": "ʕasäʁäh bØtevet",
-        "Candle lighting": "hɒdlɒˈkɒt neɪˈʁot",
-        "Chanukah": "χɒnuˈkɒ",
-        "Havdalah": "hɒvdɒˈlɒ",
-        "Lag B'Omer": "ˈlɒg bɒˈomeʁ",
-        "Lag BaOmer": "ˈlɒg bɒˈomeʁ",
-        "Leil Selichot": "ˈleɪl slijˈχot",
-        "Pesach": "ˈpeɪsɑːχ",
-        "Pesach Sheni": "ˈpeɪsɑːχ ʃeɪˈnj",
-        "Purim": "puːʁˈim",
-        "Purim Katan": "puːʁˈim kɒˈtɒn",
-        "Rosh Hashana": "ʁoʔʃ häʃׁänäh",
-        "Shabbat Chazon": "ʃəˈbɑːt χazon",
-        "Shabbat HaChodesh": "ʃəˈbɑːt häχodeʃ",
-        "Shabbat HaGadol": "ʃəˈbɑːt hägädol",
-        "Shabbat Machar Chodesh": "ʃəˈbɑːt mχʁ χvdʃ",
-        "Shabbat Nachamu": "ʃəˈbɑːt näχamu",
-        "Shabbat Parah": "ʃəˈbɑːt pʁh",
-        "Shabbat Rosh Chodesh": "ʃəˈbɑːt ʁʔʃ χvdʃ",
-        "Shabbat Shekalim": "ʃəˈbɑːt ʃØkälˈim",
-        "Shabbat Shuva": "ʃəˈbɑːt ʃuväh",
-        "Shabbat Zachor": "ʃəˈbɑːt zɒˈχoʊʁ",
-        "Shavuot": "ʃävuʕot",
-        "Shmini Atzeret": "ʃØmijnij ʕaʦeʁet",
-        "Shushan Purim": "ʃuʃän puːʁˈim",
-        "Sigd": "sjgd",
-        "Simchat Torah": "ˈsimχɒt ˈtoʊrə",
-        "Sukkot": "sukot",
-        "Ta'anit Bechorot": "täʕanijt bØχoʁot",
-        "Ta'anit Esther": "täʕanijt ʔesØteʁ",
-        "Tish'a B'Av": "tiʃˈäh bəˈäv",
-        "Tu B'Av": "ˈtu bəˈäv",
-        "Tu B'Shvat": "ˈtu biʃəˈvɑːt",
-        "Tu BiShvat": "ˈtu biʃəˈvɑːt",
-        "Tzom Gedaliah": "ʦom ɡəˈdɑːljə",
-        "Tzom Tammuz": "ʦom tämuz",
-        "Yom HaAtzma'ut": "ˈjom häʕäʦØmäʔut",
-        "Yom HaShoah": "ˈjom häʃׁoʔäh",
-        "Yom HaZikaron": "ˈjom häzikäʁon",
-        "Yom Kippur": "ˈjom kiˈpuʁ",
-        "Yom Yerushalayim": "ˈjom jeruˈʃalajim"
-    },
-
-    holidayAlias: {
-        'lag baomer': 'lag b\'omer',
-        'lag ba omer': 'lag b\'omer',
-        'tu bishvat': 'tu b\'shvat',
-        'tu bi shvat': 'tu b\'shvat',
-        'hanukkah': 'chanukah',
-        'passover': 'pesach',
-        'sukkos': 'sukkot',
-        'sukkoth': 'sukkot',
-        'simchas torah': 'simchat torah',
-        "ta'anis bechoros": "ta'anit bechorot",
-        "ta anis bechoros": "ta'anit bechorot",
-        "ta anit bechoros": "ta'anit bechorot",
-        'tish a bav': "tish'a b'av",
-        'tish a b av': "tish'a b'av",
-        'yom ha atzma ut': 'yom haatzma\'ut',
-        'shavuos': 'shavuot'
-    },
-
-    ZIPCODES_TZ_MAP: {
-        '0'  : 'UTC',
-        '4'  : 'America/Puerto_Rico',
-        '5'  : 'America/New_York',
-        '6'  : 'America/Chicago',
-        '7'  : 'America/Denver',
-        '8'  : 'America/Los_Angeles',
-        '9'  : 'America/Anchorage',
-        '10' : 'Pacific/Honolulu',
-        '11' : 'Pacific/Pago_Pago',
-        '13' : 'Pacific/Funafuti',
-        '14' : 'Pacific/Guam',
-        '15' : 'Pacific/Palau'
-    },
-
-    stateNames: {
-        "AK": "Alaska",
-        "AL": "Alabama",
-        "AR": "Arkansas",
-        "AZ": "Arizona",
-        "CA": "California",
-        "CO": "Colorado",
-        "CT": "Connecticut",
-        "DC": "Washington, D.C.",
-        "DE": "Delaware",
-        "FL": "Florida",
-        "GA": "Georgia",
-        "HI": "Hawaii",
-        "IA": "Iowa",
-        "ID": "Idaho",
-        "IL": "Illinois",
-        "IN": "Indiana",
-        "KS": "Kansas",
-        "KY": "Kentucky",
-        "LA": "Louisiana",
-        "MA": "Massachusetts",
-        "MD": "Maryland",
-        "ME": "Maine",
-        "MI": "Michigan",
-        "MN": "Minnesota",
-        "MO": "Missouri",
-        "MS": "Mississippi",
-        "MT": "Montana",
-        "NC": "North Carolina",
-        "ND": "North Dakota",
-        "NE": "Nebraska",
-        "NH": "New Hampshire",
-        "NJ": "New Jersey",
-        "NM": "New Mexico",
-        "NV": "Nevada",
-        "NY": "New York",
-        "OH": "Ohio",
-        "OK": "Oklahoma",
-        "OR": "Oregon",
-        "PA": "Pennsylvania",
-        "RI": "Rhode Island",
-        "SC": "South Carolina",
-        "SD": "South Dakota",
-        "TN": "Tennessee",
-        "TX": "Texas",
-        "UT": "Utah",
-        "VA": "Virginia",
-        "VT": "Vermont",
-        "WA": "Washington",
-        "WI": "Wisconsin",
-        "WV": "West Virginia",
-        "WY": "Wyoming"
-    },
-
-    defaultTimezone: 'America/New_York',
-
     usCities: {},
 
     init: function() {
         var self = this;
         var usCitiesArray = require('./cities.json');
-        this.setDefaultTimeZone(this.defaultTimezone);
-        for (var k in this.month2ipa) {
+        this.setDefaultTimeZone(config.defaultTimezone);
+        for (var k in config.month2ipa) {
             var rck = "Rosh Chodesh " + k;
-            this.holiday2ipa[rck] = this.roshChodeshIpa + this.month2ipa[k];
+            config.holiday2ipa[rck] = config.roshChodeshIpa + config.month2ipa[k];
         }
         usCitiesArray.forEach(function(str) {
             var f = str.split('|'),
@@ -237,7 +28,7 @@ var hebcal = {
                     tzid: f[4]
                 },
                 cityLc = cityName.toLowerCase(),
-                stateLc = self.stateNames[city.state].toLowerCase();
+                stateLc = config.stateNames[city.state].toLowerCase();
             self.usCities[cityLc] = city;
             self.usCities[cityLc + ' ' + stateLc] = city;
         });
@@ -256,6 +47,14 @@ var hebcal = {
         process.env.TZ = tzid;
     },
 
+    getHolidayAlias: function(str) {
+        return config.holidayAlias[str];
+    },
+
+    getHolidayIPA: function(str) {
+        return config.holiday2ipa[str];
+    },
+
     getPhonemeTag: function(ipa, innerText) {
         if (!ipa) {
             return innerText;
@@ -268,7 +67,7 @@ var hebcal = {
             day = matches[1],
             month = matches[2],
             year = matches[3],
-            ipa = this.month2ipa[month],
+            ipa = config.month2ipa[month],
             phoneme = this.getPhonemeTag(ipa, month),
             ssml = '<say-as interpret-as="ordinal">' + day + '</say-as> of ' + phoneme;
         if (!suppressYear) {
@@ -281,10 +80,12 @@ var hebcal = {
         var dow = moment().day(),
             isTodayShabbat = addShabbatShalom ? (dow === 5 || dow === 6) : false,
             isTodaySpecial = typeof specialGreeting === 'object' && specialGreeting.length,
-            suffixNeeded = isTodayShabbat || isTodaySpecial;
+            greetings = isTodayShabbat ? [ 'Shabbat Shalom' ] : [];
         var ss;
-        var shabbatShalomText = 'Shabbat Shalom';
-        if (!suffixNeeded || !str || !str.length) {
+        if (isTodaySpecial) {
+            greetings = greetings.concat(specialGreeting);
+        }
+        if (!str || !str.length || !greetings.length) {
             return str;
         }
         ss = str;
@@ -294,25 +95,12 @@ var hebcal = {
         ss += ' ';
         if (ssml) {
             ss += '<break time="0.3s"/>';
-            if (isTodayShabbat) {
-                ss += this.getPhonemeTag("ʃəˈbɑːt ʃɑːˈlom", shabbatShalomText);
-            }
-        } else if (isTodayShabbat) {
-            ss += shabbatShalomText;
+            greetings = greetings.map(function(x) {
+                var ipa = config.greeting2ipa[x];
+                return this.getPhonemeTag(ipa, x);
+            }, this);
         }
-        if (isTodaySpecial) {
-            if (isTodayShabbat) {
-                ss += ' and ';
-            }
-            var ipaGreetings = specialGreeting;
-            if (ssml) {
-                ipaGreetings = specialGreeting.map(function(x) {
-                    var ipa = this.greeting2ipa[x];
-                    return this.getPhonemeTag(ipa, x);
-                }, this);
-            }
-            ss += ipaGreetings.join(' and ');
-        }
+        ss += greetings.join(' and ');
         ss += '.';
         return ss;
     },
@@ -488,7 +276,7 @@ var hebcal = {
         if (name.indexOf("Parashat ") === 0) {
             var space = name.indexOf(' '),
                 parsha = name.substr(space + 1),
-                ipa = this.parsha2ipa[parsha];
+                ipa = config.parsha2ipa[parsha];
             return {
                 title: name,
                 name: name,
@@ -499,7 +287,7 @@ var hebcal = {
             return {
                 title: holiday + ' Torah reading',
                 name: holiday,
-                ipa: this.holiday2ipa[holiday]
+                ipa: config.holiday2ipa[holiday]
             };
         }
     },
@@ -507,22 +295,6 @@ var hebcal = {
     reOmer: /^(\d+)\w+ day of the Omer$/,
 
     reHebrewDate: /^(\d+)\w+ of ([^,]+), (\d+)$/,
-
-    fastHolidays: "Tzom Gedaliah,Asara B'Tevet,Ta'anit Esther,Ta'anit Bechorot,Tzom Tammuz,Tish'a B'Av".split(','),
-
-    noGreetingHolidays: "Yom HaShoah,Yom HaZikaron,Pesach Sheni,Leil Selichot".split(','),
-
-    greeting2ipa: {
-        "Chodesh Tov": "ˈχodəʃ tov",
-        "Tzom Kal": "tsom kɑːl",
-        "Mo'adim L'Simcha": null,
-        "Chag Urim Sameach": "χɑːɡ uːʁˈim sɑːˈmeɪɑːχ",
-        "Chag Kasher v'Sameach": "χɑːɡ kɑːˈʃer və sɑːˈmeɪɑːχ",
-        "Shavua Tov": "ʃɑːˈvuɑː tov",
-        "Shana Tovah": "ʃɑːˈnɑː toˈvɑː",
-        "G'mar Chatimah Tovah": null,
-        "Chag Sameach": "χɑːɡ sɑːˈmeɪɑːχ"
-    },
 
     getGreetingForHoliday: function(evt) {
         var str = evt.name;
@@ -532,12 +304,12 @@ var hebcal = {
         if (this.reHebrewDate.test(str) || this.reOmer.test(str)) {
             // ignore Hebrew date and Omer
             return undefined;
-        } else if (str.indexOf('Shabbat ') === 0 || this.noGreetingHolidays.indexOf(str) != -1) {
+        } else if (str.indexOf('Shabbat ') === 0 || config.noGreetingHolidays.indexOf(str) != -1) {
             // no Chag Sameach on these days
             return undefined;
         } else if (str.indexOf('Rosh Chodesh ') === 0) {
             return 'Chodesh Tov';
-        } else if (this.fastHolidays.indexOf(str) != -1) {
+        } else if (config.fastHolidays.indexOf(str) != -1) {
             return 'Tzom Kal';
         } else if (str.indexOf(" (CH''M)") != -1) {
             return "Mo'adim L'Simcha";
@@ -602,7 +374,7 @@ var hebcal = {
                 return 'America/Phoenix';
             }
         } else {
-            return this.ZIPCODES_TZ_MAP[tz];
+            return config.ZIPCODES_TZ_MAP[tz];
         }
     },
 
@@ -732,7 +504,8 @@ hebcal.invokeHebcal(['-t'], function(err, events) {
     if (!err) {
         var arr = hebcal.getSpecialGreetings(events);
         console.log(arr);
-        console.log(hebcal.strWithSpecialGreeting("Hello.", true, false, arr));
+        console.log(hebcal.strWithSpecialGreeting("Hello.", true, true, arr));
+        console.log(hebcal.strWithSpecialGreeting("Hello.", false, true, arr));
         console.log("Quux");
     }
 });

@@ -427,7 +427,7 @@ function getHolidayResponse(intent, session, callback) {
     var sessionAttributes = session && session.attributes ? session.attributes : {};
     var args;
     var searchStr0 = intent.slots.Holiday.value.toLowerCase(),
-        searchStr = hebcal.holidayAlias[searchStr0] || searchStr0;
+        searchStr = hebcal.getHolidayAlias(searchStr0) || searchStr0;
     var titleYear;
 
     if (intent.name === "GetHoliday") {
@@ -480,7 +480,7 @@ function getHolidayResponse(intent, session, callback) {
         if (found.length) {
             var evt = found[0],
                 holiday = hebcal.getHolidayBasename(evt.name);
-            var ipa = hebcal.holiday2ipa[holiday];
+            var ipa = hebcal.getHolidayIPA(holiday);
             var phoneme = hebcal.getPhonemeTag(ipa, holiday);
             var observedDt = hebcal.dayEventObserved(evt),
                 observedWhen = hebcal.beginsWhen(evt.name);
