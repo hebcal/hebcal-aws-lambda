@@ -3,6 +3,8 @@ var spawn = require('child_process').spawn,
     readline = require('readline'),
     moment = require('moment-timezone');
 
+var SunCalc = require('suncalc');
+
 var config = require('./config.json');
 
 var hebcal = {
@@ -44,7 +46,7 @@ var hebcal = {
 
     setDefaultTimeZone: function(tzid) {
         moment.tz.setDefault(tzid);
-        process.env.TZ = tzid;
+//        process.env.TZ = tzid;
     },
 
     getHolidayAlias: function(str) {
@@ -229,12 +231,27 @@ var hebcal = {
         }
     },
 
-    invokeHebcal: function(args, callback) {
+    getEnvForLocation: function(env, location) {
+        var copy = {};
+        if (typeof location != 'object' || typeof location.tzid != 'string') {
+            return env;
+        }
+        // shallow copy of process.env
+        for (var attr in env) {
+            if (env.hasOwnProperty(attr)) {
+                copy[attr] = env[attr];
+            }
+        }
+        copy.TZ = location.tzid;
+        return copy;
+    },
+
+    invokeHebcal: function(args, location, callback) {
         var proc, rd, events = [];
         var evtTimeRe = /(\d+:\d+)$/;
+        var env = this.getEnvForLocation(process.env, location);
 
-        process.env.PATH = process.env.PATH + ':' + process.env.LAMBDA_TASK_ROOT;
-        proc = spawn('./hebcal', args);
+        proc = spawn('./hebcal', args, { cwd: undefined, env: env });
 
         proc.on('error', function(err) {
             console.log('Failed to start child process.');
@@ -258,6 +275,9 @@ var hebcal = {
                 name = name.substr(0, name.indexOf(':'));
             } else {
                 dt = moment(mdy, 'MM/DD/YYYY');
+            }
+            if (location && location.tzid) {
+                dt.tz(location.tzid);
             }
             events.push({dt: dt, name: name});
         });
@@ -348,6 +368,31 @@ var hebcal = {
         };
     },
 
+    getSunset: function(location) {
+        var now = new Date(),
+            nowM = moment(now).tz(location.tzid),
+            suntimes = SunCalc.getTimes(now, location.latitude, location.longitude),
+            sunsetM = moment.tz(suntimes.sunset, location.tzid);
+        if (sunsetM.isBefore(nowM, 'day')) {
+            var tomorrow = new Date(now.getTime() + 86400000);
+            suntimes = SunCalc.getTimes(tomorrow, location.latitude, location.longitude);
+        }
+        return suntimes.sunset;
+//        return moment.tz(suntimes.sunset, location.tzid);
+    },
+
+    getTodayHebrewDateArgs: function(location, extraArgs) {
+        var now = moment().tz(location.tzid),
+            sunset = moment.tz(hebcal.getSunset(location), location.tzid),
+            beforeSunset = now.isBefore(sunset),
+            m = beforeSunset ? now : now.add(1, 'd');
+        var args = [
+            '-h', '-x', '-d',
+            m.format('M'), m.format('D'), m.format('YYYY')
+        ];
+        return extraArgs ? args.concat(extraArgs) : args;
+    },
+
     getCandleLightingArgs: function(location, extraArgs) {
         var ll = this.latlongToHebcal(location.latitude, location.longitude);
         var args = [
@@ -360,7 +405,7 @@ var hebcal = {
             '-z', location.tzid,
             '-m', '50'
         ];
-        this.setDefaultTimeZone(location.tzid);
+//        this.setDefaultTimeZone(location.tzid);
         return extraArgs ? args.concat(extraArgs) : args;
     },
 
@@ -499,7 +544,62 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
-hebcal.invokeHebcal(['-t'], function(err, events) {
+var locations = [{
+    latitude: -23.5475,
+    longitude: -46.63611,
+    tzid: 'America/Sao_Paulo'
+},{
+    latitude: 51.854871,
+    longitude: -177.088812,
+    tzid: 'America/Adak'
+},{
+    latitude: 59.93863,
+    longitude: 30.31413,
+    tzid: 'Europe/Moscow'
+},{
+    latitude: 41.85003,
+    longitude: -87.65005,
+    tzid: 'America/Chicago'
+},{
+    latitude: 37.45779,
+    longitude: -122.122538,
+    tzid: 'America/Los_Angeles'
+},{
+    latitude: 48.85341,
+    longitude: 2.3488,
+    tzid: 'Europe/Paris'
+},{
+    latitude: -25.96553,
+    longitude: 32.58322,
+    tzid: 'Africa/Maputo'
+},{
+    latitude: 40.6501,
+    longitude: -73.94958,
+    tzid: 'America/New_York'
+}
+];
+
+var now = moment();
+console.log(new Date());
+for (var i = locations.length - 1; i >= 0; i--) {
+    var location = locations[i];
+    var sunset = hebcal.getSunset(location);
+    var sunsetZ = moment.tz(sunset, location.tzid);
+    console.log(location.tzid);
+    console.log(sunsetZ.format());
+    console.log(sunsetZ.isBefore(now));
+    var args = hebcal.getTodayHebrewDateArgs(location);
+    console.log(args);
+    hebcal.invokeHebcal(args, location, function(err, events) {
+        if (!err && events && events.length) {
+            var evt = events[0];
+            console.log(evt.dt.format() + " : " + evt.name);
+        }
+    });
+    console.log();
+}
+
+hebcal.invokeHebcal(['3', '23', '2016'], {}, function(err, events) {
     console.log("Foobar");
     if (!err) {
         var arr = hebcal.getSpecialGreetings(events);

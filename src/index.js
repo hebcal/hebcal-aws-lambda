@@ -23,7 +23,7 @@ exports.handler = function (event, context) {
                     context.succeed(buildResponse(sessionAttributes, speechletResponse));
                 });
         } else if (event.request.type === "IntentRequest") {
-            hebcal.invokeHebcal(['-t'], function(err, events) {
+            hebcal.invokeHebcal(['-t'], getLocation(session), function(err, events) {
                 if (!err) {
                     var arr = hebcal.getSpecialGreetings(events);
                     if (arr.length) {
@@ -111,12 +111,19 @@ function onSessionEnded(sessionEndedRequest, session) {
 
 // --------------- Functions that control the skill's behavior -----------------------
 
+function getLocation(session) {
+    if (session && session.attributes && session.attributes.location) {
+        return session.attributes.location;
+    }
+    return undefined;
+}
+
 function getWelcomeResponse(session, callback, isHelpIntent) {
     var sessionAttributes = session && session.attributes ? session.attributes : {};
     var repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
     var nag = ' What will it be?';
     var args = ['-t'];
-    hebcal.invokeHebcal(args, function(err, events) {
+    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
@@ -232,7 +239,7 @@ function getCandleLightingResponse(intent, session, callback) {
 
     var myInvokeHebcal = function(location) {
         var args = hebcal.getCandleLightingArgs(location, friYear);
-        hebcal.invokeHebcal(args, hebcalEventsCallback);
+        hebcal.invokeHebcal(args, location, hebcalEventsCallback);
     };
 
     if (location && location.latitude) {
@@ -273,7 +280,7 @@ function getParshaResponse(intent, session, callback) {
     var saturday = moment().day(6),
         satYear = saturday.format('YYYY');
     var args = ['-s', satYear];
-    hebcal.invokeHebcal(args, function(err, events) {
+    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var re =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
@@ -327,7 +334,7 @@ function getHebrewDateResponse(intent, session, callback) {
         args = ['-d', '-h', '-x', src.format('YYYY')],
         srcDateSsml = hebcal.formatDateSsml(src),
         srcDateText = src.format('MMMM Do YYYY');
-    hebcal.invokeHebcal(args, function(err, events) {
+    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
@@ -356,7 +363,7 @@ function getHebrewDateResponse(intent, session, callback) {
 function getDafYomiResponse(intent, session, callback) {
     var sessionAttributes = session && session.attributes ? session.attributes : {};
     var args = ['-F', '-h', '-x', '-t'];
-    hebcal.invokeHebcal(args, function(err, events) {
+    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var found = false;
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
@@ -379,7 +386,7 @@ function getDafYomiResponse(intent, session, callback) {
 function getOmerResponse(intent, session, callback) {
     var sessionAttributes = session && session.attributes ? session.attributes : {};
     var args = ['-o', '-h', '-x', '--years', '2'];
-    hebcal.invokeHebcal(args, function(err, events) {
+    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var now = moment();
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
@@ -444,7 +451,7 @@ function getHolidayResponse(intent, session, callback) {
         titleYear = yearStr;
     }
 
-    hebcal.invokeHebcal(args, function(err, events) {
+    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var now = moment();
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
