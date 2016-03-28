@@ -23,7 +23,7 @@ exports.handler = function (event, context) {
                     context.succeed(buildResponse(sessionAttributes, speechletResponse));
                 });
         } else if (event.request.type === "IntentRequest") {
-            hebcal.invokeHebcal(['-t'], getLocation(session), function(err, events) {
+            hebcal.invokeHebcal(['-t'], getLocation(event.session), function(err, events) {
                 if (!err) {
                     var arr = hebcal.getSpecialGreetings(events);
                     if (arr.length) {
@@ -123,7 +123,11 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
     var repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
     var nag = ' What will it be?';
     var args = ['-t'];
-    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
+    var location = getLocation(session);
+    if (location) {
+        args = hebcal.getTodayHebrewDateArgs(location);
+    }
+    hebcal.invokeHebcal(args, location, function(err, events) {
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
