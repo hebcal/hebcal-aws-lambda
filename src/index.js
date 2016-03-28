@@ -194,8 +194,7 @@ function userSpecifiedLocation(intent, session) {
 function getCandleLightingResponse(intent, session, callback) {
     var now = moment(),
         friday = hebcal.getUpcomingFriday(now),
-        fridayStr = friday.format('YYYY-MM-DD'),
-        friYear = friday.format('YYYY');
+        fridayMDY = friday.format('M D YYYY').split(' ');
     var location = userSpecifiedLocation(intent, session);
     var sessionAttributes = session && session.attributes ? session.attributes : {};
 
@@ -209,8 +208,7 @@ function getCandleLightingResponse(intent, session, callback) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
-            return evt.name === 'Candle lighting' &&
-                evt.dt.format('YYYY-MM-DD') === fridayStr;
+            return evt.name === 'Candle lighting';
         });
         if (found.length) {
             var evt = found[0],
@@ -235,14 +233,14 @@ function getCandleLightingResponse(intent, session, callback) {
                 true,
                 session));
         } else {
-            console.log("Found NO events with date=" + fridayStr);
+            console.log("Found NO events with date=" + friday.format('YYYY-MM-DD'));
             callback(sessionAttributes, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not get candle-lighting times for " + location.cityName));
         }
     };
 
     var myInvokeHebcal = function(location) {
-        var args = hebcal.getCandleLightingArgs(location, friYear);
+        var args = hebcal.getCandleLightingArgs(location, fridayMDY);
         hebcal.invokeHebcal(args, location, hebcalEventsCallback);
     };
 
@@ -282,18 +280,14 @@ function getCandleLightingResponse(intent, session, callback) {
 function getParshaResponse(intent, session, callback) {
     var sessionAttributes = session && session.attributes ? session.attributes : {};
     var saturday = moment().day(6),
-        satYear = saturday.format('YYYY');
-    var args = ['-s', satYear];
+        saturdayMDY = saturday.format('M D YYYY').split(' '),
+        args = ['-s'].concat(saturdayMDY);
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var re =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
         if (err) {
             return callback(sessionAttributes, respond('Internal Error', err));
         }
-        var saturdayEvents = events.filter(function(evt) {
-            return evt.dt.isSame(saturday, 'day');
-        });
-        console.log("Got " + saturdayEvents.length + " Saturday events");
-        var found = saturdayEvents.filter(function(evt) {
+        var found = events.filter(function(evt) {
             return evt.name.search(re) != -1;
         });
         if (found.length) {
@@ -301,7 +295,7 @@ function getParshaResponse(intent, session, callback) {
             var prefixText = todayOrThisWeek + "'s Torah portion is ";
             var result = hebcal.getParashaOrHolidayName(found[0].name);
             var phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
-            var specialShabbat = saturdayEvents.filter(function(evt) {
+            var specialShabbat = events.filter(function(evt) {
                 return evt.name.indexOf('Shabbat ') === 0;
             });
             var suffixText = '', suffixSsml = '';
@@ -335,7 +329,8 @@ function getDateFromSlotOrNow(intent) {
 function getHebrewDateResponse(intent, session, callback) {
     var sessionAttributes = session && session.attributes ? session.attributes : {};
     var src = getDateFromSlotOrNow(intent),
-        args = ['-d', '-h', '-x', src.format('YYYY')],
+        mdy = src.format('M D YYYY').split(' '),
+        args = ['-d', '-h', '-x'].concat(mdy),
         srcDateSsml = hebcal.formatDateSsml(src),
         srcDateText = src.format('MMMM Do YYYY');
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
