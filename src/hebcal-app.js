@@ -231,9 +231,17 @@ var hebcal = {
         }
     },
 
+    getTzidFromLocation: function(location) {
+        if (typeof location === 'object' && typeof location.tzid === 'string') {
+            return location.tzid;
+        }
+        return undefined;
+    },
+
     getEnvForLocation: function(env, location) {
         var copy = {};
-        if (typeof location != 'object' || typeof location.tzid != 'string') {
+        var tzid = this.getTzidFromLocation(location);
+        if (!tzid) {
             return env;
         }
         // shallow copy of process.env
@@ -242,13 +250,14 @@ var hebcal = {
                 copy[attr] = env[attr];
             }
         }
-        copy.TZ = location.tzid;
+        copy.TZ = tzid;
         return copy;
     },
 
     invokeHebcal: function(args, location, callback) {
         var proc, rd, events = [];
         var evtTimeRe = /(\d+:\d+)$/;
+        var tzid = this.getTzidFromLocation(location);
         var env = this.getEnvForLocation(process.env, location);
 
         proc = spawn('./hebcal', args, { cwd: undefined, env: env });
@@ -271,13 +280,10 @@ var hebcal = {
                 var matches = name.match(evtTimeRe),
                     hourMin = matches[1],
                     timeStr = mdy + ' ' + hourMin;
-                dt = moment(timeStr, 'MM/DD/YYYY HH:mm');
+                dt = moment.tz(timeStr, 'MM/DD/YYYY HH:mm', tzid);
                 name = name.substr(0, name.indexOf(':'));
             } else {
-                dt = moment(mdy, 'MM/DD/YYYY');
-            }
-            if (location && location.tzid) {
-                dt.tz(location.tzid);
+                dt = moment.tz(mdy, 'MM/DD/YYYY', tzid);
             }
             events.push({dt: dt, name: name});
         });
