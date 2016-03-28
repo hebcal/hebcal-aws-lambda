@@ -337,11 +337,8 @@ function getHebrewDateResponse(intent, session, callback) {
         if (err) {
             return callback(session, respond('Internal Error', err));
         }
-        var found = events.filter(function(evt) {
-            return evt.dt.isSame(src, 'day');
-        });
-        if (found.length) {
-            var evt = found[0],
+        if (events.length) {
+            var evt = events[0],
                 now = moment(),
                 isOrWasThe = evt.dt.isSameOrAfter(now, 'day') ? ' is the ' : ' was the ',
                 name = evt.name;

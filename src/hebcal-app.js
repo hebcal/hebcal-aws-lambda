@@ -44,7 +44,10 @@ var hebcal = {
 //        console.log(JSON.stringify(self.cities, null, 2));
     },
 
+    defaultTimezone: config.defaultTimezone,
+
     setDefaultTimeZone: function(tzid) {
+        this.defaultTimezone = tzid;
         moment.tz.setDefault(tzid);
 //        process.env.TZ = tzid;
     },
@@ -238,12 +241,8 @@ var hebcal = {
         return undefined;
     },
 
-    getEnvForLocation: function(env, location) {
+    getEnvForTimezone: function(env, tzid) {
         var copy = {};
-        var tzid = this.getTzidFromLocation(location);
-        if (!tzid) {
-            return env;
-        }
         // shallow copy of process.env
         for (var attr in env) {
             if (env.hasOwnProperty(attr)) {
@@ -257,8 +256,9 @@ var hebcal = {
     invokeHebcal: function(args, location, callback) {
         var proc, rd, events = [];
         var evtTimeRe = /(\d+:\d+)$/;
-        var tzid = this.getTzidFromLocation(location);
-        var env = this.getEnvForLocation(process.env, location);
+        var tzid0 = this.getTzidFromLocation(location),
+            tzid = tzid0 || this.defaultTimezone;
+        var env = this.getEnvForTimezone(process.env, tzid);
 
         proc = spawn('./hebcal', args, { cwd: undefined, env: env });
 
@@ -376,7 +376,7 @@ var hebcal = {
 
     getSunset: function(location) {
         var now = new Date(),
-            nowM = moment(now).tz(location.tzid),
+            nowM = moment.tz(now, location.tzid),
             suntimes = SunCalc.getTimes(now, location.latitude, location.longitude),
             sunsetM = moment.tz(suntimes.sunset, location.tzid);
         if (sunsetM.isBefore(nowM, 'day')) {
@@ -384,7 +384,6 @@ var hebcal = {
             suntimes = SunCalc.getTimes(tomorrow, location.latitude, location.longitude);
         }
         return suntimes.sunset;
-//        return moment.tz(suntimes.sunset, location.tzid);
     },
 
     getTodayHebrewDateArgs: function(location, extraArgs) {
@@ -554,6 +553,22 @@ var locations = [{
     latitude: -23.5475,
     longitude: -46.63611,
     tzid: 'America/Sao_Paulo'
+},{
+    latitude: -8.05389,
+    longitude: -34.88111,
+    tzid: 'America/Recife'
+},{
+    latitude: 60.71667,
+    longitude: -46.03333,
+    tzid: 'America/Godthab'
+},{
+    latitude: 64.13548,
+    longitude: -21.89541,
+    tzid: 'Atlantic/Reykjavik'
+},{
+    latitude: 38.71667,
+    longitude: -9.13333,
+    tzid: 'Europe/Lisbon'
 },{
     latitude: 51.854871,
     longitude: -177.088812,
