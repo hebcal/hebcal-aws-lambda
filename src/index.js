@@ -175,7 +175,7 @@ function userSpecifiedLocation(intent, session) {
     if (session && session.attributes && session.attributes.location) {
         return session.attributes.location;
     } else if (intent.slots && intent.slots.CityName && intent.slots.CityName.value) {
-        var location = hebcal.usCities[intent.slots.CityName.value.toLowerCase()];
+        var location = hebcal.getCity(intent.slots.CityName.value);
         return location ? location : {
                 cityName: intent.slots.CityName.value,
                 cityNotFound: true

@@ -76,6 +76,36 @@ GetHebrewDate {MyDate} Hebrew date
 GetHebrewDate {MyDate} Hebrew day
 GetHebrewDate {MyDate} on the Hebrew calendar
 
+GetHebrewDate convert {MyDate} to Jewish date
+GetHebrewDate convert {MyDate} to Jewish day
+GetHebrewDate give me the Jewish date for {MyDate}
+GetHebrewDate give me the Jewish date {MyDate}
+GetHebrewDate give me today's Jewish date
+GetHebrewDate give me today's Jewish day
+GetHebrewDate give me {MyDate} as a Jewish date
+GetHebrewDate Jewish date {MyDate}
+GetHebrewDate Jewish day {MyDate}
+GetHebrewDate tell me the Jewish date for {MyDate}
+GetHebrewDate tell me the Jewish date {MyDate}
+GetHebrewDate tell me today's Jewish date
+GetHebrewDate tell me today's Jewish day
+GetHebrewDate the Jewish date
+GetHebrewDate the Jewish date for {MyDate}
+GetHebrewDate the Jewish day
+GetHebrewDate the Jewish day for {MyDate}
+GetHebrewDate today's Jewish date
+GetHebrewDate what Jewish day is {MyDate}
+GetHebrewDate what is the Jewish date
+GetHebrewDate what is the Jewish date on {MyDate}
+GetHebrewDate what is the Jewish date today
+GetHebrewDate what is the Jewish date {MyDate}
+GetHebrewDate what is the Jewish day
+GetHebrewDate what is today's Jewish date
+GetHebrewDate what is {MyDate} Jewish date
+GetHebrewDate what was the Jewish date {MyDate}
+GetHebrewDate {MyDate} Jewish date
+GetHebrewDate {MyDate} Jewish day
+
 GetParsha give me this week's Torah portion
 GetParsha give me this week's Torah reading
 GetParsha tell me this week's Torah portion
@@ -83,21 +113,28 @@ GetParsha tell me this week's Torah reading
 GetParsha the Torah portion
 GetParsha the Torah reading
 GetParsha the parsha
+GetParsha the parshat hashavua
+GetParsha the kriyah
 GetParsha the weekly Torah portion
 GetParsha the weekly Torah reading
 GetParsha this week's Torah portion
 GetParsha this week's Torah reading
 GetParsha this week's parsha
+GetParsha this week's kriyah
 GetParsha today's Torah portion
 GetParsha today's Torah reading
 GetParsha today's parsha
 GetParsha what is the Torah portion
 GetParsha what is the Torah reading
 GetParsha what is the parasha
+GetParsha what is the parashat hashavua
+GetParsha what is the kriyah
+GetParsha what is the kriyah this week
 GetParsha what is the parasha for this week
 GetParsha what is the parasha for today
 GetParsha what is the parasha for tonight
 GetParsha what is the parsha
+GetParsha what is the parsha hashavua
 GetParsha what is the parsha for this week
 GetParsha what is the parsha for today
 GetParsha what is the parsha for tonight
@@ -105,6 +142,7 @@ GetParsha what is this week's Torah portion
 GetParsha what is this week's Torah reading
 GetParsha what is this week's parasha
 GetParsha what is this week's parsha
+GetParsha what is this week's kriyah
 
 GetOmer day of the Omer
 GetOmer give me the Omer count
@@ -116,16 +154,19 @@ GetOmer tell me the Omer count
 GetOmer the Omer count
 GetOmer the Omer count last night
 GetOmer the Omer count today
-GetOmer the Omer count today
 GetOmer today's Omer count
 GetOmer what day of the Omer is it
 GetOmer what is the day of the Omer
 GetOmer what is the Omer count
 GetOmer what's the day of the Omer
 GetOmer yesterday's Omer count
+GetOmer count the Omer
+GetOmer counting of the Omer
 
+GetCandles candle lighting
 GetCandles candle lighting in {ZipCode}
 GetCandles candle lighting time in {ZipCode}
+GetCandles candle lighting time
 GetCandles candle lighting times
 GetCandles give me candle lighting for {ZipCode}
 GetCandles give me candle lighting time
@@ -148,7 +189,6 @@ GetCandles tell me what time Shabbat starts
 GetCandles tell me what time Shabbos begins
 GetCandles tell me what time Shabbos starts
 GetCandles tell me when is candle lighting
-GetCandles tell me when Shabbat begins
 GetCandles tell me when Shabbat begins
 GetCandles tell me when Shabbat starts
 GetCandles tell me when Shabbos begins
@@ -224,3 +264,42 @@ GetDafYomi the daf yomi today
 GetDafYomi today's daf yomi
 GetDafYomi what is the daf yomi
 GetDafYomi what is the daf yomi today
+
+GetCandles find sabbath in {CityName}
+GetCandles find sabbath in {ZipCode}
+GetCandles find Shabbat in {CityName}
+GetCandles find Shabbat in {ZipCode}
+GetCandles find Shabbos
+GetCandles find Shabbos in {CityName}
+GetCandles find Shabbos in {ZipCode}
+GetCandles find the sabbath in {CityName}
+GetCandles find the sabbath in {ZipCode}
+GetCandles what are the candle light times for {CityName}
+GetCandles what are the candle light times for {ZipCode}
+GetCandles what are the times for {CityName}
+GetCandles what are the times for {ZipCode}
+GetCandles what time is Shabbos in {CityName}
+GetCandles what time is Shabbos in {ZipCode}
+GetCandles what time Shabbos
+GetCandles what time Shabbos begins
+GetCandles what time Shabbos ends
+GetCandles what time Shabbos is in {CityName}
+GetCandles what time Shabbos is in {ZipCode}
+GetCandles when is sabbath
+GetCandles when is sabbath in {CityName}
+GetCandles when is sabbath in {ZipCode}
+GetCandles when is the sabbath
+GetCandles when is the sabbath in {CityName}
+GetCandles when is the sabbath in {ZipCode}
+GetCandles when's sabbath
+GetCandles when's sabbath in {CityName}
+GetCandles when's sabbath in {ZipCode}
+GetCandles when's Shabbat
+GetCandles when's Shabbat in {CityName}
+GetCandles when's Shabbat in {ZipCode}
+GetCandles when's Shabbos
+GetCandles when's Shabbos in {CityName}
+GetCandles when's Shabbos in {ZipCode}
+GetCandles when's the sabbath
+GetCandles when's the sabbath in {CityName}
+GetCandles when's the sabbath in {ZipCode}

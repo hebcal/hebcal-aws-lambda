@@ -8,39 +8,56 @@ var SunCalc = require('suncalc');
 var config = require('./config.json');
 
 var hebcal = {
-    usCities: {},
+    cities: {},
 
     init: function() {
         var self = this;
-        var usCitiesArray = require('./cities.json');
+        var allCities = require('./cities.json');
         this.setDefaultTimeZone(config.defaultTimezone);
         for (var k in config.month2ipa) {
             var rck = "Rosh Chodesh " + k;
             config.holiday2ipa[rck] = config.roshChodeshIpa + config.month2ipa[k];
         }
-        usCitiesArray.forEach(function(str) {
+        allCities.forEach(function(str) {
             var f = str.split('|'),
                 cityName = f[0],
+                country = f[1],
+                admin1 = f[2],
+                latitude = +f[3],
+                longitude = +f[4],
+                tzid = f[5],
                 city = {
-                    cityName: cityName + ', ' + f[1],
                     name: cityName,
-                    state: f[1],
-                    latitude: +f[2],
-                    longitude: +f[3],
-                    tzid: f[4]
+                    latitude: latitude,
+                    longitude: longitude,
+                    tzid: tzid
                 },
                 cityLc = cityName.toLowerCase(),
-                stateLc = config.stateNames[city.state].toLowerCase();
-            self.usCities[cityLc] = city;
-            self.usCities[cityLc + ' ' + stateLc] = city;
+                aliasLc;
+            if (country == 'US') {
+                var stateLc = config.stateNames[admin1].toLowerCase();
+                city.state = admin1;
+                city.cityName = cityName + ', ' + admin1;
+                aliasLc = cityLc + ' ' + stateLc;
+            } else {
+                var countryName = config.countryNames[country],
+                    countryLc = countryName.toLowerCase();
+                city.country = countryName;
+                city.cityName = cityName + ', ' + countryName;
+                aliasLc = cityLc + ' ' + countryLc;
+            }
+            self.cities[cityLc] = city;
+            self.cities[aliasLc] = city;
         });
-        usCitiesArray = null;
-        var nyc = this.usCities["new york city"];
-        this.usCities["new york"] = nyc;
-        this.usCities["new york new york"] = nyc;
-        this.usCities.nyc = nyc;
-        this.usCities["n y c"] = nyc;
-        this.usCities.la = this.usCities["los angeles"];
+        allCities = null;
+        var nyc = this.cities["new york city"];
+        this.cities["new york"] = nyc;
+        this.cities["new york new york"] = nyc;
+        this.cities.nyc = nyc;
+        this.cities["n y c"] = nyc;
+        this.cities.la = this.cities["los angeles"];
+        this.cities["washington dc"] = this.cities["washington"];
+        this.cities["washington d c"] = this.cities["washington"];
 //        console.log(JSON.stringify(self.cities, null, 2));
     },
 
@@ -50,6 +67,10 @@ var hebcal = {
         this.defaultTimezone = tzid;
         moment.tz.setDefault(tzid);
 //        process.env.TZ = tzid;
+    },
+
+    getCity: function(str) {
+        return this.cities[str.toLowerCase()];
     },
 
     getHolidayAlias: function(str) {
@@ -549,6 +570,12 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
+var testCities = 'London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California'.split(',');
+testCities.forEach(function(str) {
+    var city = hebcal.getCity(str);
+    console.log(JSON.stringify(city, null, 2));
+});
+
 var locations = [{
     latitude: -23.5475,
     longitude: -46.63611,
