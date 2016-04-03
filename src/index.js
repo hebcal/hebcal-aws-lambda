@@ -63,10 +63,10 @@ function onLaunch(launchRequest, session, callback) {
     googleAnalytics.screenview(session.user.userId, "LaunchRequest");
 
     if (!session.attributes || !session.attributes.location) {
-        hebcal.lookupUser(session.user.userId, function(data) {
-            if (data) {
+        hebcal.lookupUser(session.user.userId, function(user) {
+            if (user && user.location) {
                 session.attributes = session.attributes || {};
-                session.attributes.location = data;
+                session.attributes.location = user.location;
             }
         });
     }
@@ -293,10 +293,10 @@ function getCandleLightingResponse(intent, session, callback) {
             myInvokeHebcal(location);
         });
     } else {
-        hebcal.lookupUser(session.user.userId, function(data) {
-            if (data) {
-                location = data;
-                session.attributes.location = data;
+        hebcal.lookupUser(session.user.userId, function(user) {
+            if (user && user.location) {
+                location = user.location;
+                session.attributes.location = user.location;
                 myInvokeHebcal(location);
             } else {
                 return getWhichZipCodeResponse(session, callback);

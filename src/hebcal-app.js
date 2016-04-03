@@ -561,8 +561,14 @@ var hebcal = {
             } else if (data.Item === undefined) {
                 callback(null);
             } else {
-                console.log("SUCCESS Got from DynamoDB userId=" + userId + ",data=" + data.Item.Data.S);
-                callback(JSON.parse(data.Item.Data.S));
+                console.log("SUCCESS Got from DynamoDB userId=" + userId + ",ts=" + data.Item.Timestamp.N);
+                var user = {
+                    ts: data.Item.Timestamp.N
+                };
+                if (data.Item.Data && data.Item.Data.S) {
+                    user.location = JSON.parse(data.Item.Data.S);
+                }
+                callback(user);
             }
         });
     },
