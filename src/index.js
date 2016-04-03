@@ -82,6 +82,16 @@ function onIntent(intentRequest, session, callback) {
         intentName = intentRequest.intent.name;
 
     googleAnalytics.screenview(session.user.userId, intentName);
+    if (typeof intent.slots === 'object') {
+        var slots = intent.slots;
+        for (var slot in slots) {
+            var slotval = slots[slot].value;
+            if (slotval && slotval.length) {
+                googleAnalytics.event(session.user.userId,
+                    'Slot', intentName + ' ' + slot, slotval);
+            }
+        }
+    }
 
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {

@@ -11,54 +11,77 @@ var hebcal = {
     cities: {},
 
     init: function() {
-        var self = this;
-        var allCities = require('./cities.json');
         this.setDefaultTimeZone(config.defaultTimezone);
         for (var k in config.month2ipa) {
             var rck = "Rosh Chodesh " + k;
             config.holiday2ipa[rck] = config.roshChodeshIpa + config.month2ipa[k];
         }
-        allCities.forEach(function(str) {
-            var f = str.split('|'),
-                cityName = f[0],
-                country = f[1],
-                admin1 = f[2],
-                latitude = +f[3],
-                longitude = +f[4],
-                tzid = f[5],
-                city = {
-                    name: cityName,
-                    latitude: latitude,
-                    longitude: longitude,
-                    tzid: tzid
-                },
-                cityLc = cityName.toLowerCase(),
+        console.log("Loading cities.json...");
+        var allCities = require('./cities.json');
+        console.log("Parsing " + allCities.length + " cities");
+        this.cities = this.loadCities(allCities);
+        this.initCityAliases();
+    },
+
+    loadCities: function(allCities) {
+        var cities = {};
+        var cityObjs = allCities.map(this.parseCityString);
+        cityObjs.forEach(function(city) {
+            var cityLc = city.name.toLowerCase(),
                 aliasLc;
-            if (country == 'US') {
-                var stateLc = config.stateNames[admin1].toLowerCase();
-                city.state = admin1;
-                city.cityName = cityName + ', ' + admin1;
+            if (city.cc == 'US') {
+                var stateLc = config.stateNames[city.state].toLowerCase();
                 aliasLc = cityLc + ' ' + stateLc;
             } else {
-                var countryName = config.countryNames[country],
-                    countryLc = countryName.toLowerCase();
-                city.country = countryName;
-                city.cityName = cityName + ', ' + countryName;
+                var countryLc = city.country.toLowerCase();
                 aliasLc = cityLc + ' ' + countryLc;
             }
-            self.cities[cityLc] = city;
-            self.cities[aliasLc] = city;
+            cities[cityLc] = city;
+            cities[aliasLc] = city;
         });
-        allCities = null;
-        var nyc = this.cities["new york city"];
-        this.cities["new york"] = nyc;
-        this.cities["new york new york"] = nyc;
-        this.cities.nyc = nyc;
-        this.cities["n y c"] = nyc;
-        this.cities.la = this.cities["los angeles"];
-        this.cities["washington dc"] = this.cities["washington"];
-        this.cities["washington d c"] = this.cities["washington"];
-//        console.log(JSON.stringify(self.cities, null, 2));
+        return cities;
+    },
+
+    parseCityString: function(str) {
+        var f = str.split('|'),
+            cityName = f[0],
+            country = f[1],
+            admin1 = f[2],
+            latitude = +f[3],
+            longitude = +f[4],
+            tzid = f[5],
+            city = {
+                name: cityName,
+                cc: country,
+                latitude: latitude,
+                longitude: longitude,
+                tzid: tzid
+            };
+        if (country == 'US') {
+            city.state = admin1;
+            city.cityName = cityName + ', ' + admin1;
+        } else {
+            var countryName = config.countryNames[country];
+            city.country = countryName;
+            city.cityName = cityName + ', ' + countryName;
+        }
+        return city;
+    },
+
+    initCityAliases: function() {
+        var aliasMap = {
+            'new york city': ['nyc', 'n y c', 'new york', 'new york new york'],
+            'los angeles': ['la', 'l a'],
+            'washington': ['dc', 'd c', 'washington dc', 'washington d c'],
+            'las vegas': ['vegas']
+        };
+        for (var city in aliasMap) {
+            var c = this.cities[city];
+            var aliases = aliasMap[city];
+            for (var i = 0; i < aliases.length; i++) {
+                this.cities[aliases[i]] = c;
+            }
+        }
     },
 
     defaultTimezone: config.defaultTimezone,
