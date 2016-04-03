@@ -29,6 +29,7 @@ var googleAnalytics = {
         postParams = this.extend(postParams, params);
 
         var postData = querystring.stringify(postParams);
+        console.log("TRACKING: " + postData);
 
         var options = {
             hostname: 'www.google-analytics.com',

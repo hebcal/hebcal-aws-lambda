@@ -524,7 +524,7 @@ var hebcal = {
                 cityName: cityName
             };
             if (row.GeoId) {
-                result.geoId = row.GeoId;
+                result.geoid = row.GeoId;
             }
             callback(null, result);
         }
