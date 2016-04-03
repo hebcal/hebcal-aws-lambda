@@ -1,5 +1,5 @@
 var moment = require('moment-timezone');
-var googleAnalytics = require('hebcal-track');
+var googleAnalytics = require('./hebcal-track');
 var hebcal = require('./hebcal-app');
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
