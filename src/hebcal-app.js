@@ -476,7 +476,7 @@ var hebcal = {
 
     parseZipCodeRow: function(str) {
         var f = str.split('|');
-        return {
+        var r = {
             ZipCode: f[0],
             State: f[1],
             CityMixedCase: f[2],
@@ -485,6 +485,10 @@ var hebcal = {
             TimeZone: +f[5],
             DayLightSaving: f[6]
         };
+        if (f[7] && f[7].length) {
+            r.GeoId = +f[7];
+        }
+        return r;
     },
 
     loadZipsDb: function() {
@@ -519,6 +523,9 @@ var hebcal = {
                 tzid: tzid,
                 cityName: cityName
             };
+            if (row.GeoId) {
+                result.geoId = row.GeoId;
+            }
             callback(null, result);
         }
     },
