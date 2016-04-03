@@ -1,5 +1,5 @@
 var moment = require('moment-timezone');
-
+var googleAnalytics = require('hebcal-track');
 var hebcal = require('./hebcal-app');
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
@@ -42,6 +42,8 @@ exports.handler = function (event, context) {
         } else if (event.request.type === "SessionEndedRequest") {
             onSessionEnded(event.request, event.session);
             context.succeed();
+        } else {
+            context.fail("Unknown event.request.type");
         }
     } catch (e) {
         context.fail("Exception: " + e);
@@ -58,6 +60,8 @@ function onSessionStarted(sessionStartedRequest, session) {
  * Called when the user launches the skill without specifying what they want.
  */
 function onLaunch(launchRequest, session, callback) {
+    googleAnalytics.screenview(session.user.userId, "LaunchRequest");
+
     if (!session.attributes || !session.attributes.location) {
         hebcal.lookupUser(session.user.userId, function(data) {
             if (data) {
@@ -76,6 +80,8 @@ function onLaunch(launchRequest, session, callback) {
 function onIntent(intentRequest, session, callback) {
     var intent = intentRequest.intent,
         intentName = intentRequest.intent.name;
+
+    googleAnalytics.screenview(session.user.userId, intentName);
 
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
@@ -108,7 +114,7 @@ function onIntent(intentRequest, session, callback) {
  * Is not called when the skill returns shouldEndSession=true.
  */
 function onSessionEnded(sessionEndedRequest, session) {
-    // Add cleanup logic here
+    googleAnalytics.screenview(session.user.userId, "SessionEndedRequest");
 }
 
 // --------------- Functions that control the skill's behavior -----------------------
@@ -130,6 +136,7 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
     }
     hebcal.invokeHebcal(args, location, function(err, events) {
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         var hebrewDateStr = events[0].name;
@@ -199,12 +206,16 @@ function getCandleLightingResponse(intent, session, callback) {
     var location = userSpecifiedLocation(intent, session);
 
     if (location && location.cityNotFound) {
+        console.log("NOTFOUND: " + location.cityName);
+        googleAnalytics.event(session.user.userId,
+            'Error', 'cityNotFound', location.cityName);
         return getWhichZipCodeResponse(session, callback,
             "Sorry, we don't know where " + location.cityName + " is. ");
     }
 
     var hebcalEventsCallback = function(err, events) {
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
@@ -234,6 +245,7 @@ function getCandleLightingResponse(intent, session, callback) {
                 session));
         } else {
             console.log("Found NO events with date=" + friday.format('YYYY-MM-DD'));
+            googleAnalytics.exception(session.user.userId, intent.name);
             callback(session, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not get candle-lighting times for " + location.cityName));
         }
@@ -255,8 +267,12 @@ function getCandleLightingResponse(intent, session, callback) {
         console.log("Need to lookup zipCode " + location.zipCode);
         hebcal.lookupZipCode(location.zipCode, function(err, data) {
             if (err) {
+                googleAnalytics.exception(session.user.userId, err);
                 return callback(session, respond('Internal Error', err));
             } else if (!data) {
+                console.log("NOTFOUND: " + location.zipCode);
+                googleAnalytics.event(session.user.userId,
+                    'Error', 'zipNotFound', location.zipCode);
                 return getWhichZipCodeResponse(session, callback,
                     'We could not find ZIP code ' + location.zipCode + '. ');
             }
@@ -286,6 +302,7 @@ function getParshaResponse(intent, session, callback) {
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var re =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         var found = events.filter(function(evt) {
@@ -313,6 +330,7 @@ function getParshaResponse(intent, session, callback) {
                 true,
                 session));
         } else {
+            googleAnalytics.exception(session.user.userId, intent.name);
             callback(session, respond('Internal Error - ' + intent.name,
                 "Sorry, we could find the weekly Torah portion."));
         }
@@ -335,6 +353,7 @@ function getHebrewDateResponse(intent, session, callback) {
         srcDateText = src.format('MMMM Do YYYY');
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         if (events.length) {
@@ -349,6 +368,7 @@ function getHebrewDateResponse(intent, session, callback) {
                 true,
                 session));
         } else {
+            googleAnalytics.exception(session.user.userId, intent.name);
             callback(session, respond('Internal Error - ' + intent.name,
                 "Sorry, we could not convert " + srcDateText + " to Hebrew calendar.",
                 "Sorry, we could not convert " + srcDateSsml + " to Hebrew calendar."));
@@ -361,6 +381,7 @@ function getDafYomiResponse(intent, session, callback) {
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var found = false;
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         events.forEach(function(evt) {
@@ -372,6 +393,7 @@ function getDafYomiResponse(intent, session, callback) {
             }
         });
         if (!found) {
+            googleAnalytics.exception(session.user.userId, intent.name);
             return callback(session, respond('Internal Error - ' + intent.name,
                 "Sorry, we could fetch Daf Yomi. Please try again later."));
         }
@@ -383,6 +405,7 @@ function getOmerResponse(intent, session, callback) {
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var now = moment();
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         var omerEvents = events.filter(function(evt) {
@@ -447,6 +470,7 @@ function getHolidayResponse(intent, session, callback) {
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
         var now = moment();
         if (err) {
+            googleAnalytics.exception(session.user.userId, err);
             return callback(session, respond('Internal Error', err));
         }
         if (intent.name === "GetHoliday") {
