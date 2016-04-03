@@ -88,7 +88,7 @@ function onIntent(intentRequest, session, callback) {
             var slotval = slots[slot].value;
             if (slotval && slotval.length) {
                 googleAnalytics.event(session.user.userId,
-                    'Slot', intentName + ' ' + slot, slotval);
+                    intentName, slot + ' ' + slotval);
             }
         }
     }
