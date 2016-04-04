@@ -430,16 +430,12 @@ var hebcal = {
         return suntimes.sunset;
     },
 
-    getTodayHebrewDateArgs: function(location, extraArgs) {
+    getMomentForTodayHebrewDate: function(location) {
         var now = moment().tz(location.tzid),
             sunset = moment.tz(hebcal.getSunset(location), location.tzid),
             beforeSunset = now.isBefore(sunset),
             m = beforeSunset ? now : now.add(1, 'd');
-        var args = [
-            '-h', '-x', '-d',
-            m.format('M'), m.format('D'), m.format('YYYY')
-        ];
-        return extraArgs ? args.concat(extraArgs) : args;
+        return m;
     },
 
     getCandleLightingArgs: function(location, extraArgs) {

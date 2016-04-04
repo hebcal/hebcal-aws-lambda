@@ -16,30 +16,22 @@ exports.handler = function (event, context) {
             onSessionStarted({requestId: event.request.requestId}, event.session);
         }
 
-        if (event.request.type === "LaunchRequest") {
-            onLaunch(event.request,
-                event.session,
-                function(session, speechletResponse) {
-                    var sessionAttributes = session && session.attributes ? session.attributes : {};
-                    trackScreenview(session, "LaunchRequest");
-                    context.succeed(buildResponse(sessionAttributes, speechletResponse));
-                });
-        } else if (event.request.type === "IntentRequest") {
-            hebcal.invokeHebcal(['-t'], getLocation(event.session), function(err, events) {
-                if (!err) {
-                    var arr = hebcal.getSpecialGreetings(events);
-                    if (arr.length) {
-                        event.session.attributes = event.session.attributes || {};
-                        event.session.attributes.specialGreeting = arr;
-                    }
-                }
-                onIntent(event.request,
-                    event.session,
-                    function(session, speechletResponse) {
+        if (event.request.type === "LaunchRequest" || event.request.type === "IntentRequest") {
+            loadUserAndGreetings(event.request, event.session, function(err) {
+                if (event.request.type === "LaunchRequest") {
+                    onLaunch(event.request, event.session, function(session, speechletResponse) {
+                        var sessionAttributes = session && session.attributes ? session.attributes : {};
+                        trackScreenview(session, "LaunchRequest");
+                        context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                    });
+                } else {
+                    // event.request.type === "IntentRequest"
+                    onIntent(event.request, event.session, function(session, speechletResponse) {
                         var sessionAttributes = session && session.attributes ? session.attributes : {};
                         trackIntent(event.request.intent, session);
                         context.succeed(buildResponse(sessionAttributes, speechletResponse));
                     });
+                }
             });
         } else if (event.request.type === "SessionEndedRequest") {
             onSessionEnded(event.request, event.session);
@@ -105,18 +97,42 @@ function trackException(session, description) {
 function onSessionStarted(sessionStartedRequest, session) {
 }
 
+function loadUserAndGreetings(request, session, callback) {
+    session.attributes = session.attributes || {};
+
+    if (session.attributes.todayHebrewDateStr) {
+        return callback(null);
+    }
+
+    hebcal.lookupUser(session.user.userId, function(user) {
+        var args = ['-t'];
+        if (user && user.ts) {
+            session.attributes.returningUser = true;
+            if (user.location) {
+                var m = hebcal.getMomentForTodayHebrewDate(user.location);
+                args = m.format('M D YYYY').split(' ');
+                session.attributes.location = user.location;
+            }
+        }
+        hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
+            if (err) {
+                trackException(session, err);
+                return callback(err);
+            }
+            session.attributes.todayHebrewDateStr = events[0].name;
+            var arr = hebcal.getSpecialGreetings(events);
+            if (arr.length) {
+                session.attributes.specialGreeting = arr;
+            }
+            return callback(null);
+        });
+    });
+}
+
 /**
  * Called when the user launches the skill without specifying what they want.
  */
 function onLaunch(launchRequest, session, callback) {
-    if (!session.attributes || !session.attributes.location) {
-        hebcal.lookupUser(session.user.userId, function(user) {
-            if (user && user.location) {
-                session.attributes = session.attributes || {};
-                session.attributes.location = user.location;
-            }
-        });
-    }
     // Dispatch to your skill's launch.
     getWelcomeResponse(session, callback, false);
 }
@@ -173,31 +189,22 @@ function getLocation(session) {
 function getWelcomeResponse(session, callback, isHelpIntent) {
     var repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
     var nag = ' What will it be?';
-    var args = ['-t'];
-    var location = getLocation(session);
-    if (location) {
-        args = hebcal.getTodayHebrewDateArgs(location);
+    var hebrewDateStr = session.attributes.todayHebrewDateStr;
+    var speech = hebcal.hebrewDateSSML(hebrewDateStr, true);
+    var cardText = '';
+    var ssmlContent = '';
+    if (!isHelpIntent) {
+        cardText += 'Welcome to Hebcal. Today is the ' + hebrewDateStr + '. ';
+        ssmlContent += 'Welcome to Hieb-Kal. Today is the ' + speech + '. ';
     }
-    hebcal.invokeHebcal(args, location, function(err, events) {
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
-        var hebrewDateStr = events[0].name;
-        var speech = hebcal.hebrewDateSSML(hebrewDateStr, true);
-        var cardText = '';
-        var ssmlContent = '';
-        if (!isHelpIntent) {
-            cardText += 'Welcome to Hebcal. Today is the ' + hebrewDateStr + '. ';
-            ssmlContent += 'Welcome to Hieb-Kal. Today is the ' + speech + '. ';
-        }
-        var response = respond('Welcome to Hebcal',
-            cardText + repromptText + nag,
-            ssmlContent + repromptText + nag);
-        response.shouldEndSession = false;
-        response.reprompt.outputSpeech.text = repromptText;
-        callback(session, response);
-    });
+    if (!session.attributes.returningUser) {
+        cardText += repromptText;
+        ssmlContent += repromptText;
+    }
+    var response = respond('Welcome to Hebcal', cardText + nag, ssmlContent + nag);
+    response.shouldEndSession = false;
+    response.reprompt.outputSpeech.text = repromptText;
+    callback(session, response);
 }
 
 function getWhichHolidayResponse(session, callback) {
