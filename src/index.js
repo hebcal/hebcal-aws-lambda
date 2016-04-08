@@ -17,7 +17,7 @@ exports.handler = function (event, context) {
         }
 
         if (event.request.type === "LaunchRequest" || event.request.type === "IntentRequest") {
-            loadUserAndGreetings(event.request, event.session, function(err) {
+            loadUserAndGreetings(event.request, event.session, function() {
                 if (event.request.type === "LaunchRequest") {
                     onLaunch(event.request, event.session, function(session, speechletResponse) {
                         var sessionAttributes = session && session.attributes ? session.attributes : {};
@@ -101,7 +101,7 @@ function loadUserAndGreetings(request, session, callback) {
     session.attributes = session.attributes || {};
 
     if (session.attributes.todayHebrewDateStr) {
-        return callback(null);
+        return callback();
     }
 
     hebcal.lookupUser(session.user.userId, function(user) {
@@ -117,14 +117,14 @@ function loadUserAndGreetings(request, session, callback) {
         hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
             if (err) {
                 trackException(session, err);
-                return callback(err);
+                return callback();
             }
             session.attributes.todayHebrewDateStr = events[0].name;
             var arr = hebcal.getSpecialGreetings(events);
             if (arr.length) {
                 session.attributes.specialGreeting = arr;
             }
-            return callback(null);
+            return callback();
         });
     });
 }
@@ -186,6 +186,15 @@ function getLocation(session) {
     return undefined;
 }
 
+function getNowForLocation(session) {
+    var location = getLocation(session);
+    if (location && location.tzid) {
+        return moment.tz(location.tzid);
+    } else {
+        return moment();
+    }
+}
+
 function getWelcomeResponse(session, callback, isHelpIntent) {
     var repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
     var nag = ' What will it be?';
@@ -230,9 +239,7 @@ function getWhichZipCodeResponse(session, callback, prefixText) {
 }
 
 function userSpecifiedLocation(intent, session) {
-    if (session && session.attributes && session.attributes.location) {
-        return session.attributes.location;
-    } else if (intent.slots && intent.slots.CityName && intent.slots.CityName.value) {
+    if (intent.slots && intent.slots.CityName && intent.slots.CityName.value) {
         var location = hebcal.getCity(intent.slots.CityName.value);
         return location ? location : {
                 cityName: intent.slots.CityName.value,
@@ -251,10 +258,11 @@ function userSpecifiedLocation(intent, session) {
 }
 
 function getCandleLightingResponse(intent, session, callback) {
-    var now = moment(),
+    var now = getNowForLocation(session),
         friday = hebcal.getUpcomingFriday(now),
         fridayMDY = friday.format('M D YYYY').split(' ');
     var location = userSpecifiedLocation(intent, session);
+    var sessionLocation = getLocation(session);
 
     if (location && location.cityNotFound) {
         console.log("NOTFOUND: " + location.cityName);
@@ -309,7 +317,6 @@ function getCandleLightingResponse(intent, session, callback) {
     session.attributes = session.attributes || {};
 
     if (location && location.latitude) {
-        console.log("Skipping SQLite lookup " + JSON.stringify(location));
         session.attributes.location = location;
         hebcal.saveUser(session.user.userId, location);
         myInvokeHebcal(location);
@@ -331,21 +338,16 @@ function getCandleLightingResponse(intent, session, callback) {
             hebcal.saveUser(session.user.userId, data);
             myInvokeHebcal(location);
         });
+    } else if (sessionLocation) {
+        location = sessionLocation;
+        myInvokeHebcal(location);
     } else {
-        hebcal.lookupUser(session.user.userId, function(user) {
-            if (user && user.location) {
-                location = user.location;
-                session.attributes.location = user.location;
-                myInvokeHebcal(location);
-            } else {
-                return getWhichZipCodeResponse(session, callback);
-            }
-        });
+        return getWhichZipCodeResponse(session, callback);
     }
 }
 
 function getParshaResponse(intent, session, callback) {
-    var saturday = moment().day(6),
+    var saturday = getNowForLocation(session).day(6),
         saturdayMDY = saturday.format('M D YYYY').split(' '),
         args = ['-s'].concat(saturdayMDY);
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
@@ -358,7 +360,7 @@ function getParshaResponse(intent, session, callback) {
             return evt.name.search(re) != -1;
         });
         if (found.length) {
-            var todayOrThisWeek = (moment().day() === 6) ? 'Today' : 'This week';
+            var todayOrThisWeek = (getNowForLocation(session).day() === 6) ? 'Today' : 'This week';
             var prefixText = todayOrThisWeek + "'s Torah portion is ";
             var result = hebcal.getParashaOrHolidayName(found[0].name);
             var phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
@@ -386,16 +388,16 @@ function getParshaResponse(intent, session, callback) {
     });
 }
 
-function getDateFromSlotOrNow(intent) {
+function getDateFromSlotOrNow(intent, session) {
     if (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value) {
         return hebcal.parseAmazonDateFormat(intent.slots.MyDate.value);
     } else {
-        return moment();
+        return getNowForLocation(session);
     }
 }
 
 function getHebrewDateResponse(intent, session, callback) {
-    var src = getDateFromSlotOrNow(intent),
+    var src = getDateFromSlotOrNow(intent, session),
         mdy = src.format('M D YYYY').split(' '),
         args = ['-d', '-h', '-x'].concat(mdy),
         srcDateSsml = hebcal.formatDateSsml(src),
@@ -407,7 +409,7 @@ function getHebrewDateResponse(intent, session, callback) {
         }
         if (events.length) {
             var evt = events[0],
-                now = moment(),
+                now = getNowForLocation(session),
                 isOrWasThe = evt.dt.isSameOrAfter(now, 'day') ? ' is the ' : ' was the ',
                 name = evt.name;
             var speech = hebcal.hebrewDateSSML(name);
@@ -452,7 +454,7 @@ function getDafYomiResponse(intent, session, callback) {
 function getOmerResponse(intent, session, callback) {
     var args = ['-o', '-h', '-x', '--years', '2'];
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
-        var now = moment();
+        var now = getNowForLocation(session);
         if (err) {
             trackException(session, err);
             return callback(session, respond('Internal Error', err));
@@ -517,7 +519,7 @@ function getHolidayResponse(intent, session, callback) {
     }
 
     hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
-        var now = moment();
+        var now = getNowForLocation(session);
         if (err) {
             trackException(session, err);
             return callback(session, respond('Internal Error', err));
