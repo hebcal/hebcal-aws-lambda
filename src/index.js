@@ -453,35 +453,44 @@ function getDafYomiResponse(intent, session, callback) {
 
 function getOmerResponse(intent, session, callback) {
     var args = ['-o', '-h', '-x', '--years', '2'];
-    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
-        var now = getNowForLocation(session);
+    var location = getLocation(session);
+    hebcal.invokeHebcal(args, location, function(err, events) {
+        var now = getNowForLocation(session),
+            targetDay = location ? hebcal.getMomentForTodayHebrewDate(location) : now;
         if (err) {
             trackException(session, err);
             return callback(session, respond('Internal Error', err));
         }
         var omerEvents = events.filter(function(evt) {
-            return hebcal.reOmer.test(evt.name) && evt.dt.isSameOrAfter(now, 'day');
+            return hebcal.reOmer.test(evt.name) && evt.dt.isSameOrAfter(targetDay, 'day');
         });
         console.log("Filtered " + events.length + " events to " + omerEvents.length + " future");
         if (omerEvents.length === 0) {
             return callback(session, respond('Interal Error', 'Cannot find Omer in event list.'));
         }
         var evt = omerEvents[0];
-        if (evt.dt.isSame(now, 'day')) {
+        if (evt.dt.isSame(targetDay, 'day')) {
             var matches = evt.name.match(re),
                 num = matches[1],
                 weeks = Math.floor(num / 7),
                 days = num % 7,
-                speech = 'Today is the <say-as interpret-as="ordinal">' + num + '</say-as> day of the Omer';
+                todayOrTonight = 'Today',
+                speech = ' is the <say-as interpret-as="ordinal">' + num + '</say-as> day of the Omer';
             if (weeks) {
                 speech += ', which is ' + weeks + ' weeks';
                 if (days) {
                     speech += ' and ' + days + ' days';
                 }
             }
+            if (location) {
+                var sunset = hebcal.getSunset(location);
+                if (now.isAfter(sunset)) {
+                    todayOrTonight = 'Tonight';
+                }
+            }
             return callback(session, respond(evt.name,
-                'Today is the ' + evt.name + '.',
-                speech,
+                todayOrTonight + ' is the ' + evt.name + '.',
+                todayOrTonight + speech,
                 true,
                 session));
         } else {

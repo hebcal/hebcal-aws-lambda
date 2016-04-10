@@ -430,14 +430,15 @@ var hebcal = {
             sunsetM = moment.tz(suntimes.sunset, location.tzid);
         if (sunsetM.isBefore(nowM, 'day')) {
             var tomorrow = new Date(now.getTime() + 86400000);
-            suntimes = SunCalc.getTimes(tomorrow, location.latitude, location.longitude);
+            var suntimes2 = SunCalc.getTimes(tomorrow, location.latitude, location.longitude);
+            return moment.tz(suntimes2.sunset, location.tzid);
         }
-        return suntimes.sunset;
+        return sunsetM;
     },
 
     getMomentForTodayHebrewDate: function(location) {
-        var now = moment().tz(location.tzid),
-            sunset = moment.tz(hebcal.getSunset(location), location.tzid),
+        var now = moment.tz(location.tzid),
+            sunset = hebcal.getSunset(location),
             beforeSunset = now.isBefore(sunset),
             m = beforeSunset ? now : now.add(1, 'd');
         return m;
@@ -607,12 +608,21 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
-var testCities = 'London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California,Reykjavik,perth,Wellington,melbourne'.split(',');
+var testCities = 'anchorage,honolulu,London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California,Reykjavik,perth,Wellington,melbourne'.split(',');
 testCities.forEach(function(str) {
     var city = hebcal.getCity(str);
     console.log(JSON.stringify(city, null, 2));
     var m = hebcal.getMomentForTodayHebrewDate(city);
-    console.log(m.format());
+    var now = moment.tz(city.tzid);
+    var sunset = hebcal.getSunset(city);
+    var delta = now.diff(sunset);
+
+    var prefix = "Sunset for " + city.name;
+    var prefix2 = delta < 0 ? ' is ' : ' was ';
+    var dur = moment.duration(delta).humanize();
+    var suffix = ", hebdate src=" + m.format('YYYY MM DD');
+    var suffix2 = delta < 0 ? ' from now' : ' ago';
+    console.log(prefix + prefix2 + dur + suffix2 + suffix);
 });
 
 var locations = [{
@@ -670,8 +680,7 @@ var now = moment();
 console.log(new Date());
 for (var i = locations.length - 1; i >= 0; i--) {
     var location = locations[i];
-    var sunset = hebcal.getSunset(location);
-    var sunsetZ = moment.tz(sunset, location.tzid);
+    var sunsetZ = hebcal.getSunset(location);
     console.log(location.tzid);
     console.log(sunsetZ.format());
     console.log(sunsetZ.isBefore(now));
