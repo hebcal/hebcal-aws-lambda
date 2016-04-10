@@ -206,7 +206,7 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
         cardText += 'Welcome to Hebcal. Today is the ' + hebrewDateStr + '. ';
         ssmlContent += 'Welcome to Hieb-Kal. Today is the ' + speech + '. ';
     }
-    if (!session.attributes.returningUser) {
+    if (isHelpIntent || !session.attributes.returningUser) {
         cardText += repromptText;
         ssmlContent += repromptText;
     }

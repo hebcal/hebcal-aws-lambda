@@ -50,6 +50,7 @@ var hebcal = {
             latitude = +f[3],
             longitude = +f[4],
             tzid = f[5],
+            geoid = f[6],
             city = {
                 name: cityName,
                 cc: country,
@@ -57,6 +58,9 @@ var hebcal = {
                 longitude: longitude,
                 tzid: tzid
             };
+        if (geoid) {
+            city.geoid = +geoid;
+        }
         if (country == 'US') {
             city.state = admin1;
             city.cityName = cityName + ', ' + admin1;
@@ -71,6 +75,7 @@ var hebcal = {
     initCityAliases: function() {
         var aliasMap = {
             'new york city': ['nyc', 'n y c', 'new york', 'new york new york'],
+            'the bronx': ['bronx'],
             'los angeles': ['la', 'l a'],
             'washington': ['dc', 'd c', 'washington dc', 'washington d c'],
             'las vegas': ['vegas']
@@ -602,10 +607,12 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
-var testCities = 'London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California'.split(',');
+var testCities = 'London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California,Reykjavik,perth,Wellington,melbourne'.split(',');
 testCities.forEach(function(str) {
     var city = hebcal.getCity(str);
     console.log(JSON.stringify(city, null, 2));
+    var m = hebcal.getMomentForTodayHebrewDate(city);
+    console.log(m.format());
 });
 
 var locations = [{
@@ -668,8 +675,9 @@ for (var i = locations.length - 1; i >= 0; i--) {
     console.log(location.tzid);
     console.log(sunsetZ.format());
     console.log(sunsetZ.isBefore(now));
-    var args = hebcal.getTodayHebrewDateArgs(location);
-    console.log(args);
+    var m = hebcal.getMomentForTodayHebrewDate(location);
+    var args = m.format('M D YYYY').split(' ');
+    console.log(m.format());
     hebcal.invokeHebcal(args, location, function(err, events) {
         if (!err && events && events.length) {
             var evt = events[0];
