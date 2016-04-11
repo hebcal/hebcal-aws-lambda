@@ -199,14 +199,16 @@ function getNowForLocation(session) {
     return getNowForLocation0(location);
 }
 
-function todayOrTonight(now, location) {
+function isAfterSunset(now, location) {
     if (location && location.latitude) {
         var sunset = hebcal.getSunset(location);
-        if (now.isAfter(sunset)) {
-            return 'Tonight';
-        }
+        return now.isAfter(sunset);
     }
-    return 'Today';
+    return false;
+}
+
+function todayOrTonight(now, location) {
+    return isAfterSunset(now, location) ? 'Tonight' : 'Today';
 }
 
 function getWelcomeResponse(session, callback, isHelpIntent) {
@@ -427,6 +429,10 @@ function getHebrewDateResponse(intent, session, callback) {
         srcDateText = src.format('MMMM Do YYYY');
     if (!slotValue) {
         srcDateSsml = todayOrTonight(now, location);
+        if (isAfterSunset(now, location)) {
+            srcDateText = now.format('MMMM Do YYYY');
+            srcDateText += ' (after sunset)';
+        }
     }
     hebcal.invokeHebcal(args, location, function(err, events) {
         if (err) {
