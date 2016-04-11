@@ -25,8 +25,8 @@ var googleAnalytics = {
         digest = hash.digest('hex');
         return digest.substr(0, 8) +
             '-' + digest.substr(8, 4) +
-            '-' + digest.substr(12, 4) +
-            '-' + digest.substr(16, 4) +
+            '-4' + digest.substr(13, 3) +
+            '-8' + digest.substr(17, 3) +
             '-' + digest.substr(20, 12);
     },
 
