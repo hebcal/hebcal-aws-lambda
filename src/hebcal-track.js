@@ -1,5 +1,6 @@
 var querystring = require('querystring'),
     http = require('http');
+var crypto = require('crypto');
 
 var googleAnalytics = {
     tid: 'UA-967247-4',
@@ -17,12 +18,24 @@ var googleAnalytics = {
         return destination;
     },
 
+    hashUuid4: function(str) {
+        var hash = crypto.createHash('md5'),
+            digest;
+        hash.update(str);
+        digest = hash.digest('hex');
+        return digest.substr(0, 8) +
+            '-' + digest.substr(8, 4) +
+            '-' + digest.substr(12, 4) +
+            '-' + digest.substr(16, 4) +
+            '-' + digest.substr(20, 12);
+    },
+
     send: function(hitType, userId, params) {
         var postParams = {
             v: '1',
             tid: this.tid,
             t: hitType,
-            cid: userId,
+            cid: this.hashUuid4(userId),
             an: this.an
         };
 
