@@ -67,7 +67,7 @@ function getTrackingOptions(session) {
             options = {
                 geoid: location.geoid
             };
-        } else if (location.cc) {
+        } else if (location.cc && location.cc.length && location.cc != 'US') {
             options = {
                 geoid: location.cc
             };
@@ -186,13 +186,27 @@ function getLocation(session) {
     return undefined;
 }
 
-function getNowForLocation(session) {
-    var location = getLocation(session);
+function getNowForLocation0(location) {
     if (location && location.tzid) {
         return moment.tz(location.tzid);
     } else {
         return moment();
     }
+}
+
+function getNowForLocation(session) {
+    var location = getLocation(session);
+    return getNowForLocation0(location);
+}
+
+function todayOrTonight(now, location) {
+    if (location && location.latitude) {
+        var sunset = hebcal.getSunset(location);
+        if (now.isAfter(sunset)) {
+            return 'Tonight';
+        }
+    }
+    return 'Today';
 }
 
 function getWelcomeResponse(session, callback, isHelpIntent) {
@@ -388,28 +402,39 @@ function getParshaResponse(intent, session, callback) {
     });
 }
 
-function getDateFromSlotOrNow(intent, session) {
-    if (intent.slots && intent.slots.MyDate && intent.slots.MyDate.value) {
-        return hebcal.parseAmazonDateFormat(intent.slots.MyDate.value);
+function getDateSlotValue(intent) {
+    return intent.slots && intent.slots.MyDate && intent.slots.MyDate.value;
+}
+
+function getHebrewDateSrc(now, location, slotValue) {
+    if (slotValue) {
+        return hebcal.parseAmazonDateFormat(slotValue);
+    } else if (location && location.latitude) {
+        return hebcal.getMomentForTodayHebrewDate(location);
     } else {
-        return getNowForLocation(session);
+        return now;
     }
 }
 
 function getHebrewDateResponse(intent, session, callback) {
-    var src = getDateFromSlotOrNow(intent, session),
+    var location = getLocation(session),
+        now = getNowForLocation0(location),
+        slotValue = getDateSlotValue(intent),
+        src = getHebrewDateSrc(now, location, slotValue),
         mdy = src.format('M D YYYY').split(' '),
         args = ['-d', '-h', '-x'].concat(mdy),
         srcDateSsml = hebcal.formatDateSsml(src),
         srcDateText = src.format('MMMM Do YYYY');
-    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
+    if (!slotValue) {
+        srcDateSsml = todayOrTonight(now, location);
+    }
+    hebcal.invokeHebcal(args, location, function(err, events) {
         if (err) {
             trackException(session, err);
             return callback(session, respond('Internal Error', err));
         }
         if (events.length) {
             var evt = events[0],
-                now = getNowForLocation(session),
                 isOrWasThe = evt.dt.isSameOrAfter(now, 'day') ? ' is the ' : ' was the ',
                 name = evt.name;
             var speech = hebcal.hebrewDateSSML(name);
@@ -453,10 +478,10 @@ function getDafYomiResponse(intent, session, callback) {
 
 function getOmerResponse(intent, session, callback) {
     var args = ['-o', '-h', '-x', '--years', '2'];
-    var location = getLocation(session);
+    var location = getLocation(session),
+        now = getNowForLocation0(location),
+        targetDay = getHebrewDateSrc(now, location);
     hebcal.invokeHebcal(args, location, function(err, events) {
-        var now = getNowForLocation(session),
-            targetDay = location ? hebcal.getMomentForTodayHebrewDate(location) : now;
         if (err) {
             trackException(session, err);
             return callback(session, respond('Internal Error', err));
@@ -474,7 +499,7 @@ function getOmerResponse(intent, session, callback) {
                 num = matches[1],
                 weeks = Math.floor(num / 7),
                 days = num % 7,
-                todayOrTonight = 'Today',
+                todayOrTonightStr = todayOrTonight(now, location),
                 speech = ' is the <say-as interpret-as="ordinal">' + num + '</say-as> day of the Omer';
             if (weeks) {
                 speech += ', which is ' + weeks + ' weeks';
@@ -482,15 +507,9 @@ function getOmerResponse(intent, session, callback) {
                     speech += ' and ' + days + ' days';
                 }
             }
-            if (location) {
-                var sunset = hebcal.getSunset(location);
-                if (now.isAfter(sunset)) {
-                    todayOrTonight = 'Tonight';
-                }
-            }
             return callback(session, respond(evt.name,
-                todayOrTonight + ' is the ' + evt.name + '.',
-                todayOrTonight + speech,
+                todayOrTonightStr + ' is the ' + evt.name + '.',
+                todayOrTonightStr + speech,
                 true,
                 session));
         } else {
