@@ -163,6 +163,9 @@ GetOmer yesterday's Omer count
 GetOmer count the Omer
 GetOmer counting of the Omer
 
+SetLocation {CityName}
+SetLocation {ZipCode}
+
 GetCandles candle lighting
 GetCandles candle lighting in {ZipCode}
 GetCandles candle lighting time in {ZipCode}
@@ -223,7 +226,6 @@ GetCandles when Shabbos begins
 GetCandles when Shabbos begins in {ZipCode}
 GetCandles when Shabbos starts
 GetCandles when Shabbos starts in {ZipCode}
-GetCandles {ZipCode}
 
 GetCandles candle lighting in {CityName}
 GetCandles candle lighting time in {CityName}
@@ -249,7 +251,6 @@ GetCandles when Shabbat begins in {CityName}
 GetCandles when Shabbat starts in {CityName}
 GetCandles when Shabbos begins in {CityName}
 GetCandles when Shabbos starts in {CityName}
-GetCandles {CityName}
 
 GetDafYomi daf yomi
 GetDafYomi daf yomi today

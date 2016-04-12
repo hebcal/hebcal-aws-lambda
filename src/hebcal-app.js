@@ -29,6 +29,9 @@ var hebcal = {
         cityObjs.forEach(function(city) {
             var cityLc = city.name.toLowerCase(),
                 aliasLc;
+            if (cities[cityLc]) {
+                return;
+            }
             if (city.cc == 'US') {
                 var stateLc = config.stateNames[city.state].toLowerCase();
                 aliasLc = cityLc + ' ' + stateLc;

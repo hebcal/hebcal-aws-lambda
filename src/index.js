@@ -157,6 +157,8 @@ function onIntent(intentRequest, session, callback) {
         getHebrewDateResponse(intent, session, callback);
     } else if ("GetCandles" === intentName) {
         getCandleLightingResponse(intent, session, callback);
+    } else if ("SetLocation" === intentName) {
+        getCandleLightingResponse(intent, session, callback);
     } else if ("GetOmer" === intentName) {
         getOmerResponse(intent, session, callback);
     } else if ("GetDafYomi" === intentName) {
