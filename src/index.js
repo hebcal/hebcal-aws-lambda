@@ -35,7 +35,7 @@ exports.handler = function (event, context) {
             });
         } else if (event.request.type === "SessionEndedRequest") {
             onSessionEnded(event.request, event.session);
-            trackScreenview(session, "SessionEndedRequest");
+            trackScreenview(event.session, "SessionEndedRequest");
             context.succeed();
         } else {
             context.fail("Unknown event.request.type");
