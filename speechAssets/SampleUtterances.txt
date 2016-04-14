@@ -304,3 +304,26 @@ GetCandles when's Shabbos in {ZipCode}
 GetCandles when's the sabbath
 GetCandles when's the sabbath in {CityName}
 GetCandles when's the sabbath in {ZipCode}
+
+AMAZON.StopIntent all done
+AMAZON.StopIntent goodbye
+AMAZON.StopIntent bye
+AMAZON.StopIntent thanks
+AMAZON.StopIntent thank you
+
+AMAZON.HelpIntent help
+AMAZON.HelpIntent help me
+AMAZON.HelpIntent what can I ask you
+AMAZON.HelpIntent get help
+AMAZON.HelpIntent to help
+AMAZON.HelpIntent to help me
+AMAZON.HelpIntent what commands can I ask
+AMAZON.HelpIntent what commands can I say
+AMAZON.HelpIntent what can I do
+AMAZON.HelpIntent what can I say
+AMAZON.HelpIntent what can I use this for
+AMAZON.HelpIntent what questions can I ask
+AMAZON.HelpIntent what can you do
+AMAZON.HelpIntent what do you do
+AMAZON.HelpIntent how do I use you
+AMAZON.HelpIntent how can I use you
