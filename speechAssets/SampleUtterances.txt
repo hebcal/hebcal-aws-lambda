@@ -228,6 +228,10 @@ GetCandles when Shabbos begins
 GetCandles when Shabbos begins in {ZipCode}
 GetCandles when Shabbos starts
 GetCandles when Shabbos starts in {ZipCode}
+GetCandles when does Shabbat begin
+GetCandles when does Shabbat start
+GetCandles when does Shabbos begin
+GetCandles when does Shabbos start
 
 GetCandles candle lighting in {CityName}
 GetCandles candle lighting time in {CityName}
