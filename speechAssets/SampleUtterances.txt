@@ -5,6 +5,7 @@ GetHolidayDate when was {Holiday} in {MyYear}
 GetHolidayDate when {Holiday} was in {MyYear}
 GetHolidayDate give me the date of {Holiday} in {MyYear}
 GetHolidayDate tell me the date of {Holiday} in {MyYear}
+GetHolidayDate {Holiday} in {MyYear}
 
 GetHoliday {Holiday}
 GetHoliday when is {Holiday}
@@ -21,6 +22,7 @@ GetHolidayNextYear when is the following {Holiday}
 GetHolidayNextYear when is the next {Holiday}
 GetHolidayNextYear what the date of the next {Holiday} is
 
+GetHebrewDate {MyDate}
 GetHebrewDate convert {MyDate}
 GetHebrewDate convert {MyDate} to Hebrew calendar
 GetHebrewDate convert {MyDate} to Hebrew date
@@ -163,8 +165,8 @@ GetOmer yesterday's Omer count
 GetOmer count the Omer
 GetOmer counting of the Omer
 
-SetLocation {CityName}
-SetLocation {ZipCode}
+GetCandles {CityName}
+GetCandles {ZipCode}
 
 GetCandles candle lighting
 GetCandles candle lighting in {ZipCode}

@@ -60,19 +60,6 @@
       ]
     },
     {
-      "intent": "SetLocation",
-      "slots": [
-        {
-          "name": "CityName",
-          "type": "AMAZON.US_CITY"
-        },
-        {
-          "name": "ZipCode",
-          "type": "AMAZON.NUMBER"
-        }
-      ]
-    },
-    {
       "intent": "GetDafYomi"
     },
     {

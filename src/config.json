@@ -116,6 +116,7 @@
     "Yom Yerushalayim": "ˈjom jeruˈʃalajim"
   },
   "holidayAlias": {
+    "asara b tevet": "asara b'tevet",
     "lag baomer": "lag b'omer",
     "lag ba omer": "lag b'omer",
     "tu bishvat": "tu b'shvat",
@@ -127,10 +128,14 @@
     "simchas torah": "simchat torah",
     "ta'anis bechoros": "ta'anit bechorot",
     "ta anis bechoros": "ta'anit bechorot",
+    "ta anit bechorot": "ta'anit bechorot",
     "ta anit bechoros": "ta'anit bechorot",
+    "ta anit esther": "ta'anit esther",
     "tish a bav": "tish'a b'av",
     "tish a b av": "tish'a b'av",
     "yom ha atzma ut": "yom haatzma'ut",
+    "yom ha shoah": "yom hashoah",
+    "yom ha zikaron": "yom hazikaron",
     "shavuos": "shavuot"
   },
   "fastHolidays": [
