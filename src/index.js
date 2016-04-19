@@ -146,8 +146,13 @@ function onIntent(intentRequest, session, callback) {
 
     // Dispatch to your skill's intent handlers
     if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].indexOf(intentName) != -1) {
-        if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value) {
-            getHolidayResponse(intent, session, callback);
+        if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value && intent.slots.Holiday.value.length > 1) {
+            var holidayName = intent.slots.Holiday.value.toLowerCase();
+            if (holidayName === 'shabbat' || holidayName === 'shabbos') {
+                getCandleLightingResponse(intent, session, callback);
+            } else {
+                getHolidayResponse(intent, session, callback);
+            }
         } else {
             getWhichHolidayResponse(session, callback);
         }
