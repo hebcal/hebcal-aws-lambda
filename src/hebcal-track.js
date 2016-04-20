@@ -79,9 +79,11 @@ var googleAnalytics = {
         var params = {
             ec: category,
             ea: action,
-            el: label,
             geoid: 'US'
         };
+        if (typeof label !== 'undefined') {
+            params.el = label;
+        }
         params = this.extend(params, options);
         this.send('event', userId, params);
     },

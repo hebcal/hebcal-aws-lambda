@@ -562,7 +562,7 @@ var hebcal = {
             if (err) {
                 console.log(err, err.stack);
                 callback(null);
-            } else if (data.Item === undefined) {
+            } else if (typeof data.Item == 'undefined') {
                 callback(null);
             } else {
                 console.log("SUCCESS Got from DynamoDB userId=" + userId + ",ts=" + data.Item.Timestamp.N);

@@ -53,7 +53,7 @@ function trackIntent(intent, session) {
         for (var slot in slots) {
             var slotval = slots[slot].value;
             if (slotval && slotval.length) {
-                trackEvent(session, intentName, slot + ' ' + slotval);
+                trackEvent(session, slot, slotval);
             }
         }
     }
@@ -289,7 +289,7 @@ function getCandleLightingResponse(intent, session, callback) {
 
     if (location && location.cityNotFound) {
         console.log("NOTFOUND: " + location.cityName);
-        trackEvent(session, 'Error', 'cityNotFound', location.cityName);
+        trackEvent(session, 'cityNotFound', location.cityName);
         return getWhichZipCodeResponse(session, callback,
             "Sorry, we don't know where " + location.cityName + " is. ");
     }
@@ -351,7 +351,7 @@ function getCandleLightingResponse(intent, session, callback) {
                 return callback(session, respond('Internal Error', err));
             } else if (!data) {
                 console.log("NOTFOUND: " + location.zipCode);
-                trackEvent(session, 'Error', 'zipNotFound', location.zipCode);
+                trackEvent(session, 'zipNotFound', location.zipCode);
                 return getWhichZipCodeResponse(session, callback,
                     'We could not find ZIP code ' + location.zipCode + '. ');
             }
