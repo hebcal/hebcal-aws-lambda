@@ -94,6 +94,10 @@ var hebcal = {
             'the bronx': ['bronx'],
             'los angeles': ['la', 'l a'],
             'washington': ['dc', 'd c', 'washington dc', 'washington d c'],
+            'london': ['england', 'great britain', 'britain'],
+            'glasgow': ['scotland'],
+            'belfast': ['northern ireland'],
+            'cardiff': ['wales'],
             'las vegas': ['vegas']
         };
         for (var city in aliasMap) {
@@ -624,10 +628,16 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
+//var testCities = 'Hawaii,Portugal,New Zealand,Costa Rica,San Jose,Israel'.split(',');
+//var testCities = 'England,Scotland,Wales,Northern Ireland,Ireland'.split(',');
 //var testCities = 'japan,arizona,canada,victoria,United Arab Emirates'.split(',');
 var testCities = 'anchorage,honolulu,London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California,Reykjavik,perth,Wellington,melbourne'.split(',');
 testCities.forEach(function(str) {
     var city = hebcal.getCity(str);
+    if (typeof city === 'undefined') {
+        console.log("*** DID NOT FIND " + str);
+        return;
+    }
     console.log(JSON.stringify(city, null, 2));
     var m = hebcal.getMomentForTodayHebrewDate(city);
     var now = moment.tz(city.tzid);
