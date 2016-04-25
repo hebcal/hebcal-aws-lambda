@@ -1,3 +1,4 @@
+"use strict"; /* jshint node: true */
 var moment = require('moment-timezone');
 var googleAnalytics = require('./hebcal-track');
 var hebcal = require('./hebcal-app');
@@ -508,7 +509,7 @@ function getOmerResponse(intent, session, callback) {
         }
         var evt = omerEvents[0];
         if (evt.dt.isSame(targetDay, 'day')) {
-            var matches = evt.name.match(re),
+            var matches = evt.name.match(hebcal.reOmer),
                 num = matches[1],
                 weeks = Math.floor(num / 7),
                 days = num % 7,

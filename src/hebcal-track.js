@@ -1,3 +1,4 @@
+"use strict"; /* jshint node: true */
 var querystring = require('querystring'),
     http = require('http');
 var crypto = require('crypto');

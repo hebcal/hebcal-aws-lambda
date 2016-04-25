@@ -41,6 +41,20 @@ var hebcal = {
             }
             cities[aliasLc] = city;
         });
+        // this is silly, but alias the first occurrence of each country and US state
+        cityObjs.forEach(function(city) {
+            if (city.cc == 'US') {
+                var stateLc = config.stateNames[city.state].toLowerCase();
+                if (!cities[stateLc]) {
+                    cities[stateLc] = city;
+                }
+            } else {
+                var countryLc = city.country.toLowerCase();
+                if (!cities[countryLc]) {
+                    cities[countryLc] = city;
+                }
+            }
+        });
         return cities;
     },
 
@@ -610,6 +624,7 @@ hebcal.init();
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
+//var testCities = 'japan,arizona,canada,victoria,United Arab Emirates'.split(',');
 var testCities = 'anchorage,honolulu,London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California,Reykjavik,perth,Wellington,melbourne'.split(',');
 testCities.forEach(function(str) {
     var city = hebcal.getCity(str);
