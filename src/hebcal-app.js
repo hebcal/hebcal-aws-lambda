@@ -576,7 +576,14 @@ var hebcal = {
         };
         var dynamodb = this.getDynamoDB();
         console.log("Getting from DynamoDB userId=" + userId);
-        dynamodb.getItem(params, function (err, data) {
+        var request = dynamodb.getItem(params);
+        var timeoutObject = setTimeout(function() {
+            console.log("ABORT DynamoDB request for userId=" + userId);
+            request.abort();
+            callback(null);
+        }, 2000);
+        request.send(function(err, data) {
+            clearTimeout(timeoutObject);
             if (err) {
                 console.log(err, err.stack);
                 callback(null);
