@@ -166,13 +166,14 @@ var hebcal = {
         if (str.charAt(str.length - 1) !== '.') {
             ss += '.';
         }
-        ss += ' ';
         if (ssml) {
-            ss += '<break time="0.3s"/>';
+            ss += ' <break time="0.3s"/>';
             greetings = greetings.map(function(x) {
                 var ipa = config.greeting2ipa[x];
                 return this.getPhonemeTag(ipa, x);
             }, this);
+        } else {
+            ss += '\n';
         }
         ss += greetings.join(' and ');
         ss += '.';

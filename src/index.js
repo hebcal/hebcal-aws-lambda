@@ -514,16 +514,23 @@ function getOmerResponse(intent, session, callback) {
                 weeks = Math.floor(num / 7),
                 days = num % 7,
                 todayOrTonightStr = todayOrTonight(now, location),
+                suffix = '',
                 speech = ' is the <say-as interpret-as="ordinal">' + num + '</say-as> day of the Omer';
             if (weeks) {
-                speech += ', which is ' + weeks + ' weeks';
+                suffix = ', which is ' + weeks + ' week';
+                if (weeks > 1) {
+                    suffix += 's';
+                }
                 if (days) {
-                    speech += ' and ' + days + ' days';
+                    suffix += ' and ' + days + ' day';
+                    if (days > 1) {
+                        suffix += 's';
+                    }
                 }
             }
             return callback(session, respond(evt.name,
-                todayOrTonightStr + ' is the ' + evt.name + '.',
-                todayOrTonightStr + speech,
+                todayOrTonightStr + ' is the ' + evt.name + suffix + '.',
+                todayOrTonightStr + speech + suffix,
                 true,
                 session));
         } else {
