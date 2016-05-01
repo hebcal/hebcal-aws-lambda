@@ -150,11 +150,27 @@ var hebcal = {
         return ssml;
     },
 
-    strWithSpecialGreeting: function(str, ssml, addShabbatShalom, specialGreeting) {
-        var dow = moment().day(),
-            isTodayShabbat = addShabbatShalom ? (dow === 5 || dow === 6) : false,
+    weekendGreeting: function(location) {
+        var now = this.getNowForLocation(location),
+            dow = now.day();
+        if (dow === 6) {
+            if (this.isAfterSunset(now, location)) {
+                return 'Shavua Tov';
+            } else {
+                return 'Shabbat Shalom';
+            }
+        } else if (dow === 5) {
+            return 'Shabbat Shalom';
+        } else if (dow === 0 && now.hour() <= 12) {
+            return 'Shavua Tov';
+        }
+        return null;
+    },
+
+    strWithSpecialGreeting: function(str, location, ssml, addShabbatShalom, specialGreeting) {
+        var shabbatGreeting = addShabbatShalom ? this.weekendGreeting(location) : null,
             isTodaySpecial = typeof specialGreeting === 'object' && specialGreeting.length,
-            greetings = isTodayShabbat ? [ 'Shabbat Shalom' ] : [];
+            greetings = shabbatGreeting ? [ shabbatGreeting ] : [];
         var ss;
         if (isTodaySpecial) {
             greetings = greetings.concat(specialGreeting);
@@ -465,6 +481,22 @@ var hebcal = {
         return m;
     },
 
+    getNowForLocation: function(location) {
+        if (location && location.tzid) {
+            return moment.tz(location.tzid);
+        } else {
+            return moment();
+        }
+    },
+
+    isAfterSunset: function(now, location) {
+        if (location && location.latitude) {
+            var sunset = this.getSunset(location);
+            return now.isAfter(sunset);
+        }
+        return false;
+    },
+
     getCandleLightingArgs: function(location, extraArgs) {
         var ll = this.latlongToHebcal(location.latitude, location.longitude);
         var args = [
@@ -722,6 +754,8 @@ for (var i = locations.length - 1; i >= 0; i--) {
     var m = hebcal.getMomentForTodayHebrewDate(location);
     var args = m.format('M D YYYY').split(' ');
     console.log(m.format());
+    console.log(hebcal.weekendGreeting(location));
+    console.log(hebcal.strWithSpecialGreeting("Hello.", location, true, true, []));
     hebcal.invokeHebcal(args, location, function(err, events) {
         if (!err && events && events.length) {
             var evt = events[0];

@@ -194,29 +194,13 @@ function getLocation(session) {
     return undefined;
 }
 
-function getNowForLocation0(location) {
-    if (location && location.tzid) {
-        return moment.tz(location.tzid);
-    } else {
-        return moment();
-    }
-}
-
 function getNowForLocation(session) {
     var location = getLocation(session);
-    return getNowForLocation0(location);
-}
-
-function isAfterSunset(now, location) {
-    if (location && location.latitude) {
-        var sunset = hebcal.getSunset(location);
-        return now.isAfter(sunset);
-    }
-    return false;
+    return hebcal.getNowForLocation(location);
 }
 
 function todayOrTonight(now, location) {
-    return isAfterSunset(now, location) ? 'Tonight' : 'Today';
+    return hebcal.isAfterSunset(now, location) ? 'Tonight' : 'Today';
 }
 
 function getWelcomeResponse(session, callback, isHelpIntent) {
@@ -428,7 +412,7 @@ function getHebrewDateSrc(now, location, slotValue) {
 
 function getHebrewDateResponse(intent, session, callback) {
     var location = getLocation(session),
-        now = getNowForLocation0(location),
+        now = hebcal.getNowForLocation(location),
         slotValue = getDateSlotValue(intent),
         src = getHebrewDateSrc(now, location, slotValue),
         mdy = src.format('M D YYYY').split(' '),
@@ -437,7 +421,7 @@ function getHebrewDateResponse(intent, session, callback) {
         srcDateText = src.format('MMMM Do YYYY');
     if (!slotValue) {
         srcDateSsml = todayOrTonight(now, location);
-        if (isAfterSunset(now, location)) {
+        if (hebcal.isAfterSunset(now, location)) {
             srcDateText = now.format('MMMM Do YYYY');
             srcDateText += ' (after sunset)';
         }
@@ -493,7 +477,7 @@ function getDafYomiResponse(intent, session, callback) {
 function getOmerResponse(intent, session, callback) {
     var args = ['-o', '-h', '-x', '--years', '2'];
     var location = getLocation(session),
-        now = getNowForLocation0(location),
+        now = hebcal.getNowForLocation(location),
         targetDay = getHebrewDateSrc(now, location);
     hebcal.invokeHebcal(args, location, function(err, events) {
         if (err) {
@@ -634,8 +618,9 @@ function getHolidayResponse(intent, session, callback) {
 
 function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
     var specialGreeting = session && session.attributes ? session.attributes.specialGreeting : undefined;
-    var cardText2 = hebcal.strWithSpecialGreeting(cardText, false, addShabbatShalom, specialGreeting),
-        ssmlContent2 = hebcal.strWithSpecialGreeting(ssmlContent, true, addShabbatShalom, specialGreeting);
+    var location = getLocation(session);
+    var cardText2 = hebcal.strWithSpecialGreeting(cardText, location, false, addShabbatShalom, specialGreeting),
+        ssmlContent2 = hebcal.strWithSpecialGreeting(ssmlContent, location, true, addShabbatShalom, specialGreeting);
     var outputSpeech = ssmlContent2 ? {
         type: 'SSML',
         ssml: '<speak>' + ssmlContent2 + '</speak>'
