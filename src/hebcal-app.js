@@ -375,7 +375,7 @@ var hebcal = {
         });
 
         proc.on('close', function(code) {
-            console.log("Got " + events.length + " events");
+            console.log("Got " + events.length + " events (" + args.join(' ') + ')');
             if (events.length === 0) {
                 callback('No event data available.', null);
             } else {

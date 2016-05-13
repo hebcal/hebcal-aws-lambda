@@ -357,8 +357,13 @@ function getCandleLightingResponse(intent, session, callback) {
 function getParshaResponse(intent, session, callback) {
     var saturday = getNowForLocation(session).day(6),
         saturdayMDY = saturday.format('M D YYYY').split(' '),
-        args = ['-s'].concat(saturdayMDY);
-    hebcal.invokeHebcal(args, getLocation(session), function(err, events) {
+        location = getLocation(session),
+        args = ['-s'];
+    if (location && location.cc && location.cc == 'IL') {
+        args = args.concat('-i');
+    }
+    args = args.concat(saturdayMDY);
+    hebcal.invokeHebcal(args, location, function(err, events) {
         var re =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
         if (err) {
             trackException(session, err);
