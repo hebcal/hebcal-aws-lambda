@@ -98,7 +98,7 @@ var hebcal = {
             'glasgow': ['scotland'],
             'belfast': ['northern ireland'],
             'cardiff': ['wales'],
-            'south lake tahoe': ['lake tahoe'],
+            'south lake tahoe': ['lake tahoe', 'tahoe'],
             'las vegas': ['vegas']
         };
         for (var city in aliasMap) {
