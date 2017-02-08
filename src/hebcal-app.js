@@ -91,13 +91,14 @@ var hebcal = {
     initCityAliases: function() {
         var aliasMap = {
             'new york city': ['nyc', 'n y c', 'new york', 'new york new york'],
-            'the bronx': ['bronx'],
+            'the bronx': ['bronx', 'bronx new york'],
             'los angeles': ['la', 'l a'],
             'washington': ['dc', 'd c', 'washington dc', 'washington d c'],
             'london': ['england', 'great britain', 'britain'],
             'glasgow': ['scotland'],
             'belfast': ['northern ireland'],
             'cardiff': ['wales'],
+            'south lake tahoe': ['lake tahoe'],
             'las vegas': ['vegas']
         };
         for (var city in aliasMap) {
