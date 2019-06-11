@@ -3,6 +3,9 @@ var spawn = require('child_process').spawn,
     readline = require('readline'),
     moment = require('moment-timezone');
 
+// don't lazily load
+var AWS = require('aws-sdk');
+
 var SunCalc = require('suncalc');
 
 var config = require('./config.json');
@@ -592,8 +595,7 @@ var hebcal = {
 
     getDynamoDB: function() {
         if (!this.dynamodb) {
-            console.log("Lazily loading aws-sdk and creating DynamoDB");
-            var AWS = require('aws-sdk');
+            console.log("Creating DynamoDB...");
             this.dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
         }
         return this.dynamodb;

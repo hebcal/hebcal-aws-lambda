@@ -4,4 +4,4 @@ ZIPCONTENTS=node_modules hebcal hebcal-app.js hebcal-track.js index.js config.js
 all: $(ZIPFILE)
 
 $(ZIPFILE): $(ZIPCONTENTS)
-	rm -f $(ZIPFILE) && zip -r $(ZIPFILE) $(ZIPCONTENTS)
+	rm -f $(ZIPFILE) && zip -x 'node_modules/aws-sdk/*' -r $(ZIPFILE) $(ZIPCONTENTS)
