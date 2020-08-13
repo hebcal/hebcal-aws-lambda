@@ -10,20 +10,15 @@ const googleAnalytics = {
 
     extend(destination, source) {
         if (typeof source === 'object') {
-            for (const attr in source) {
-                if (source.hasOwnProperty(attr)) {
-                    destination[attr] = source[attr];
-                }
-            }
+            Object.assign(destination, source);
         }
         return destination;
     },
 
     hashUuid4(str) {
         const hash = crypto.createHash('md5');
-        let digest;
         hash.update(str);
-        digest = hash.digest('hex');
+        const digest = hash.digest('hex');
         return `${digest.substr(0, 8)}-${digest.substr(8, 4)}-4${digest.substr(13, 3)}-8${digest.substr(17, 3)}-${digest.substr(20, 12)}`;
     },
 

@@ -51,7 +51,7 @@
       "slots": [
         {
           "name": "CityName",
-          "type": "AMAZON.US_CITY"
+          "type": "AMAZON.City"
         },
         {
           "name": "ZipCode",

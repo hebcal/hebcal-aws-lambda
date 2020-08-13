@@ -11,10 +11,6 @@ exports.handler = function (event, context) {
              context.fail("Invalid Application ID=" + event.session.application.applicationId);
         }
 */
-        if (event.session.new) {
-            onSessionStarted({requestId: event.request.requestId}, event.session);
-        }
-
         if (event.request.type === "LaunchRequest" || event.request.type === "IntentRequest") {
             loadUserAndGreetings(event.request, event.session, () => {
                 if (event.request.type === "LaunchRequest") {
@@ -33,7 +29,6 @@ exports.handler = function (event, context) {
                 }
             });
         } else if (event.request.type === "SessionEndedRequest") {
-            onSessionEnded(event.request, event.session);
             trackScreenview(event.session, "SessionEndedRequest");
             context.succeed();
         } else {
@@ -90,12 +85,6 @@ function trackException(session, description) {
     googleAnalytics.exception(session.user.userId, description, options);
 }
 
-/**
- * Called when the session starts.
- */
-function onSessionStarted(sessionStartedRequest, session) {
-}
-
 function loadUserAndGreetings(request, session, callback) {
     session.attributes = session.attributes || {};
 
@@ -144,43 +133,52 @@ function onIntent(intentRequest, session, callback) {
     const intentName = intentRequest.intent.name;
 
     // Dispatch to your skill's intent handlers
-    if (["GetHoliday", "GetHolidayDate", "GetHolidayNextYear"].includes(intentName)) {
-        if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value && intent.slots.Holiday.value.length > 1) {
-            const holidayName = intent.slots.Holiday.value.toLowerCase();
-            if (holidayName === 'shabbat' || holidayName === 'shabbos') {
-                getCandleLightingResponse(intent, session, callback);
+    switch (intentName) {
+        case "GetHoliday":
+        case "GetHolidayDate":
+        case "GetHolidayNextYear":
+        case "HolidaySlotOnlyIntent":
+            if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value && intent.slots.Holiday.value.length > 1) {
+                const holidayName = intent.slots.Holiday.value.toLowerCase();
+                if (holidayName === 'shabbat' || holidayName === 'shabbos') {
+                    getCandleLightingResponse(intent, session, callback);
+                } else {
+                    getHolidayResponse(intent, session, callback);
+                }
             } else {
-                getHolidayResponse(intent, session, callback);
+                getWhichHolidayResponse(session, callback);
             }
-        } else {
-            getWhichHolidayResponse(session, callback);
-        }
-    } else if ("GetParsha" === intentName) {
-        getParshaResponse(intent, session, callback);
-    } else if ("GetHebrewDate" === intentName) {
-        getHebrewDateResponse(intent, session, callback);
-    } else if ("GetCandles" === intentName) {
-        getCandleLightingResponse(intent, session, callback);
-    } else if ("SetLocation" === intentName) {
-        getCandleLightingResponse(intent, session, callback);
-    } else if ("GetOmer" === intentName) {
-        getOmerResponse(intent, session, callback);
-    } else if ("GetDafYomi" === intentName) {
-        getDafYomiResponse(intent, session, callback);
-    } else if ("AMAZON.CancelIntent" === intentName || "AMAZON.StopIntent" === intentName) {
-        callback(session, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
-    } else if ("AMAZON.HelpIntent" === intentName) {
-        getWelcomeResponse(session, callback, true);
-    } else {
-        callback(session, buildSpeechletResponse("Invalid intent", `Invalid intent ${intentName}. Goodbye`, null, true));
+            break;
+        case "GetParsha":
+            getParshaResponse(intent, session, callback);
+            break;
+        case "GetHebrewDate":
+        case "MyDateSlotOnlyIntent":
+            getHebrewDateResponse(intent, session, callback);
+            break;
+        case "GetCandles":
+        case "SetLocation":
+        case "CityNameSlotOnlyIntent":
+        case "ZipCodeSlotOnlyIntent":
+            getCandleLightingResponse(intent, session, callback);
+            break;
+        case "GetOmer":
+            getOmerResponse(intent, session, callback);
+            break;
+        case "GetDafYomi":
+            getDafYomiResponse(intent, session, callback);
+            break;
+        case "AMAZON.CancelIntent":
+        case "AMAZON.StopIntent":
+            callback(session, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
+            break;
+        case "AMAZON.HelpIntent":
+            getWelcomeResponse(session, callback, true);
+            break;
+        default:
+            callback(session, buildSpeechletResponse("Invalid intent", `Invalid intent ${intentName}. Goodbye`, null, true));
+            break;
     }
-}
-
-/**
- * Called when the user ends the session.
- * Is not called when the skill returns shouldEndSession=true.
- */
-function onSessionEnded(sessionEndedRequest, session) {
 }
 
 // --------------- Functions that control the skill's behavior -----------------------
@@ -244,7 +242,7 @@ function getWhichZipCodeResponse(session, callback, prefixText) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function userSpecifiedLocation({slots}, session) {
+function userSpecifiedLocation({slots}) {
     if (slots && slots.CityName && slots.CityName.value) {
         const location = hebcal.getCity(slots.CityName.value);
         return location ? location : {
@@ -267,7 +265,7 @@ function getCandleLightingResponse(intent, session, callback) {
     const now = getNowForLocation(session);
     const friday = hebcal.getUpcomingFriday(now);
     const fridayMDY = friday.format('M D YYYY').split(' ');
-    let location = userSpecifiedLocation(intent, session);
+    let location = userSpecifiedLocation(intent);
     const sessionLocation = getLocation(session);
 
     if (location && location.cityNotFound) {
