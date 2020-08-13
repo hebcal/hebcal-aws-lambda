@@ -1,5 +1,7 @@
 const googleAnalytics = require('./hebcal-track');
 const hebcal = require('./hebcal-app');
+const moment = require('moment-timezone');
+const {HDate, HebrewCalendar, DafYomi} = require('@hebcal/core');
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -93,28 +95,34 @@ function loadUserAndGreetings(request, session, callback) {
     }
 
     hebcal.lookupUser(session.user.userId, user => {
-        let args = ['-t'];
+        let now = moment();
+        let location;
         if (user && user.ts) {
             session.attributes.returningUser = true;
             if (user.location) {
-                const m = hebcal.getMomentForTodayHebrewDate(user.location);
-                args = m.format('M D YYYY').split(' ');
-                session.attributes.location = user.location;
+                now = hebcal.getMomentForTodayHebrewDate(user.location);
+                location = session.attributes.location = user.location;
             }
         }
-        hebcal.invokeHebcal(args, getLocation(session), (err, events) => {
-            if (err) {
-                trackException(session, err);
-                return callback();
-            }
-            session.attributes.todayHebrewDateStr = events[0].name;
-            const arr = hebcal.getSpecialGreetings(events);
-            if (arr.length) {
-                session.attributes.specialGreeting = arr;
-            }
-            return callback();
-        });
+        const hd = new HDate(now.toDate());
+        session.attributes.todayHebrewDateStr = hd.render();
+        const il = Boolean(location && location.country && location.country === 'Israel');
+        const events = getHolidaysOnDate(hd, il);
+        const arr = hebcal.getSpecialGreetings(events);
+        if (arr.length) {
+            session.attributes.specialGreeting = arr;
+        }
+        return callback();
     });
+}
+
+function getHolidaysOnDate(hd, il) {
+    const events0 = HebrewCalendar.getHolidaysOnDate(hd) || [];
+    const events1 = events0.filter((ev) => (il && ev.observedInIsrael() || (!il && ev.observedInDiaspora())));
+    const events = events1.map((ev) => {
+        return { name: ev.renderBrief(), dt: ev.getDate().greg() };
+    });
+    return events;
 }
 
 /**
@@ -402,6 +410,12 @@ function getDateSlotValue({slots}) {
     return slots && slots.MyDate && slots.MyDate.value;
 }
 
+/**
+ * @param {moment.Moment} now 
+ * @param {*} location 
+ * @param {*} slotValue 
+ * @return {moment.Moment}
+ */
 function getHebrewDateSrc(now, location, slotValue) {
     if (slotValue) {
         return hebcal.parseAmazonDateFormat(slotValue);
@@ -417,8 +431,6 @@ function getHebrewDateResponse(intent, session, callback) {
     const now = hebcal.getNowForLocation(location);
     const slotValue = getDateSlotValue(intent);
     const src = getHebrewDateSrc(now, location, slotValue);
-    const mdy = src.format('M D YYYY').split(' ');
-    const args = ['-d', '-h', '-x'].concat(mdy);
     let srcDateSsml = hebcal.formatDateSsml(src);
     let srcDateText = src.format('MMMM Do YYYY');
     if (!slotValue) {
@@ -428,52 +440,24 @@ function getHebrewDateResponse(intent, session, callback) {
             srcDateText += ' (after sunset)';
         }
     }
-    hebcal.invokeHebcal(args, location, (err, events) => {
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
-        if (events.length) {
-            const evt = events[0];
-            const isOrWasThe = evt.dt.isSameOrAfter(now, 'day') ? ' is the ' : ' was the ';
-            const name = evt.name;
-            const speech = hebcal.hebrewDateSSML(name);
-            callback(session, respond(name,
-                `${srcDateText + isOrWasThe + name}.`,
-                srcDateSsml + isOrWasThe + speech,
-                true,
-                session));
-        } else {
-            trackException(session, intent.name);
-            callback(session, respond(`Internal Error - ${intent.name}`,
-                `Sorry, we could not convert ${srcDateText} to Hebrew calendar.`,
-                `Sorry, we could not convert ${srcDateSsml} to Hebrew calendar.`));
-        }
-    });
+    const hd = new HDate(src.toDate());
+    const name = hd.render();
+    const speech = hebcal.hebrewDateSSML(name);
+    callback(session, respond(name,
+        `${srcDateText} is the ${name}.`,
+        srcDateSsml + ' is the ' + speech,
+        true,
+        session));
 }
 
-function getDafYomiResponse({name}, session, callback) {
-    const args = ['-F', '-h', '-x', '-t'];
-    hebcal.invokeHebcal(args, getLocation(session), (err, events) => {
-        let found = false;
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
-        events.forEach(({name}) => {
-            if (name.indexOf('Daf Yomi:') === 0) {
-                const daf = name.substr(10);
-                const cardText = `Today's Daf Yomi is ${daf}`;
-                found = true;
-                return callback(session, respond(daf, cardText, null, true, session));
-            }
-        });
-        if (!found) {
-            trackException(session, name);
-            return callback(session, respond(`Internal Error - ${name}`,
-                "Sorry, we could fetch Daf Yomi. Please try again later."));
-        }
-    });
+function getDafYomiResponse(intent, session, callback) {
+    const location = getLocation(session);
+    const now = hebcal.getNowForLocation(location);
+    const slotValue = getDateSlotValue(intent);
+    const src = getHebrewDateSrc(now, location, slotValue);
+    const daf = new DafYomi(src.toDate());
+    const cardText = `Today's Daf Yomi is ` + daf.render();
+    return callback(session, respond(daf, cardText, null, true, session));
 }
 
 function getOmerResponse(intent, session, callback) {

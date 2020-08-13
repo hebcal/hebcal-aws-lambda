@@ -2,7 +2,6 @@ const {spawn} = require('child_process');
 
 const readline = require('readline');
 const moment = require('moment-timezone');
-// const {HDate} = require('@hebcal/core');
 
 // don't lazily load
 const AWS = require('aws-sdk');
@@ -344,22 +343,20 @@ const hebcal = {
     },
 
     invokeHebcal(args, location, callback) {
-        let proc;
-        let rd;
         const events = [];
         const evtTimeRe = /(\d+:\d+)$/;
         const tzid0 = this.getTzidFromLocation(location);
         const tzid = tzid0 || this.defaultTimezone;
         const env = this.getEnvForTimezone(process.env, tzid);
 
-        proc = spawn('./hebcal', args, { cwd: undefined, env });
+        const proc = spawn('./hebcal', args, { cwd: undefined, env });
 
         proc.on('error', err => {
             console.log('Failed to start child process.');
             callback('Failed to start child process.', null);
         });
 
-        rd = readline.createInterface({
+        const rd = readline.createInterface({
             input: proc.stdout,
             terminal: false
         }).on('line', line => {
@@ -380,7 +377,7 @@ const hebcal = {
             events.push({dt, name});
         });
 
-        proc.on('close', code => {
+        proc.on('close', () => {
             console.log(`Got ${events.length} events (${args.join(' ')})`);
             if (events.length === 0) {
                 callback('No event data available.', null);
@@ -487,6 +484,10 @@ const hebcal = {
         return m;
     },
 
+    /**
+     * @param {*} location
+     * @return {moment.Moment}
+     */
     getNowForLocation(location) {
         if (location && location.tzid) {
             return moment.tz(location.tzid);
