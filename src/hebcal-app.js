@@ -1,6 +1,3 @@
-const {spawn} = require('child_process');
-
-const readline = require('readline');
 const moment = require('moment-timezone');
 
 // don't lazily load
@@ -201,21 +198,7 @@ const hebcal = {
         return ss;
     },
 
-    getHolidayBasename(str) {
-        str = str.replace(/ \d\d\d\d$/, '');
-        str = str.replace(/ \(CH\'\'M\)$/, '');
-        str = str.replace(/ \(Hoshana Raba\)$/, '');
-        if (str.indexOf('Rosh Chodesh Adar ') !== 0) {
-            str = str.replace(/ [IV]+$/, '');
-        }
-        str = str.replace(/: \d Candles?$/, '');
-        str = str.replace(/: 8th Day$/, '');
-        str = str.replace(/^Erev /, '');
-        return str;
-    },
-
     filterEvents(events) {
-        const self = this;
         const dest = [];
         const seen = {};
         events.forEach(evt => {
@@ -230,12 +213,11 @@ const hebcal = {
                     return;
                 }
             } else {
-                subj = self.getHolidayBasename(subj);
+                subj = evt.basename;
             }
             if (seen[subj]) {
                 return;
             }
-            evt.basename = subj;
             dest.push(evt);
             if (subj != "Asara B'Tevet") {
                 seen[subj] = true;
@@ -330,64 +312,8 @@ const hebcal = {
         return undefined;
     },
 
-    getEnvForTimezone(env, tzid) {
-        const copy = {};
-        // shallow copy of process.env
-        for (const attr in env) {
-            if (env.hasOwnProperty(attr)) {
-                copy[attr] = env[attr];
-            }
-        }
-        copy.TZ = tzid;
-        return copy;
-    },
-
-    invokeHebcal(args, location, callback) {
-        const events = [];
-        const evtTimeRe = /(\d+:\d+)$/;
-        const tzid0 = this.getTzidFromLocation(location);
-        const tzid = tzid0 || this.defaultTimezone;
-        const env = this.getEnvForTimezone(process.env, tzid);
-
-        const proc = spawn('./hebcal', args, { cwd: undefined, env });
-
-        proc.on('error', err => {
-            console.log('Failed to start child process.');
-            callback('Failed to start child process.', null);
-        });
-
-        const rd = readline.createInterface({
-            input: proc.stdout,
-            terminal: false
-        }).on('line', line => {
-            const space = line.indexOf(' ');
-            const mdy = line.substr(0, space);
-            let name = line.substr(space + 1);
-            let dt;
-            if (name.indexOf('Candle lighting') === 0 ||
-                name.indexOf('Havdalah') === 0) {
-                const matches = name.match(evtTimeRe);
-                const hourMin = matches[1];
-                const timeStr = `${mdy} ${hourMin}`;
-                dt = moment.tz(timeStr, 'MM/DD/YYYY HH:mm', tzid);
-                name = name.substr(0, name.indexOf(':'));
-            } else {
-                dt = moment.tz(mdy, 'MM/DD/YYYY', tzid);
-            }
-            events.push({dt, name});
-        });
-
-        proc.on('close', () => {
-            console.log(`Got ${events.length} events (${args.join(' ')})`);
-            if (events.length === 0) {
-                callback('No event data available.', null);
-            } else {
-                callback(null, events);
-            }
-        });
-    },
-
-    getParashaOrHolidayName(name) {
+    getParashaOrHolidayName(evt) {
+        const name = evt.name;
         if (name.indexOf("Parashat ") === 0) {
             const space = name.indexOf(' ');
             const parsha = name.substr(space + 1);
@@ -398,7 +324,7 @@ const hebcal = {
                 ipa: `ˈpɑːʁɑːˈʃɑːt ${ipa}`
             };
         } else {
-            const holiday = this.getHolidayBasename(name);
+            const holiday = evt.basename;
             return {
                 title: `${holiday} Torah reading`,
                 name: holiday,
@@ -446,21 +372,6 @@ const hebcal = {
         return greetings.filter(str => {
             return str !== undefined;
         });
-    },
-
-    latlongToHebcal(latitude, longitude) {
-        const latDeg = latitude > 0 ? Math.floor(latitude) : Math.ceil(latitude);
-        const longDeg = longitude > 0 ? Math.floor(longitude) : Math.ceil(longitude);
-        const latMin = Math.floor((latitude - latDeg) * 60);
-        const longMin = Math.floor((longitude - longDeg) * 60);
-        return {
-            latitude,
-            longitude,
-            latDeg,
-            latMin: Math.abs(latMin),
-            longDeg: longDeg * -1,
-            longMin: Math.abs(longMin)
-        };
     },
 
     /**
@@ -515,22 +426,6 @@ const hebcal = {
             return now.isAfter(sunset);
         }
         return false;
-    },
-
-    getCandleLightingArgs({latitude, longitude, tzid}, extraArgs) {
-        const ll = this.latlongToHebcal(latitude, longitude);
-        const args = [
-            '-c',
-            '-E',
-            '-h',
-            '-x',
-            '-L', `${ll.longDeg},${ll.longMin}`,
-            '-l', `${ll.latDeg},${ll.latMin}`,
-            '-z', tzid,
-            '-m', '50'
-        ];
-//        this.setDefaultTimeZone(location.tzid);
-        return extraArgs ? args.concat(extraArgs) : args;
     },
 
     getUsaTzid(state, tz, dst) {
@@ -596,6 +491,7 @@ const hebcal = {
                 latitude: row.Latitude,
                 longitude: row.Longitude,
                 tzid,
+                cc: 'US',
                 cityName
             };
             if (row.GeoId) {
