@@ -1,7 +1,7 @@
 const googleAnalytics = require('./hebcal-track');
 const hebcal = require('./hebcal-app');
 const moment = require('moment-timezone');
-const {HDate, HebrewCalendar, DafYomi} = require('@hebcal/core');
+const {HDate, HebrewCalendar, DafYomi, OmerEvent, months, greg} = require('@hebcal/core');
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -106,8 +106,7 @@ function loadUserAndGreetings(request, session, callback) {
         }
         const hd = new HDate(now.toDate());
         session.attributes.todayHebrewDateStr = hd.render();
-        const il = Boolean(location && location.country && location.country === 'Israel');
-        const events = getHolidaysOnDate(hd, il);
+        const events = getHolidaysOnDate(hd, location);
         const arr = hebcal.getSpecialGreetings(events);
         if (arr.length) {
             session.attributes.specialGreeting = arr;
@@ -116,11 +115,19 @@ function loadUserAndGreetings(request, session, callback) {
     });
 }
 
-function getHolidaysOnDate(hd, il) {
+function getHolidaysOnDate(hd, location) {
+    const il = Boolean(location && location.cc && location.cc === 'IL');
+    const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
     const events0 = HebrewCalendar.getHolidaysOnDate(hd) || [];
     const events1 = events0.filter((ev) => (il && ev.observedInIsrael() || (!il && ev.observedInDiaspora())));
     const events = events1.map((ev) => {
-        return { name: ev.renderBrief(), dt: ev.getDate().greg() };
+        const dt = ev.getDate().greg();
+        const iso = dt.toISOString().substring(0, 10);
+        return {
+            name: ev.render(),
+            dt: moment.tz(iso, tzid),
+            orig: ev,
+        };
     });
     return events;
 }
@@ -358,52 +365,52 @@ function getCandleLightingResponse(intent, session, callback) {
     }
 }
 
-function getParshaResponse({name}, session, callback) {
-    const saturday = getNowForLocation(session).day(6);
-    const saturdayMDY = saturday.format('M D YYYY').split(' ');
+const reParsha =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
+
+function getParshaResponse(intent, session, callback) {
+    const now = getNowForLocation(session);
+    const saturday = now.day(6);
     const location = getLocation(session);
-    let args = ['-s'];
-    if (location && location.cc && location.cc == 'IL') {
-        args = args.concat('-i');
-    }
-    args = args.concat(saturdayMDY);
-    hebcal.invokeHebcal(args, location, (err, events) => {
-        const re =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
-        const found = events.filter(({name}) => {
-            return name.search(re) != -1;
-        });
-        if (found.length) {
-            const todayOrThisWeek = (getNowForLocation(session).day() === 6) ? 'Today' : 'This week';
-            const prefixText = `${todayOrThisWeek}'s Torah portion is `;
-            const result = hebcal.getParashaOrHolidayName(found[0].name);
-            const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
-            const specialShabbat = events.filter(({name}) => {
-                return name.indexOf('Shabbat ') === 0;
-            });
-            let suffixText = '';
-            let suffixSsml = '';
-            if (specialShabbat.length) {
-                const suffixStart = ' Note the special reading for ';
-                const result2 = hebcal.getParashaOrHolidayName(specialShabbat[0].name);
-                const phoneme2 = hebcal.getPhonemeTag(result2.ipa, result2.name);
-                suffixText = `${suffixStart + specialShabbat[0].name}.`;
-                suffixSsml = `${suffixStart + phoneme2}.`;
-            }
-            callback(session, respond(result.title,
-                `${prefixText + result.name}.${suffixText}`,
-                `${prefixText + phoneme}.${suffixSsml}`,
-                true,
-                session));
-        } else {
-            trackException(session, name);
-            callback(session, respond(`Internal Error - ${name}`,
-                "Sorry, we could find the weekly Torah portion."));
-        }
+    const il = Boolean(location && location.cc && location.cc === 'IL');
+    const events0 = HebrewCalendar.calendar({
+        start: saturday.toDate(),
+        end: saturday.toDate(),
+        sedrot: true,
+        il,
     });
+    const events = events0.map((ev) => {
+        return { name: ev.render() };
+    });
+    const found = events.find((evt) => {
+        return evt.name.search(reParsha) != -1;
+    });
+    if (found) {
+        const todayOrThisWeek = (now.day() === 6) ? 'Today' : 'This week';
+        const prefixText = `${todayOrThisWeek}'s Torah portion is `;
+        const result = hebcal.getParashaOrHolidayName(found.name);
+        const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
+        const specialShabbat = events.find((evt) => {
+            return evt.name.indexOf('Shabbat ') === 0;
+        });
+        let suffixText = '';
+        let suffixSsml = '';
+        if (specialShabbat) {
+            const suffixStart = ' Note the special reading for ';
+            const result2 = hebcal.getParashaOrHolidayName(specialShabbat.name);
+            const phoneme2 = hebcal.getPhonemeTag(result2.ipa, result2.name);
+            suffixText = `${suffixStart}${specialShabbat.name}.`;
+            suffixSsml = `${suffixStart}${phoneme2}.`;
+        }
+        callback(session, respond(result.title,
+            `${prefixText}${result.name}.${suffixText}`,
+            `${prefixText}${phoneme}.${suffixSsml}`,
+            true,
+            session));
+    } else {
+        trackException(session, intent.name);
+        callback(session, respond(`Internal Error - ${intent.name}`,
+            "Sorry, we could find the weekly Torah portion."));
+    }
 }
 
 function getDateSlotValue({slots}) {
@@ -455,151 +462,154 @@ function getDafYomiResponse(intent, session, callback) {
     const now = hebcal.getNowForLocation(location);
     const slotValue = getDateSlotValue(intent);
     const src = getHebrewDateSrc(now, location, slotValue);
-    const daf = new DafYomi(src.toDate());
-    const cardText = `Today's Daf Yomi is ` + daf.render();
+    const dy = new DafYomi(src.toDate());
+    const daf = dy.render();
+    const cardText = `Today's Daf Yomi is ${daf}`;
     return callback(session, respond(daf, cardText, null, true, session));
 }
 
 function getOmerResponse(intent, session, callback) {
-    const args = ['-o', '-h', '-x', '--years', '2'];
     const location = getLocation(session);
     const now = hebcal.getNowForLocation(location);
     const targetDay = getHebrewDateSrc(now, location);
-    hebcal.invokeHebcal(args, location, (err, events) => {
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
-        const omerEvents = events.filter(({name, dt}) => {
-            return hebcal.reOmer.test(name) && dt.isSameOrAfter(targetDay, 'day');
-        });
-        console.log(`Filtered ${events.length} events to ${omerEvents.length} future`);
-        if (omerEvents.length === 0) {
-            return callback(session, respond('Interal Error', 'Cannot find Omer in event list.'));
-        }
-        const evt = omerEvents[0];
-        if (evt.dt.isSame(targetDay, 'day')) {
-            const matches = evt.name.match(hebcal.reOmer);
-            const num = matches[1];
-            const weeks = Math.floor(num / 7);
-            const days = num % 7;
-            const todayOrTonightStr = todayOrTonight(now, location);
-            let suffix = '';
-            const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
-            if (weeks) {
-                suffix = `, which is ${weeks} week`;
-                if (weeks > 1) {
+    const hd = new HDate(targetDay.toDate());
+    const hyear = hd.getFullYear();
+    const beginOmer = HDate.hebrew2abs(hyear, months.NISAN, 16);
+    const endOmer = HDate.hebrew2abs(hyear, months.SIVAN, 5);
+    const abs = hd.abs();
+    if (abs >= beginOmer && abs <= endOmer) {
+        const num = abs - beginOmer + 1;
+        const weeks = Math.floor(num / 7);
+        const days = num % 7;
+        const todayOrTonightStr = todayOrTonight(now, location);
+        let suffix = '';
+        const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
+        if (weeks) {
+            suffix = `, which is ${weeks} week`;
+            if (weeks > 1) {
+                suffix += 's';
+            }
+            if (days) {
+                suffix += ` and ${days} day`;
+                if (days > 1) {
                     suffix += 's';
                 }
-                if (days) {
-                    suffix += ` and ${days} day`;
-                    if (days > 1) {
-                        suffix += 's';
-                    }
-                }
             }
-            return callback(session, respond(evt.name,
-                `${todayOrTonightStr} is the ${evt.name}${suffix}.`,
-                todayOrTonightStr + speech + suffix,
-                true,
-                session));
-        } else {
-            const observedDt = hebcal.dayEventObserved(evt);
-            const dateSsml = hebcal.formatDateSsml(observedDt);
-            const dateText = observedDt.format('dddd, MMMM Do YYYY');
-            const prefix = 'The counting of the Omer begins at sundown on ';
-            callback(session, respond('Counting of the Omer',
-                `${prefix + dateText}.`,
-                prefix + dateSsml,
-                true,
-                session));
         }
-    });
+        const ev = new OmerEvent(hd, num);
+        const title = ev.render();
+        return callback(session, respond(title,
+            `${todayOrTonightStr} is the ${title}${suffix}.`,
+            todayOrTonightStr + speech + suffix,
+            true,
+            session));
+    } else {
+        const upcoming = abs < beginOmer ? beginOmer : HDate.hebrew2abs(hyear + 1, months.NISAN, 16);
+        const upcomingDt = greg.abs2greg(upcoming); /** @todo: subtract 1? */
+        const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
+        const observedDt = moment.tz(upcomingDt, tzid);
+        const dateSsml = hebcal.formatDateSsml(observedDt);
+        const dateText = observedDt.format('dddd, MMMM Do YYYY');
+        const prefix = 'The counting of the Omer begins at sundown on ';
+        callback(session, respond('Counting of the Omer',
+            `${prefix}${dateText}.`,
+            prefix + dateSsml,
+            true,
+            session));
+    }
 }
 
 function getHolidayResponse({slots, name}, session, callback) {
-    let args;
+    const location = getLocation(session);
+    const il = Boolean(location && location.cc && location.cc === 'IL');
+    const options = {il};
     const searchStr0 = slots.Holiday.value.toLowerCase();
     const searchStr = hebcal.getHolidayAlias(searchStr0) || searchStr0;
     let titleYear;
 
     if (name === "GetHoliday") {
-        args = ['--years', '2'];
+        options.numYears = 2;
     } else if (name === "GetHolidayDate") {
         if (slots && slots.MyYear && slots.MyYear.value) {
-            args = [slots.MyYear.value];
+            options.year = +slots.MyYear.value;
             titleYear = slots.MyYear.value;
         }
     } else if (name === "GetHolidayNextYear") {
         const year = new Date().getFullYear() + 1;
-        const yearStr = year.toString();
-        args = [yearStr];
-        titleYear = yearStr;
+        options.year = year;
+        titleYear = year.toString();
     }
 
-    hebcal.invokeHebcal(args, getLocation(session), (err, events) => {
-        const now = getNowForLocation(session);
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
-        if (name === "GetHoliday") {
-            // events today or in the future
-            const future = events.filter(({dt}) => {
-                return dt.isSameOrAfter(now, 'day');
-            });
-            console.log(`Filtered ${events.length} events to ${future.length} future`);
-            events = future;
-        }
-        const eventsFiltered = hebcal.filterEvents(events);
-        console.log(`Filtered to ${eventsFiltered.length} first occurrences`);
-        /*
-        console.log(JSON.stringify({events: eventsFiltered}));
-        console.log("Searching for [" + searchStr + "] in " + eventsFiltered.length);
-        if (eventsFiltered.length) {
-            var evt = eventsFiltered[0],
-                evt2 = eventsFiltered[eventsFiltered.length - 1];
-            console.log("Event 0 is [" + evt.name + "] on " + evt.dt.format('YYYY-MM-DD'));
-            console.log("Event " + (eventsFiltered.length - 1) + " is [" + evt2.name + "] on " + evt2.dt.format('YYYY-MM-DD'));
-        }
-        */
-        const found = eventsFiltered.filter(({name}) => {
-            if (searchStr === 'rosh chodesh') {
-                return name.indexOf('Rosh Chodesh ') === 0;
-            } else {
-                const h = hebcal.getHolidayBasename(name);
-                return h.toLowerCase() === searchStr;
-            }
+    const now = getNowForLocation(session);
+    const events0 = HebrewCalendar.calendar(options);
+    let events = events0.map((ev) => {
+        const dt = ev.getDate().greg();
+        const iso = dt.toISOString().substring(0, 10);
+        const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
+        return {
+            name: ev.render(),
+            dt: moment.tz(iso, tzid),
+            orig: ev,
+        };
+    });
+    console.log(`Got ${events.length} events (${options})`);
+
+    if (name === "GetHoliday") {
+        // events today or in the future
+        const future = events.filter((evt) => {
+            return evt.dt.isSameOrAfter(now, 'day');
         });
-        if (found.length) {
-            const evt = found[0];
-            const holiday = hebcal.getHolidayBasename(evt.name);
-            const ipa = hebcal.getHolidayIPA(holiday);
-            const phoneme = hebcal.getPhonemeTag(ipa, holiday);
-            const observedDt = hebcal.dayEventObserved(evt);
-            const observedWhen = hebcal.beginsWhen(evt.name);
-            const dateSsml = hebcal.formatDateSsml(observedDt);
-            const dateText = observedDt.format('dddd, MMMM Do YYYY');
-            const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
-            const isToday = observedDt.isSame(now, 'day');
-            let beginsOn = ` ${begins} ${observedWhen} `;
-            let title = holiday;
-            if (titleYear) {
-                title += ` ${titleYear}`;
-            }
-            if (!isToday) {
-                beginsOn += 'on ';
-            }
-            callback(session, respond(title,
-                `${holiday + beginsOn + dateText}.`,
-                phoneme + beginsOn + dateSsml,
-                true,
-                session));
+        console.log(`Filtered ${events.length} events to ${future.length} future`);
+        events = future;
+    }
+    const eventsFiltered = hebcal.filterEvents(events);
+    console.log(`Filtered to ${eventsFiltered.length} first occurrences`);
+    /*
+    console.log(JSON.stringify({events: eventsFiltered}));
+    console.log("Searching for [" + searchStr + "] in " + eventsFiltered.length);
+    if (eventsFiltered.length) {
+        var evt = eventsFiltered[0],
+            evt2 = eventsFiltered[eventsFiltered.length - 1];
+        console.log("Event 0 is [" + evt.name + "] on " + evt.dt.format('YYYY-MM-DD'));
+        console.log("Event " + (eventsFiltered.length - 1) + " is [" + evt2.name + "] on " + evt2.dt.format('YYYY-MM-DD'));
+    }
+    */
+    const found = eventsFiltered.filter(({name}) => {
+        if (searchStr === 'rosh chodesh') {
+            return name.indexOf('Rosh Chodesh ') === 0;
         } else {
-            callback(session, respond(slots.Holiday.value,
-                `Sorry, we could not find the date for ${slots.Holiday.value}.`));
+            const h = hebcal.getHolidayBasename(name);
+            return h.toLowerCase() === searchStr;
         }
     });
+    if (found.length) {
+        const evt = found[0];
+        const holiday = hebcal.getHolidayBasename(evt.name);
+        const ipa = hebcal.getHolidayIPA(holiday);
+        const phoneme = hebcal.getPhonemeTag(ipa, holiday);
+        const observedDt = hebcal.dayEventObserved(evt);
+        const observedWhen = hebcal.beginsWhen(evt.name);
+        const dateSsml = hebcal.formatDateSsml(observedDt);
+        const dateText = observedDt.format('dddd, MMMM Do YYYY');
+        const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
+        const isToday = observedDt.isSame(now, 'day');
+        let beginsOn = ` ${begins} ${observedWhen} `;
+        let title = holiday;
+        if (titleYear) {
+            title += ` ${titleYear}`;
+        }
+        if (!isToday) {
+            beginsOn += 'on ';
+        }
+        callback(session, respond(title,
+            `${holiday + beginsOn + dateText}.`,
+            phoneme + beginsOn + dateSsml,
+            true,
+            session));
+    } else {
+        callback(session, respond(slots.Holiday.value,
+            `Sorry, we could not find the date for ${slots.Holiday.value}.`));
+    }
 }
 
 function respond(title, cardText, ssmlContent, addShabbatShalom, session) {

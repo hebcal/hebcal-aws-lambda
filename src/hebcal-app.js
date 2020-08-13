@@ -463,6 +463,10 @@ const hebcal = {
         };
     },
 
+    /**
+     * @param {*} location
+     * @return {moment.Moment}
+     */
     getSunset({tzid, latitude, longitude}) {
         const now = new Date();
         const nowM = moment.tz(now, tzid);
@@ -476,6 +480,10 @@ const hebcal = {
         return sunsetM;
     },
 
+    /**
+     * @param {*} location
+     * @return {moment.Moment}
+     */
     getMomentForTodayHebrewDate(location) {
         const now = moment.tz(location.tzid);
         const sunset = hebcal.getSunset(location);
@@ -496,6 +504,11 @@ const hebcal = {
         }
     },
 
+    /**
+     * @param {moment.Moment} now
+     * @param {*} location
+     * @return {boolean}
+     */
     isAfterSunset(now, location) {
         if (location && location.latitude) {
             const sunset = this.getSunset(location);
