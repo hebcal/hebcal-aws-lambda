@@ -1,21 +1,25 @@
 {
   "name": "hebcal-aws-lambda",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Hebcal Amazon Web Services Lambda responder",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "aws-sdk": "^2.471.0",
-    "moment": "^2.11.2",
-    "moment-timezone": "^0.5.0",
-    "suncalc": "^1.7.0"
+    "@hebcal/core": "^2.2.4",
+    "aws-sdk": "^2.732.0",
+    "moment": "^2.27.0",
+    "moment-timezone": "^0.5.31",
+    "suncalc": "^1.8.0"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/hebcal/hebcal-aws-lambda"
   },
   "author": "Michael J. Radwin",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^7.6.0"
+  }
 }

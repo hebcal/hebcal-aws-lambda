@@ -1,4 +1,4 @@
-var sedrot = {
+const sedrot = {
     "Achrei Mot" : "אַחֲרֵי מוֹת",
     "Balak" : "בָּלָק",
     "Bamidbar" : "בְּמִדְבַּר",
@@ -55,7 +55,7 @@ var sedrot = {
     "Yitro" : "יִתְרוֹ"
 };
 
-var holidays = {
+const holidays = {
     "Asara B'Tevet" : "עֲשָׂרָה בְּטֵבֵת",
     "Candle lighting" : "הדלקת נרות",
     "Chanukah" : "חֲנוּכָּה",
@@ -111,6 +111,6 @@ var holidays = {
 };
 
 module.exports = {
-	sedrot: sedrot,
-	holidays: holidays
+	sedrot,
+	holidays
 };

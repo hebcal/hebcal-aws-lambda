@@ -1,16 +1,16 @@
-"use strict"; /* jshint node: true */
-var querystring = require('querystring'),
-    http = require('http');
-var crypto = require('crypto');
+const querystring = require('querystring');
 
-var googleAnalytics = {
+const http = require('http');
+const crypto = require('crypto');
+
+const googleAnalytics = {
     tid: 'UA-967247-4',
 
     an: 'Hebcal',
 
-    extend: function(destination, source) {
+    extend(destination, source) {
         if (typeof source === 'object') {
-            for (var attr in source) {
+            for (const attr in source) {
                 if (source.hasOwnProperty(attr)) {
                     destination[attr] = source[attr];
                 }
@@ -19,20 +19,16 @@ var googleAnalytics = {
         return destination;
     },
 
-    hashUuid4: function(str) {
-        var hash = crypto.createHash('md5'),
-            digest;
+    hashUuid4(str) {
+        const hash = crypto.createHash('md5');
+        let digest;
         hash.update(str);
         digest = hash.digest('hex');
-        return digest.substr(0, 8) +
-            '-' + digest.substr(8, 4) +
-            '-4' + digest.substr(13, 3) +
-            '-8' + digest.substr(17, 3) +
-            '-' + digest.substr(20, 12);
+        return `${digest.substr(0, 8)}-${digest.substr(8, 4)}-4${digest.substr(13, 3)}-8${digest.substr(17, 3)}-${digest.substr(20, 12)}`;
     },
 
-    send: function(hitType, userId, params) {
-        var postParams = {
+    send(hitType, userId, params) {
+        let postParams = {
             v: '1',
             tid: this.tid,
             t: hitType,
@@ -42,10 +38,10 @@ var googleAnalytics = {
 
         postParams = this.extend(postParams, params);
 
-        var postData = querystring.stringify(postParams);
-        console.log("TRACKING: " + postData);
+        const postData = querystring.stringify(postParams);
+        console.log(`TRACKING: ${postData}`);
 
-        var options = {
+        const options = {
             hostname: 'www.google-analytics.com',
             port: 80,
             path: '/collect',
@@ -56,10 +52,10 @@ var googleAnalytics = {
             }
         };
 
-        var req = http.request(options);
+        const req = http.request(options);
 
-        req.on('error', function(e) {
-            console.log('problem with request: ' + e.message);
+        req.on('error', ({message}) => {
+            console.log(`problem with request: ${message}`);
         });
 
         // write data to request body
@@ -67,8 +63,8 @@ var googleAnalytics = {
         req.end();
     },
 
-    screenview: function(userId, screenName, options) {
-        var params = {
+    screenview(userId, screenName, options) {
+        let params = {
             cd: screenName,
             geoid: 'US'
         };
@@ -76,8 +72,8 @@ var googleAnalytics = {
         this.send('screenview', userId, params);
     },
 
-    event: function(userId, category, action, label, options) {
-        var params = {
+    event(userId, category, action, label, options) {
+        let params = {
             ec: category,
             ea: action,
             geoid: 'US'
@@ -89,8 +85,8 @@ var googleAnalytics = {
         this.send('event', userId, params);
     },
 
-    exception: function(userId, description, options) {
-        var params = {
+    exception(userId, description, options) {
+        let params = {
             exd: description,
             geoid: 'US'
         };

@@ -1,43 +1,43 @@
-"use strict"; /* jshint node: true */
-var spawn = require('child_process').spawn,
-    readline = require('readline'),
-    moment = require('moment-timezone');
+const {spawn} = require('child_process');
+
+const readline = require('readline');
+const moment = require('moment-timezone');
+// const {HDate} = require('@hebcal/core');
 
 // don't lazily load
-var AWS = require('aws-sdk');
+const AWS = require('aws-sdk');
 
-var SunCalc = require('suncalc');
+const SunCalc = require('suncalc');
+const config = require('./config.json');
 
-var config = require('./config.json');
-
-var hebcal = {
+const hebcal = {
     cities: {},
 
-    init: function() {
+    init() {
         this.setDefaultTimeZone(config.defaultTimezone);
-        for (var k in config.month2ipa) {
-            var rck = "Rosh Chodesh " + k;
+        for (let k in config.month2ipa) {
+            const rck = `Rosh Chodesh ${k}`;
             config.holiday2ipa[rck] = config.roshChodeshIpa + config.month2ipa[k];
         }
         console.log("Loading cities.json...");
-        var allCities = require('./cities.json');
-        console.log("Parsing " + allCities.length + " cities");
+        const allCities = require('./cities.json');
+        console.log(`Parsing ${allCities.length} cities`);
         this.cities = this.loadCities(allCities);
         this.initCityAliases();
     },
 
-    loadCities: function(allCities) {
-        var cities = {};
-        var cityObjs = allCities.map(this.parseCityString);
-        cityObjs.forEach(function(city) {
-            var cityLc = city.name.toLowerCase(),
-                aliasLc;
+    loadCities(allCities) {
+        const cities = {};
+        const cityObjs = allCities.map(this.parseCityString);
+        cityObjs.forEach(city => {
+            const cityLc = city.name.toLowerCase();
+            let aliasLc;
             if (city.cc == 'US') {
-                var stateLc = config.stateNames[city.state].toLowerCase();
-                aliasLc = cityLc + ' ' + stateLc;
+                const stateLc = config.stateNames[city.state].toLowerCase();
+                aliasLc = `${cityLc} ${stateLc}`;
             } else {
-                var countryLc = city.country.toLowerCase();
-                aliasLc = cityLc + ' ' + countryLc;
+                const countryLc = city.country.toLowerCase();
+                aliasLc = `${cityLc} ${countryLc}`;
             }
             if (!cities[cityLc]) {
                 cities[cityLc] = city;
@@ -45,14 +45,14 @@ var hebcal = {
             cities[aliasLc] = city;
         });
         // this is silly, but alias the first occurrence of each country and US state
-        cityObjs.forEach(function(city) {
+        cityObjs.forEach(city => {
             if (city.cc == 'US') {
-                var stateLc = config.stateNames[city.state].toLowerCase();
+                const stateLc = config.stateNames[city.state].toLowerCase();
                 if (!cities[stateLc]) {
                     cities[stateLc] = city;
                 }
             } else {
-                var countryLc = city.country.toLowerCase();
+                const countryLc = city.country.toLowerCase();
                 if (!cities[countryLc]) {
                     cities[countryLc] = city;
                 }
@@ -61,38 +61,40 @@ var hebcal = {
         return cities;
     },
 
-    parseCityString: function(str) {
-        var f = str.split('|'),
-            cityName = f[0],
-            country = f[1],
-            admin1 = f[2],
-            latitude = +f[3],
-            longitude = +f[4],
-            tzid = f[5],
-            geoid = f[6],
-            city = {
-                name: cityName,
-                cc: country,
-                latitude: latitude,
-                longitude: longitude,
-                tzid: tzid
-            };
+    parseCityString(str) {
+        const f = str.split('|');
+        const cityName = f[0];
+        const country = f[1];
+        const admin1 = f[2];
+        const latitude = +f[3];
+        const longitude = +f[4];
+        const tzid = f[5];
+        const geoid = f[6];
+
+        const city = {
+            name: cityName,
+            cc: country,
+            latitude,
+            longitude,
+            tzid
+        };
+
         if (geoid) {
             city.geoid = +geoid;
         }
         if (country == 'US') {
             city.state = admin1;
-            city.cityName = cityName + ', ' + admin1;
+            city.cityName = `${cityName}, ${admin1}`;
         } else {
-            var countryName = config.countryNames[country];
+            const countryName = config.countryNames[country];
             city.country = countryName;
-            city.cityName = cityName + ', ' + countryName;
+            city.cityName = `${cityName}, ${countryName}`;
         }
         return city;
     },
 
-    initCityAliases: function() {
-        var aliasMap = {
+    initCityAliases() {
+        const aliasMap = {
             'new york city': ['nyc', 'n y c', 'new york', 'new york new york'],
             'the bronx': ['bronx', 'bronx new york'],
             'los angeles': ['la', 'l a'],
@@ -104,10 +106,10 @@ var hebcal = {
             'south lake tahoe': ['lake tahoe', 'tahoe'],
             'las vegas': ['vegas']
         };
-        for (var city in aliasMap) {
-            var c = this.cities[city];
-            var aliases = aliasMap[city];
-            for (var i = 0; i < aliases.length; i++) {
+        for (const city in aliasMap) {
+            const c = this.cities[city];
+            const aliases = aliasMap[city];
+            for (let i = 0; i < aliases.length; i++) {
                 this.cities[aliases[i]] = c;
             }
         }
@@ -115,48 +117,48 @@ var hebcal = {
 
     defaultTimezone: config.defaultTimezone,
 
-    setDefaultTimeZone: function(tzid) {
+    setDefaultTimeZone(tzid) {
         this.defaultTimezone = tzid;
         moment.tz.setDefault(tzid);
 //        process.env.TZ = tzid;
     },
 
-    getCity: function(str) {
+    getCity(str) {
         return this.cities[str.toLowerCase()];
     },
 
-    getHolidayAlias: function(str) {
+    getHolidayAlias(str) {
         return config.holidayAlias[str];
     },
 
-    getHolidayIPA: function(str) {
+    getHolidayIPA(str) {
         return config.holiday2ipa[str];
     },
 
-    getPhonemeTag: function(ipa, innerText) {
+    getPhonemeTag(ipa, innerText) {
         if (!ipa) {
             return innerText;
         }
-        return '<phoneme alphabet="ipa" ph="' + ipa + '">' + innerText + '</phoneme>';
+        return `<phoneme alphabet="ipa" ph="${ipa}">${innerText}</phoneme>`;
     },
 
-    hebrewDateSSML: function(str, suppressYear) {
-        var matches = str.match(this.reHebrewDate),
-            day = matches[1],
-            month = matches[2],
-            year = matches[3],
-            ipa = config.month2ipa[month],
-            phoneme = this.getPhonemeTag(ipa, month),
-            ssml = '<say-as interpret-as="ordinal">' + day + '</say-as> of ' + phoneme;
+    hebrewDateSSML(str, suppressYear) {
+        const matches = str.match(this.reHebrewDate);
+        const day = matches[1];
+        const month = matches[2];
+        const year = matches[3];
+        const ipa = config.month2ipa[month];
+        const phoneme = this.getPhonemeTag(ipa, month);
+        let ssml = `<say-as interpret-as="ordinal">${day}</say-as> of ${phoneme}`;
         if (!suppressYear) {
-            ssml += ', ' + year.substr(0,2) + ' ' + year.substr(2);
+            ssml += `, ${year.substr(0,2)} ${year.substr(2)}`;
         }
         return ssml;
     },
 
-    weekendGreeting: function(location) {
-        var now = this.getNowForLocation(location),
-            dow = now.day();
+    weekendGreeting(location) {
+        const now = this.getNowForLocation(location);
+        const dow = now.day();
         if (dow === 6) {
             if (this.isAfterSunset(now, location)) {
                 return 'Shavua Tov';
@@ -171,11 +173,11 @@ var hebcal = {
         return null;
     },
 
-    strWithSpecialGreeting: function(str, location, ssml, addShabbatShalom, specialGreeting) {
-        var shabbatGreeting = addShabbatShalom ? this.weekendGreeting(location) : null,
-            isTodaySpecial = typeof specialGreeting === 'object' && specialGreeting.length,
-            greetings = shabbatGreeting ? [ shabbatGreeting ] : [];
-        var ss;
+    strWithSpecialGreeting(str, location, ssml, addShabbatShalom, specialGreeting) {
+        const shabbatGreeting = addShabbatShalom ? this.weekendGreeting(location) : null;
+        const isTodaySpecial = typeof specialGreeting === 'object' && specialGreeting.length;
+        let greetings = shabbatGreeting ? [ shabbatGreeting ] : [];
+        let ss;
         if (isTodaySpecial) {
             greetings = greetings.concat(specialGreeting);
         }
@@ -189,7 +191,7 @@ var hebcal = {
         if (ssml) {
             ss += ' <break time="0.3s"/>';
             greetings = greetings.map(function(x) {
-                var ipa = config.greeting2ipa[x];
+                const ipa = config.greeting2ipa[x];
                 return this.getPhonemeTag(ipa, x);
             }, this);
         } else {
@@ -200,7 +202,7 @@ var hebcal = {
         return ss;
     },
 
-    getHolidayBasename: function(str) {
+    getHolidayBasename(str) {
         str = str.replace(/ \d\d\d\d$/, '');
         str = str.replace(/ \(CH\'\'M\)$/, '');
         str = str.replace(/ \(Hoshana Raba\)$/, '');
@@ -213,12 +215,12 @@ var hebcal = {
         return str;
     },
 
-    filterEvents: function(events) {
-        var self = this;
-        var dest = [];
-        var seen = {};
-        events.forEach(function(evt) {
-            var subj = evt.name;
+    filterEvents(events) {
+        const self = this;
+        const dest = [];
+        const seen = {};
+        events.forEach(evt => {
+            let subj = evt.name;
             if (subj.indexOf("Erev ") === 0) {
                 return;
             }
@@ -243,7 +245,7 @@ var hebcal = {
         return dest;
     },
 
-    beginsWhen: function(name) {
+    beginsWhen(name) {
         if (name === "Leil Selichot") {
             return "after nightfall";
         } else if (this.beginsAtDawn(name)) {
@@ -253,37 +255,35 @@ var hebcal = {
         }
     },
 
-    beginsAtDawn: function(name) {
-        var re =  /^(Tzom|Asara|Ta\'anit) /;
+    beginsAtDawn(name) {
+        const re =  /^(Tzom|Asara|Ta\'anit) /;
         return name.search(re) != -1;
     },
 
-    dayEventObserved: function(evt) {
-        if (this.beginsAtDawn(evt.name) || evt.name === "Leil Selichot") {
-            return evt.dt;
+    dayEventObserved({name, dt}) {
+        if (this.beginsAtDawn(name) || name === "Leil Selichot") {
+            return dt;
         } else {
-            return evt.dt.subtract(1, 'd');
+            return dt.subtract(1, 'd');
         }
     },
 
     // returns a 8-char string with 0-padding on month and day if needed
-    formatDateSsml: function(dt) {
-        var now = moment(),
-            isToday = dt.isSame(now, 'day');
+    formatDateSsml(dt) {
+        const now = moment();
+        const isToday = dt.isSame(now, 'day');
 
         if (isToday) {
             return 'Today';
         } else {
-            var year = dt.format('YYYY'),
-                month = dt.format('MM'),
-                day = dt.format('DD'),
-                dow = dt.format('dddd'),
-                thisYear = now.format('YYYY'),
-                yearStr = (thisYear == year) ? '????' : year;
+            const year = dt.format('YYYY');
+            const month = dt.format('MM');
+            const day = dt.format('DD');
+            const dow = dt.format('dddd');
+            const thisYear = now.format('YYYY');
+            const yearStr = (thisYear == year) ? '????' : year;
 
-            return dow + ', <say-as interpret-as="date">' +
-                yearStr + month + day + '</say-as>';
-
+            return `${dow}, <say-as interpret-as="date">${yearStr}${month}${day}</say-as>`;
         }
     },
 
@@ -299,13 +299,13 @@ var hebcal = {
     “next year”: 2016
     “this decade”: 201X
     */
-    parseAmazonDateFormat: function(str) {
+    parseAmazonDateFormat(str) {
         if (str.length == 4 & str.charAt(3) == 'X') {
-            var yearStr = str.substr(0,3),
-                year = (+yearStr) * 10;
-            return moment({ year : year, month : 1, day : 1 });
+            const yearStr = str.substr(0,3);
+            const year = (+yearStr) * 10;
+            return moment({ year, month : 1, day : 1 });
         }
-        var m = moment(str);
+        const m = moment(str);
         if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W') ||
             (str.length == 11 && str.substr(8) == '-WE')) {
             m.day(6); // advance to Saturday
@@ -313,8 +313,8 @@ var hebcal = {
         return m;
     },
 
-    getUpcomingFriday: function(now) {
-        var dow = now.day();
+    getUpcomingFriday(now) {
+        const dow = now.day();
         if (dow === 5) {
             return now;
         } else if (dow === 6) {
@@ -324,17 +324,17 @@ var hebcal = {
         }
     },
 
-    getTzidFromLocation: function(location) {
+    getTzidFromLocation(location) {
         if (typeof location === 'object' && typeof location.tzid === 'string') {
             return location.tzid;
         }
         return undefined;
     },
 
-    getEnvForTimezone: function(env, tzid) {
-        var copy = {};
+    getEnvForTimezone(env, tzid) {
+        const copy = {};
         // shallow copy of process.env
-        for (var attr in env) {
+        for (const attr in env) {
             if (env.hasOwnProperty(attr)) {
                 copy[attr] = env[attr];
             }
@@ -343,16 +343,18 @@ var hebcal = {
         return copy;
     },
 
-    invokeHebcal: function(args, location, callback) {
-        var proc, rd, events = [];
-        var evtTimeRe = /(\d+:\d+)$/;
-        var tzid0 = this.getTzidFromLocation(location),
-            tzid = tzid0 || this.defaultTimezone;
-        var env = this.getEnvForTimezone(process.env, tzid);
+    invokeHebcal(args, location, callback) {
+        let proc;
+        let rd;
+        const events = [];
+        const evtTimeRe = /(\d+:\d+)$/;
+        const tzid0 = this.getTzidFromLocation(location);
+        const tzid = tzid0 || this.defaultTimezone;
+        const env = this.getEnvForTimezone(process.env, tzid);
 
-        proc = spawn('./hebcal', args, { cwd: undefined, env: env });
+        proc = spawn('./hebcal', args, { cwd: undefined, env });
 
-        proc.on('error', function(err) {
+        proc.on('error', err => {
             console.log('Failed to start child process.');
             callback('Failed to start child process.', null);
         });
@@ -360,26 +362,26 @@ var hebcal = {
         rd = readline.createInterface({
             input: proc.stdout,
             terminal: false
-        }).on('line', function(line) {
-            var space = line.indexOf(' ');
-            var mdy = line.substr(0, space);
-            var name = line.substr(space + 1);
-            var dt;
+        }).on('line', line => {
+            const space = line.indexOf(' ');
+            const mdy = line.substr(0, space);
+            let name = line.substr(space + 1);
+            let dt;
             if (name.indexOf('Candle lighting') === 0 ||
                 name.indexOf('Havdalah') === 0) {
-                var matches = name.match(evtTimeRe),
-                    hourMin = matches[1],
-                    timeStr = mdy + ' ' + hourMin;
+                const matches = name.match(evtTimeRe);
+                const hourMin = matches[1];
+                const timeStr = `${mdy} ${hourMin}`;
                 dt = moment.tz(timeStr, 'MM/DD/YYYY HH:mm', tzid);
                 name = name.substr(0, name.indexOf(':'));
             } else {
                 dt = moment.tz(mdy, 'MM/DD/YYYY', tzid);
             }
-            events.push({dt: dt, name: name});
+            events.push({dt, name});
         });
 
-        proc.on('close', function(code) {
-            console.log("Got " + events.length + " events (" + args.join(' ') + ')');
+        proc.on('close', code => {
+            console.log(`Got ${events.length} events (${args.join(' ')})`);
             if (events.length === 0) {
                 callback('No event data available.', null);
             } else {
@@ -388,20 +390,20 @@ var hebcal = {
         });
     },
 
-    getParashaOrHolidayName: function(name) {
+    getParashaOrHolidayName(name) {
         if (name.indexOf("Parashat ") === 0) {
-            var space = name.indexOf(' '),
-                parsha = name.substr(space + 1),
-                ipa = config.parsha2ipa[parsha];
+            const space = name.indexOf(' ');
+            const parsha = name.substr(space + 1);
+            const ipa = config.parsha2ipa[parsha];
             return {
                 title: name,
-                name: name,
-                ipa: 'ˈpɑːʁɑːˈʃɑːt ' + ipa
+                name,
+                ipa: `ˈpɑːʁɑːˈʃɑːt ${ipa}`
             };
         } else {
-            var holiday = this.getHolidayBasename(name);
+            const holiday = this.getHolidayBasename(name);
             return {
-                title: holiday + ' Torah reading',
+                title: `${holiday} Torah reading`,
                 name: holiday,
                 ipa: config.holiday2ipa[holiday]
             };
@@ -412,26 +414,26 @@ var hebcal = {
 
     reHebrewDate: /^(\d+)\w+ of ([^,]+), (\d+)$/,
 
-    getGreetingForHoliday: function(evt) {
-        var str = evt.name;
+    getGreetingForHoliday({name}) {
+        let str = name;
         if (str.indexOf('Erev ') === 0) {
             str = str.substr(5);
         }
         if (this.reHebrewDate.test(str) || this.reOmer.test(str)) {
             // ignore Hebrew date and Omer
             return undefined;
-        } else if (str.indexOf('Shabbat ') === 0 || config.noGreetingHolidays.indexOf(str) != -1) {
+        } else if (str.indexOf('Shabbat ') === 0 || config.noGreetingHolidays.includes(str)) {
             // no Chag Sameach on these days
             return undefined;
         } else if (str.indexOf('Rosh Chodesh ') === 0) {
             return 'Chodesh Tov';
-        } else if (config.fastHolidays.indexOf(str) != -1) {
+        } else if (config.fastHolidays.includes(str)) {
             return 'Tzom Kal';
-        } else if (str.indexOf(" (CH''M)") != -1) {
+        } else if (str.includes(" (CH''M)")) {
             return "Mo'adim L'Simcha";
         } else if (str.indexOf('Chanukah') === 0) {
             return 'Chag Urim Sameach';
-        } else if (str.indexOf('Pesach') != -1) {
+        } else if (str.includes('Pesach')) {
             return "Chag Kasher v'Sameach";
         } else if (str.indexOf('Rosh Hashana') === 0) {
             return 'Shana Tovah';
@@ -442,50 +444,50 @@ var hebcal = {
         }
     },
 
-    getSpecialGreetings: function(events) {
-        var greetings = events.map(this.getGreetingForHoliday, this);
-        return greetings.filter(function(str) {
+    getSpecialGreetings(events) {
+        const greetings = events.map(this.getGreetingForHoliday, this);
+        return greetings.filter(str => {
             return str !== undefined;
         });
     },
 
-    latlongToHebcal: function(latitude,longitude) {
-        var latDeg = latitude > 0 ? Math.floor(latitude) : Math.ceil(latitude),
-            longDeg = longitude > 0 ? Math.floor(longitude) : Math.ceil(longitude),
-            latMin = Math.floor((latitude - latDeg) * 60),
-            longMin = Math.floor((longitude - longDeg) * 60);
+    latlongToHebcal(latitude, longitude) {
+        const latDeg = latitude > 0 ? Math.floor(latitude) : Math.ceil(latitude);
+        const longDeg = longitude > 0 ? Math.floor(longitude) : Math.ceil(longitude);
+        const latMin = Math.floor((latitude - latDeg) * 60);
+        const longMin = Math.floor((longitude - longDeg) * 60);
         return {
-            latitude: latitude,
-            longitude: longitude,
-            latDeg: latDeg,
+            latitude,
+            longitude,
+            latDeg,
             latMin: Math.abs(latMin),
             longDeg: longDeg * -1,
             longMin: Math.abs(longMin)
         };
     },
 
-    getSunset: function(location) {
-        var now = new Date(),
-            nowM = moment.tz(now, location.tzid),
-            suntimes = SunCalc.getTimes(now, location.latitude, location.longitude),
-            sunsetM = moment.tz(suntimes.sunset, location.tzid);
+    getSunset({tzid, latitude, longitude}) {
+        const now = new Date();
+        const nowM = moment.tz(now, tzid);
+        const suntimes = SunCalc.getTimes(now, latitude, longitude);
+        const sunsetM = moment.tz(suntimes.sunset, tzid);
         if (sunsetM.isBefore(nowM, 'day')) {
-            var tomorrow = new Date(now.getTime() + 86400000);
-            var suntimes2 = SunCalc.getTimes(tomorrow, location.latitude, location.longitude);
-            return moment.tz(suntimes2.sunset, location.tzid);
+            const tomorrow = new Date(now.getTime() + 86400000);
+            const suntimes2 = SunCalc.getTimes(tomorrow, latitude, longitude);
+            return moment.tz(suntimes2.sunset, tzid);
         }
         return sunsetM;
     },
 
-    getMomentForTodayHebrewDate: function(location) {
-        var now = moment.tz(location.tzid),
-            sunset = hebcal.getSunset(location),
-            beforeSunset = now.isBefore(sunset),
-            m = beforeSunset ? now : now.add(1, 'd');
+    getMomentForTodayHebrewDate(location) {
+        const now = moment.tz(location.tzid);
+        const sunset = hebcal.getSunset(location);
+        const beforeSunset = now.isBefore(sunset);
+        const m = beforeSunset ? now : now.add(1, 'd');
         return m;
     },
 
-    getNowForLocation: function(location) {
+    getNowForLocation(location) {
         if (location && location.tzid) {
             return moment.tz(location.tzid);
         } else {
@@ -493,31 +495,31 @@ var hebcal = {
         }
     },
 
-    isAfterSunset: function(now, location) {
+    isAfterSunset(now, location) {
         if (location && location.latitude) {
-            var sunset = this.getSunset(location);
+            const sunset = this.getSunset(location);
             return now.isAfter(sunset);
         }
         return false;
     },
 
-    getCandleLightingArgs: function(location, extraArgs) {
-        var ll = this.latlongToHebcal(location.latitude, location.longitude);
-        var args = [
+    getCandleLightingArgs({latitude, longitude, tzid}, extraArgs) {
+        const ll = this.latlongToHebcal(latitude, longitude);
+        const args = [
             '-c',
             '-E',
             '-h',
             '-x',
-            '-L', ll.longDeg + ',' + ll.longMin,
-            '-l', ll.latDeg  + ',' + ll.latMin,
-            '-z', location.tzid,
+            '-L', `${ll.longDeg},${ll.longMin}`,
+            '-l', `${ll.latDeg},${ll.latMin}`,
+            '-z', tzid,
             '-m', '50'
         ];
 //        this.setDefaultTimeZone(location.tzid);
         return extraArgs ? args.concat(extraArgs) : args;
     },
 
-    getUsaTzid: function(state,tz,dst) {
+    getUsaTzid(state, tz, dst) {
         if (state && state === 'AK' && tz === 10) {
             return 'America/Adak';
         } else if (state && state === 'AZ' && tz === 7) {
@@ -533,9 +535,9 @@ var hebcal = {
 
     zipsDb: null,
 
-    parseZipCodeRow: function(str) {
-        var f = str.split('|');
-        var r = {
+    parseZipCodeRow(str) {
+        const f = str.split('|');
+        const r = {
             ZipCode: f[0],
             State: f[1],
             CityMixedCase: f[2],
@@ -550,37 +552,37 @@ var hebcal = {
         return r;
     },
 
-    loadZipsDb: function() {
-        var arr = require('./zips.json'),
-            db = {};
-        for (var i = 0; i < arr.length; ++i) {
-            var str = arr[i],
-                pipe = str.indexOf('|'),
-                zipCode = str.substr(0, pipe);
+    loadZipsDb() {
+        let arr = require('./zips.json');
+        const db = {};
+        for (let i = 0; i < arr.length; ++i) {
+            const str = arr[i];
+            const pipe = str.indexOf('|');
+            const zipCode = str.substr(0, pipe);
             db[zipCode] = str;
         }
-        console.log("Loaded " + arr.length + " ZIP codes");
+        console.log(`Loaded ${arr.length} ZIP codes`);
         arr = null;
         return db;
     },
 
-    lookupZipCode: function(zipCode, callback) {
+    lookupZipCode(zipCode, callback) {
         if (!this.zipsDb) {
             this.zipsDb = this.loadZipsDb();
         }
-        var row0 = this.zipsDb[zipCode];
+        const row0 = this.zipsDb[zipCode];
         if (!row0) {
             callback(null, null);
         } else {
-            var row = this.parseZipCodeRow(row0);
-            var tzid = this.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
-            var cityName = row.CityMixedCase + ', ' + row.State;
-            var result = {
-                zipCode: zipCode,
+            const row = this.parseZipCodeRow(row0);
+            const tzid = this.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
+            const cityName = `${row.CityMixedCase}, ${row.State}`;
+            const result = {
+                zipCode,
                 latitude: row.Latitude,
                 longitude: row.Longitude,
-                tzid: tzid,
-                cityName: cityName
+                tzid,
+                cityName
             };
             if (row.GeoId) {
                 result.geoid = row.GeoId;
@@ -593,7 +595,7 @@ var hebcal = {
     dynamodb: null,
     dynamoTableName: 'HebcalUsers2',
 
-    getDynamoDB: function() {
+    getDynamoDB() {
         if (!this.dynamodb) {
             console.log("Creating DynamoDB...");
             this.dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
@@ -601,8 +603,8 @@ var hebcal = {
         return this.dynamodb;
     },
 
-    lookupUser: function(userId, callback) {
-        var params = {
+    lookupUser(userId, callback) {
+        const params = {
             TableName: this.dynamoTableName,
             Key: {
                 UserId: {
@@ -610,36 +612,36 @@ var hebcal = {
                 }
             }
         };
-        var dynamodb = this.getDynamoDB();
-        console.log("Getting from DynamoDB userId=" + userId);
-        var request = dynamodb.getItem(params);
-        var timeoutObject = setTimeout(function() {
-            console.log("ABORT DynamoDB request for userId=" + userId);
+        const dynamodb = this.getDynamoDB();
+        console.log(`Getting from DynamoDB userId=${userId}`);
+        const request = dynamodb.getItem(params);
+        const timeoutObject = setTimeout(() => {
+            console.log(`ABORT DynamoDB request for userId=${userId}`);
             request.abort();
             callback(null);
         }, 2000);
-        request.send(function(err, data) {
+        request.send((err, {Item}) => {
             clearTimeout(timeoutObject);
             if (err) {
                 console.log(err, err.stack);
                 callback(null);
-            } else if (typeof data.Item == 'undefined') {
+            } else if (typeof Item == 'undefined') {
                 callback(null);
             } else {
-                console.log("SUCCESS Got from DynamoDB userId=" + userId + ",ts=" + data.Item.Timestamp.N);
-                var user = {
-                    ts: data.Item.Timestamp.N
+                console.log(`SUCCESS Got from DynamoDB userId=${userId},ts=${Item.Timestamp.N}`);
+                const user = {
+                    ts: Item.Timestamp.N
                 };
-                if (data.Item.Data && data.Item.Data.S) {
-                    user.location = JSON.parse(data.Item.Data.S);
+                if (Item.Data && Item.Data.S) {
+                    user.location = JSON.parse(Item.Data.S);
                 }
                 callback(user);
             }
         });
     },
 
-    saveUser: function(userId, data, callback) {
-        var params = {
+    saveUser(userId, data, callback) {
+        const params = {
             TableName: this.dynamoTableName,
             Item: {
                 UserId: {
@@ -653,9 +655,9 @@ var hebcal = {
                 }
             }
         };
-        var dynamodb = this.getDynamoDB();
-        console.log("Storing in DynamoDB userId=" + userId + ",data=" + params.Item.Data.S);
-        dynamodb.putItem(params, function (err, data) {
+        const dynamodb = this.getDynamoDB();
+        console.log(`Storing in DynamoDB userId=${userId},data=${params.Item.Data.S}`);
+        dynamodb.putItem(params, (err, data) => {
             if (err) {
                 console.log("ERROR dynamodb.putItem");
                 console.log(err, err.stack);
@@ -668,6 +670,7 @@ var hebcal = {
 };
 
 hebcal.init();
+
 // console.log(JSON.stringify(hebcal, null, 2));
 
 /*
