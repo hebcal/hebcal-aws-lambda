@@ -18,8 +18,5 @@
     "url": "https://github.com/hebcal/hebcal-aws-lambda"
   },
   "author": "Michael J. Radwin",
-  "license": "MIT",
-  "devDependencies": {
-    "eslint": "^7.6.0"
-  }
+  "license": "MIT"
 }
