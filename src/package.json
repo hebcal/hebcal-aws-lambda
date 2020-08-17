@@ -8,10 +8,10 @@
   },
   "dependencies": {
     "@hebcal/core": "^2.3.0",
+    "@hebcal/solar-calc": "^1.0.4",
     "aws-sdk": "^2.734.0",
     "moment": "^2.27.0",
-    "moment-timezone": "^0.5.31",
-    "suncalc": "^1.8.0"
+    "moment-timezone": "^0.5.31"
   },
   "repository": {
     "type": "git",

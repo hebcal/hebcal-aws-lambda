@@ -3,7 +3,8 @@ const moment = require('moment-timezone');
 // don't lazily load
 const AWS = require('aws-sdk');
 
-const SunCalc = require('suncalc');
+const Sun = require('@hebcal/solar-calc/lib/sun');
+const {Location} = require('@hebcal/core');
 const config = require('./config.json');
 
 const hebcal = {
@@ -374,6 +375,12 @@ const hebcal = {
         });
     },
 
+    getSunsetM(dt, latitude, longitude, tzid) {
+        const sun = new Sun(dt, latitude, longitude);
+        const sunset = sun.timeAtAngle(0.833333, true);
+        return moment.tz(sunset, tzid);
+    },
+
     /**
      * @param {*} location
      * @return {moment.Moment}
@@ -381,12 +388,10 @@ const hebcal = {
     getSunset({tzid, latitude, longitude}) {
         const now = new Date();
         const nowM = moment.tz(now, tzid);
-        const suntimes = SunCalc.getTimes(now, latitude, longitude);
-        const sunsetM = moment.tz(suntimes.sunset, tzid);
+        const sunsetM = this.getSunsetM(now, latitude, longitude, tzid);
         if (sunsetM.isBefore(nowM, 'day')) {
             const tomorrow = new Date(now.getTime() + 86400000);
-            const suntimes2 = SunCalc.getTimes(tomorrow, latitude, longitude);
-            return moment.tz(suntimes2.sunset, tzid);
+            return this.getSunsetM(tomorrow, latitude, longitude, tzid);
         }
         return sunsetM;
     },
@@ -426,20 +431,6 @@ const hebcal = {
             return now.isAfter(sunset);
         }
         return false;
-    },
-
-    getUsaTzid(state, tz, dst) {
-        if (state && state === 'AK' && tz === 10) {
-            return 'America/Adak';
-        } else if (state && state === 'AZ' && tz === 7) {
-            if (dst === 'Y') {
-                return 'America/Denver';
-            } else {
-                return 'America/Phoenix';
-            }
-        } else {
-            return config.ZIPCODES_TZ_MAP[tz];
-        }
     },
 
     zipsDb: null,
@@ -484,7 +475,7 @@ const hebcal = {
             callback(null, null);
         } else {
             const row = this.parseZipCodeRow(row0);
-            const tzid = this.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
+            const tzid = Location.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
             const cityName = `${row.CityMixedCase}, ${row.State}`;
             const result = {
                 zipCode,

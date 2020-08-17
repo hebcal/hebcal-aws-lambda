@@ -165,20 +165,6 @@
     "Chag Sameach": "χɑːɡ sɑːˈmeɪɑːχ"
   },
   "defaultTimezone": "America/New_York",
-  "ZIPCODES_TZ_MAP": {
-    "0": "UTC",
-    "4": "America/Puerto_Rico",
-    "5": "America/New_York",
-    "6": "America/Chicago",
-    "7": "America/Denver",
-    "8": "America/Los_Angeles",
-    "9": "America/Anchorage",
-    "10": "Pacific/Honolulu",
-    "11": "Pacific/Pago_Pago",
-    "13": "Pacific/Funafuti",
-    "14": "Pacific/Guam",
-    "15": "Pacific/Palau"
-  },
   "countryNames": {
     "AD": "Andorra",
     "AE": "United Arab Emirates",
