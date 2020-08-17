@@ -7,8 +7,8 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@hebcal/core": "^2.2.4",
-    "aws-sdk": "^2.732.0",
+    "@hebcal/core": "^2.3.0",
+    "aws-sdk": "^2.734.0",
     "moment": "^2.27.0",
     "moment-timezone": "^0.5.31",
     "suncalc": "^1.8.0"

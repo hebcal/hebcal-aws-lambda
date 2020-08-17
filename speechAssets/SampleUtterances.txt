@@ -210,6 +210,8 @@ GetCandles what time does Shabbat start
 GetCandles what time does Shabbos begin
 GetCandles what time does Shabbos start
 GetCandles what time is candle lighting time
+GetCandles what time is candle lighting
+GetCandles what time candle lighting is
 GetCandles what time is Shabbat
 GetCandles what time is Shabbos
 GetCandles when do we light candles in {ZipCode}
