@@ -6,7 +6,7 @@ const {HDate, HebrewCalendar, DafYomi, OmerEvent, months, greg, Location} = requ
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
-    console.log(`MAIN event=${JSON.stringify(event)}`);
+    console.log(`MAIN event.request=${JSON.stringify(event.request)}`);
     try {
 /*
         if (event.session.application && event.session.application.applicationId && event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {
@@ -356,22 +356,17 @@ function getCandleLightingResponse(intent, session, callback) {
         myInvokeHebcal(location);
     } else if (location && location.zipCode) {
         console.log(`Need to lookup zipCode ${location.zipCode}`);
-        hebcal.lookupZipCode(location.zipCode, (err, data) => {
-            if (err) {
-                trackException(session, err);
-                return callback(session, respond('Internal Error', err));
-            } else if (!data) {
-                console.log(`NOTFOUND: ${location.zipCode}`);
-                trackEvent(session, 'zipNotFound', location.zipCode);
-                return getWhichZipCodeResponse(session, callback,
-                    `We could not find ZIP code ${location.zipCode}. `);
-            }
-            location = data;
-            // save location in this session and persist in DynamoDB
-            session.attributes.location = data;
-            hebcal.saveUser(session.user.userId, data);
-            myInvokeHebcal(location);
-        });
+        const data = hebcal.lookupZipCode(location.zipCode);
+        if (!data) {
+            console.log(`NOTFOUND: ${location.zipCode}`);
+            trackEvent(session, 'zipNotFound', location.zipCode);
+            return getWhichZipCodeResponse(session, callback,
+                `We could not find ZIP code ${location.zipCode}. `);
+        }
+        // save location in this session and persist in DynamoDB
+        location = session.attributes.location = data;
+        hebcal.saveUser(session.user.userId, data);
+        myInvokeHebcal(location);
     } else if (sessionLocation) {
         location = sessionLocation;
         myInvokeHebcal(location);

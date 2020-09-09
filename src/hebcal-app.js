@@ -11,6 +11,7 @@ const hebcal = {
     cities: {},
 
     init() {
+        const t0 = Date.now();
         this.setDefaultTimeZone(config.defaultTimezone);
         for (let k in config.month2ipa) {
             const rck = `Rosh Chodesh ${k}`;
@@ -19,8 +20,11 @@ const hebcal = {
         console.log("Loading cities.json...");
         const allCities = require('./cities.json');
         console.log(`Parsing ${allCities.length} cities`);
-        this.cities = this.loadCities(allCities);
+        this.cities = this.loadCities(allCities); // about 9ms
         this.initCityAliases();
+        this.zipsDb = this.loadZipsDb(); // about 20ms
+        const t1 = Date.now();
+        console.log(`Init finished in ${t1 - t0}ms`);
     },
 
     loadCities(allCities) {
@@ -296,13 +300,14 @@ const hebcal = {
     },
 
     getUpcomingFriday(now) {
-        const dow = now.day();
+        const midnight = new Date(now.year(), now.month(), now.date());
+        const dow = midnight.getDay();
         if (dow === 5) {
-            return now;
+            return moment(midnight);
         } else if (dow === 6) {
-            return now.clone().day(12); // Friday next week
+            return moment(midnight).day(12); // Friday next week
         } else {
-            return now.clone().day(5); // Friday later this week
+            return moment(midnight).day(5); // Friday later this week
         }
     },
 
@@ -466,13 +471,13 @@ const hebcal = {
         return db;
     },
 
-    lookupZipCode(zipCode, callback) {
+    lookupZipCode(zipCode) {
         if (!this.zipsDb) {
             this.zipsDb = this.loadZipsDb();
         }
         const row0 = this.zipsDb[zipCode];
         if (!row0) {
-            callback(null, null);
+            return null;
         } else {
             const row = this.parseZipCodeRow(row0);
             const tzid = Location.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
@@ -488,7 +493,7 @@ const hebcal = {
             if (row.GeoId) {
                 result.geoid = row.GeoId;
             }
-            callback(null, result);
+            return result;
         }
     },
 
