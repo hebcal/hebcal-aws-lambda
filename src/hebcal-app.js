@@ -1,4 +1,4 @@
-const moment = require('moment-timezone');
+const dayjs = require('dayjs');
 
 // don't lazily load
 const AWS = require('aws-sdk');
@@ -120,8 +120,6 @@ const hebcal = {
 
     setDefaultTimeZone(tzid) {
         this.defaultTimezone = tzid;
-        moment.tz.setDefault(tzid);
-//        process.env.TZ = tzid;
     },
 
     getCity(str) {
@@ -158,7 +156,7 @@ const hebcal = {
     },
 
     weekendGreeting(location) {
-        const now = this.getNowForLocation(location);
+        const now = dayjs();
         const dow = now.day();
         if (dow === 6) {
             if (this.isAfterSunset(now, location)) {
@@ -256,7 +254,7 @@ const hebcal = {
 
     // returns a 8-char string with 0-padding on month and day if needed
     formatDateSsml(dt) {
-        const now = moment();
+        const now = dayjs();
         const isToday = dt.isSame(now, 'day');
 
         if (isToday) {
@@ -289,25 +287,25 @@ const hebcal = {
         if (str.length == 4 & str.charAt(3) == 'X') {
             const yearStr = str.substr(0,3);
             const year = (+yearStr) * 10;
-            return moment({ year, month : 1, day : 1 });
+            return dayjs(new Date(year, 0, 1));
         }
-        const m = moment(str);
+        let m = dayjs(str);
         if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W') ||
             (str.length == 11 && str.substr(8) == '-WE')) {
-            m.day(6); // advance to Saturday
+            m = m.day(6); // advance to Saturday
         }
         return m;
     },
 
     getUpcomingFriday(now) {
-        const midnight = new Date(now.year(), now.month(), now.date());
-        const dow = midnight.getDay();
+        const midnight = dayjs(new Date(now.year(), now.month(), now.date()));
+        const dow = midnight.day();
         if (dow === 5) {
-            return moment(midnight);
+            return midnight;
         } else if (dow === 6) {
-            return moment(midnight).day(12); // Friday next week
+            return midnight.day(12); // Friday next week
         } else {
-            return moment(midnight).day(5); // Friday later this week
+            return midnight.day(5); // Friday later this week
         }
     },
 
@@ -383,16 +381,16 @@ const hebcal = {
     getSunsetM(dt, latitude, longitude, tzid) {
         const sun = new Sun(dt, latitude, longitude);
         const sunset = sun.timeAtAngle(0.833333, true);
-        return moment.tz(sunset, tzid);
+        return dayjs(sunset);
     },
 
     /**
      * @param {*} location
-     * @return {moment.Moment}
+     * @return {dayjs.Dayjs}
      */
     getSunset({tzid, latitude, longitude}) {
         const now = new Date();
-        const nowM = moment.tz(now, tzid);
+        const nowM = dayjs(now);
         const sunsetM = this.getSunsetM(now, latitude, longitude, tzid);
         if (sunsetM.isBefore(nowM, 'day')) {
             const tomorrow = new Date(now.getTime() + 86400000);
@@ -403,10 +401,10 @@ const hebcal = {
 
     /**
      * @param {*} location
-     * @return {moment.Moment}
+     * @return {dayjs.Dayjs}
      */
-    getMomentForTodayHebrewDate(location) {
-        const now = moment.tz(location.tzid);
+    getDayjsForTodayHebrewDate(location) {
+        const now = dayjs();
         const sunset = hebcal.getSunset(location);
         const beforeSunset = now.isBefore(sunset);
         const m = beforeSunset ? now : now.add(1, 'd');
@@ -414,19 +412,7 @@ const hebcal = {
     },
 
     /**
-     * @param {*} location
-     * @return {moment.Moment}
-     */
-    getNowForLocation(location) {
-        if (location && location.tzid) {
-            return moment.tz(location.tzid);
-        } else {
-            return moment();
-        }
-    },
-
-    /**
-     * @param {moment.Moment} now
+     * @param {dayjs.Dayjs} now
      * @param {*} location
      * @return {boolean}
      */
@@ -576,153 +562,5 @@ const hebcal = {
 };
 
 hebcal.init();
-
-// console.log(JSON.stringify(hebcal, null, 2));
-
-/*
-//var testCities = 'Hawaii,Portugal,New Zealand,Costa Rica,San Jose,Israel'.split(',');
-//var testCities = 'England,Scotland,Wales,Northern Ireland,Ireland'.split(',');
-//var testCities = 'japan,arizona,canada,victoria,United Arab Emirates'.split(',');
-var testCities = 'anchorage,honolulu,London,Paris,Seattle,Jerusalem,San Francisco,Sao Paulo,tel aviv israel,tokyo japan,Washington DC,San Jose California,Reykjavik,perth,Wellington,melbourne'.split(',');
-testCities.forEach(function(str) {
-    var city = hebcal.getCity(str);
-    if (typeof city === 'undefined') {
-        console.log("*** DID NOT FIND " + str);
-        return;
-    }
-    console.log(JSON.stringify(city, null, 2));
-    var m = hebcal.getMomentForTodayHebrewDate(city);
-    var now = moment.tz(city.tzid);
-    var sunset = hebcal.getSunset(city);
-    var delta = now.diff(sunset);
-
-    var prefix = "Sunset for " + city.name;
-    var prefix2 = delta < 0 ? ' is ' : ' was ';
-    var dur = moment.duration(delta).humanize();
-    var suffix = ", hebdate src=" + m.format('YYYY MM DD');
-    var suffix2 = delta < 0 ? ' from now' : ' ago';
-    console.log(prefix + prefix2 + dur + suffix2 + suffix);
-});
-
-var locations = [{
-    latitude: -23.5475,
-    longitude: -46.63611,
-    tzid: 'America/Sao_Paulo'
-},{
-    latitude: -8.05389,
-    longitude: -34.88111,
-    tzid: 'America/Recife'
-},{
-    latitude: 60.71667,
-    longitude: -46.03333,
-    tzid: 'America/Godthab'
-},{
-    latitude: 64.13548,
-    longitude: -21.89541,
-    tzid: 'Atlantic/Reykjavik'
-},{
-    latitude: 38.71667,
-    longitude: -9.13333,
-    tzid: 'Europe/Lisbon'
-},{
-    latitude: 51.854871,
-    longitude: -177.088812,
-    tzid: 'America/Adak'
-},{
-    latitude: 59.93863,
-    longitude: 30.31413,
-    tzid: 'Europe/Moscow'
-},{
-    latitude: 41.85003,
-    longitude: -87.65005,
-    tzid: 'America/Chicago'
-},{
-    latitude: 37.45779,
-    longitude: -122.122538,
-    tzid: 'America/Los_Angeles'
-},{
-    latitude: 48.85341,
-    longitude: 2.3488,
-    tzid: 'Europe/Paris'
-},{
-    latitude: -25.96553,
-    longitude: 32.58322,
-    tzid: 'Africa/Maputo'
-},{
-    latitude: 40.6501,
-    longitude: -73.94958,
-    tzid: 'America/New_York'
-}
-];
-
-var now = moment();
-console.log(new Date());
-for (var i = locations.length - 1; i >= 0; i--) {
-    var location = locations[i];
-    var sunsetZ = hebcal.getSunset(location);
-    console.log(location.tzid);
-    console.log(sunsetZ.format());
-    console.log(sunsetZ.isBefore(now));
-    var m = hebcal.getMomentForTodayHebrewDate(location);
-    var args = m.format('M D YYYY').split(' ');
-    console.log(m.format());
-    console.log(hebcal.weekendGreeting(location));
-    console.log(hebcal.strWithSpecialGreeting("Hello.", location, true, true, []));
-    hebcal.invokeHebcal(args, location, function(err, events) {
-        if (!err && events && events.length) {
-            var evt = events[0];
-            console.log(evt.dt.format() + " : " + evt.name);
-        }
-    });
-    console.log();
-}
-
-hebcal.invokeHebcal(['3', '23', '2016'], {}, function(err, events) {
-    console.log("Foobar");
-    if (!err) {
-        var arr = hebcal.getSpecialGreetings(events);
-        console.log(arr);
-        console.log(hebcal.strWithSpecialGreeting("Hello.", true, true, arr));
-        console.log(hebcal.strWithSpecialGreeting("Hello.", false, true, arr));
-        console.log("Quux");
-    }
-});
-
-hebcal.lookupZipCode('94306', function(err, data) {
-    if (err) {
-        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
-    } else if (!data) {
-        console.error("ZIP not found");
-    } else {
-        console.error("Success:", JSON.stringify(data, null, 2));
-    }
-});
-
-hebcal.saveUser('amzn1.echo-sdk-account.QUUX_FOOBAR', {     
-    "zipCode": "12345",
-    "latitude": 42.8145,
-    "longitude": -73.9403,
-    "tzid": "America/New_York",
-    "cityName": "Schenectady, NY"
-},
-function() {
-    console.log("Got called back!!");
-});
-
-    console.log("Immediate return");
-
-hebcal.lookupUser('amzn1.echo-sdk-account.QUUX_FOOBAR',
-function(err, data) {
-    if (err) {
-        console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
-    } else {
-        console.log("Query succeeded.");
-        console.log(JSON.stringify(data, null, 2));
-        if (data && data.Item) {
-            console.log(data.Item.zipCode);
-        }
-    }
-});
-*/
 
 module.exports = hebcal;

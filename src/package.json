@@ -10,8 +10,7 @@
     "@hebcal/core": "^2.5.1",
     "@hebcal/solar-calc": "^1.0.4",
     "aws-sdk": "^2.749.0",
-    "moment": "^2.27.0",
-    "moment-timezone": "^0.5.31"
+    "dayjs": "^1.8.35"
   },
   "repository": {
     "type": "git",

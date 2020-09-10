@@ -1,7 +1,10 @@
 const googleAnalytics = require('./hebcal-track');
 const hebcal = require('./hebcal-app');
-const moment = require('moment-timezone');
+const dayjs = require('dayjs');
 const {HDate, HebrewCalendar, DafYomi, OmerEvent, months, greg, Location} = require('@hebcal/core');
+const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
+
+dayjs.extend(isSameOrAfter);
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -95,12 +98,12 @@ function loadUserAndGreetings(request, session, callback) {
     }
 
     hebcal.lookupUser(session.user.userId, user => {
-        let now = moment();
+        let now = dayjs();
         let location;
         if (user && user.ts) {
             session.attributes.returningUser = true;
             if (user.location) {
-                now = hebcal.getMomentForTodayHebrewDate(user.location);
+                now = hebcal.getDayjsForTodayHebrewDate(user.location);
                 location = session.attributes.location = user.location;
             }
         }
@@ -123,7 +126,6 @@ function getHolidaysOnDate(hd, location) {
 }
 
 function formatEvents(events, location) {
-    const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
     return events.map((ev) => {
         const attrs = ev.getAttrs();
         const dt = ev.getDate().greg();
@@ -131,7 +133,7 @@ function formatEvents(events, location) {
         const time = attrs.eventTimeStr ? 'T' + attrs.eventTimeStr + ':00' : '';
         return {
             name: ev.renderBrief(),
-            dt: moment.tz(iso + time, tzid),
+            dt: dayjs(iso + time),
             basename: ev.basename(),
             orig: ev,
         };
@@ -211,11 +213,6 @@ function getLocation(session) {
     return undefined;
 }
 
-function getNowForLocation(session) {
-    const location = getLocation(session);
-    return hebcal.getNowForLocation(location);
-}
-
 function todayOrTonight(now, location) {
     return hebcal.isAfterSunset(now, location) ? 'Tonight' : 'Today';
 }
@@ -283,7 +280,7 @@ function userSpecifiedLocation({slots}) {
 }
 
 function getCandleLightingResponse(intent, session, callback) {
-    const now = getNowForLocation(session);
+    const now = dayjs();
     const friday = hebcal.getUpcomingFriday(now);
     let location = userSpecifiedLocation(intent);
     const sessionLocation = getLocation(session);
@@ -305,7 +302,7 @@ function getCandleLightingResponse(intent, session, callback) {
         });
         if (found.length) {
             const evt = found[0];
-            const dateText = evt.dt.format('dddd, MMMM Do YYYY');
+            const dateText = evt.dt.format('dddd, MMMM D YYYY');
             const timeText = evt.dt.format('h:mma');
             let whenSpeech;
             let cardText = `${evt.name} is at ${timeText} on ${dateText} in ${location.cityName}`;
@@ -378,7 +375,7 @@ function getCandleLightingResponse(intent, session, callback) {
 const reParsha =  /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
 
 function getParshaResponse(intent, session, callback) {
-    const now = getNowForLocation(session);
+    const now = dayjs();
     const saturday = now.day(6);
     const location = getLocation(session);
     const il = Boolean(location && location.cc && location.cc === 'IL');
@@ -427,16 +424,16 @@ function getDateSlotValue({slots}) {
 }
 
 /**
- * @param {moment.Moment} now 
- * @param {*} location 
- * @param {*} slotValue 
- * @return {moment.Moment}
+ * @param {dayjs.Dayjs} now
+ * @param {*} location
+ * @param {*} slotValue
+ * @return {dayjs.Dayjs}
  */
 function getHebrewDateSrc(now, location, slotValue) {
     if (slotValue) {
         return hebcal.parseAmazonDateFormat(slotValue);
     } else if (location && location.latitude) {
-        return hebcal.getMomentForTodayHebrewDate(location);
+        return hebcal.getDayjsForTodayHebrewDate(location);
     } else {
         return now;
     }
@@ -444,15 +441,15 @@ function getHebrewDateSrc(now, location, slotValue) {
 
 function getHebrewDateResponse(intent, session, callback) {
     const location = getLocation(session);
-    const now = hebcal.getNowForLocation(location);
+    const now = dayjs();
     const slotValue = getDateSlotValue(intent);
     const src = getHebrewDateSrc(now, location, slotValue);
     let srcDateSsml = hebcal.formatDateSsml(src);
-    let srcDateText = src.format('MMMM Do YYYY');
+    let srcDateText = src.format('MMMM D YYYY');
     if (!slotValue) {
         srcDateSsml = todayOrTonight(now, location);
         if (hebcal.isAfterSunset(now, location)) {
-            srcDateText = now.format('MMMM Do YYYY');
+            srcDateText = now.format('MMMM D YYYY');
             srcDateText += ' (after sunset)';
         }
     }
@@ -468,7 +465,7 @@ function getHebrewDateResponse(intent, session, callback) {
 
 function getDafYomiResponse(intent, session, callback) {
     const location = getLocation(session);
-    const now = hebcal.getNowForLocation(location);
+    const now = dayjs();
     const slotValue = getDateSlotValue(intent);
     const src = getHebrewDateSrc(now, location, slotValue);
     const dy = new DafYomi(src.toDate());
@@ -479,7 +476,7 @@ function getDafYomiResponse(intent, session, callback) {
 
 function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);
-    const now = hebcal.getNowForLocation(location);
+    const now = dayjs();
     const targetDay = getHebrewDateSrc(now, location);
     const hd = new HDate(targetDay.toDate());
     const hyear = hd.getFullYear();
@@ -515,10 +512,9 @@ function getOmerResponse(intent, session, callback) {
     } else {
         const upcoming = abs < beginOmer ? beginOmer : HDate.hebrew2abs(hyear + 1, months.NISAN, 16);
         const upcomingDt = greg.abs2greg(upcoming); /** @todo: subtract 1? */
-        const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
-        const observedDt = moment.tz(upcomingDt, tzid);
+        const observedDt = dayjs(upcomingDt);
         const dateSsml = hebcal.formatDateSsml(observedDt);
-        const dateText = observedDt.format('dddd, MMMM Do YYYY');
+        const dateText = observedDt.format('dddd, MMMM D YYYY');
         const prefix = 'The counting of the Omer begins at sundown on ';
         callback(session, respond('Counting of the Omer',
             `${prefix}${dateText}.`,
@@ -549,7 +545,7 @@ function getHolidayResponse({slots, name}, session, callback) {
         titleYear = year.toString();
     }
 
-    const now = getNowForLocation(session);
+    const now = dayjs();
     const events0 = HebrewCalendar.calendar(options);
     let events = formatEvents(events0, location);
     console.log(`Got ${events.length} events`);
@@ -589,7 +585,7 @@ function getHolidayResponse({slots, name}, session, callback) {
         const observedDt = hebcal.dayEventObserved(evt);
         const observedWhen = hebcal.beginsWhen(evt.name);
         const dateSsml = hebcal.formatDateSsml(observedDt);
-        const dateText = observedDt.format('dddd, MMMM Do YYYY');
+        const dateText = observedDt.format('dddd, MMMM D YYYY');
         const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
         const isToday = observedDt.isSame(now, 'day');
         let beginsOn = ` ${begins} ${observedWhen} `;
