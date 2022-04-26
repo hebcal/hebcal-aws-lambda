@@ -309,6 +309,16 @@ const hebcal = {
         }
     },
 
+    getUpcomingSaturday(now) {
+        const midnight = dayjs(new Date(now.year(), now.month(), now.date()));
+        const dow = midnight.day();
+        if (dow === 6) {
+            return midnight;
+        } else {
+            return midnight.day(6); // Shabbat later this week
+        }
+    },
+
     getTzidFromLocation(location) {
         if (typeof location === 'object' && typeof location.tzid === 'string') {
             return location.tzid;
