@@ -3,7 +3,7 @@ const dayjs = require('dayjs');
 // don't lazily load
 const AWS = require('aws-sdk');
 
-const Sun = require('@hebcal/solar-calc/lib/sun');
+const {SolarCalc} = require('@hebcal/solar-calc');
 const {Location} = require('@hebcal/core');
 const config = require('./config.json');
 
@@ -389,8 +389,8 @@ const hebcal = {
     },
 
     getSunsetM(dt, latitude, longitude, tzid) {
-        const sun = new Sun(dt, latitude, longitude);
-        const sunset = sun.timeAtAngle(0.833333, true);
+        const solar = new SolarCalc(dt, latitude, longitude);
+        const sunset = solar.sun.timeAtAngle(0.833333, true);
         return dayjs(sunset);
     },
 
