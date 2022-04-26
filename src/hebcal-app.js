@@ -1,4 +1,6 @@
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 
 // don't lazily load
 const AWS = require('aws-sdk');
@@ -6,6 +8,9 @@ const AWS = require('aws-sdk');
 const {SolarCalc} = require('@hebcal/solar-calc');
 const {Location} = require('@hebcal/core');
 const config = require('./config.json');
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const hebcal = {
     cities: {},
@@ -156,7 +161,7 @@ const hebcal = {
     },
 
     weekendGreeting(location) {
-        const now = dayjs();
+        const now = dayjs.tz(new Date(), location.tzid);
         const dow = now.day();
         if (dow === 6) {
             if (this.isAfterSunset(now, location)) {
@@ -388,25 +393,15 @@ const hebcal = {
         });
     },
 
-    getSunsetM(dt, latitude, longitude, tzid) {
-        const solar = new SolarCalc(dt, latitude, longitude);
-        const sunset = solar.sun.timeAtAngle(0.833333, true);
-        return dayjs(sunset);
-    },
-
     /**
+     * @param {Date} dt
      * @param {*} location
      * @return {dayjs.Dayjs}
      */
-    getSunset({tzid, latitude, longitude}) {
-        const now = new Date();
-        const nowM = dayjs(now);
-        const sunsetM = this.getSunsetM(now, latitude, longitude, tzid);
-        if (sunsetM.isBefore(nowM, 'day')) {
-            const tomorrow = new Date(now.getTime() + 86400000);
-            return this.getSunsetM(tomorrow, latitude, longitude, tzid);
-        }
-        return sunsetM;
+    getSunset(dt, location) {
+        const solar = new SolarCalc(dt, location.latitude, location.longitude);
+        const sunset = solar.sun.timeAtAngle(0.833333, false);
+        return dayjs.tz(sunset, location.tzid);
     },
 
     /**
@@ -414,11 +409,14 @@ const hebcal = {
      * @return {dayjs.Dayjs}
      */
     getDayjsForTodayHebrewDate(location) {
-        const now = dayjs();
-        const sunset = hebcal.getSunset(location);
+        const now = dayjs.tz(new Date(), location.tzid);
+        const localDate = new Date(now.year(), now.month(), now.date());
+        const sunset = this.getSunset(localDate, location);
         const beforeSunset = now.isBefore(sunset);
-        const m = beforeSunset ? now : now.add(1, 'd');
-        return m;
+        const d = dayjs.tz(localDate, location.tzid);
+        console.log(`tz=${location.tzid}, now=${now.format('YYYY-MM-DDTHH:MM')}, sunset=${sunset.format('YYYY-MM-DDTHH:MM')}, beforeSunset=${beforeSunset}`);
+        const targetDay = beforeSunset ? d : d.add(1, 'd');
+        return {now, sunset, d, beforeSunset, targetDay};
     },
 
     /**
@@ -428,7 +426,8 @@ const hebcal = {
      */
     isAfterSunset(now, location) {
         if (location && location.latitude) {
-            const sunset = this.getSunset(location);
+            const localDate = new Date(now.year(), now.month(), now.date());
+            const sunset = this.getSunset(localDate, location);
             return now.isAfter(sunset);
         }
         return false;

@@ -1,5 +1,7 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 const {HDate} = require('@hebcal/core');
 const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } = require("./respond");
@@ -14,6 +16,8 @@ const { getHolidayResponse } = require("./holiday");
 const { getDafYomiResponse } = require("./daf-yomi");
 
 dayjs.extend(isSameOrAfter);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -60,17 +64,20 @@ function loadUserAndGreetings(request, session, callback) {
         return callback();
     }
 
-    hebcal.lookupUser(session.user.userId, user => {
-        let now = dayjs();
+    hebcal.lookupUser(session.user.userId, (user) => {
+        let hd = null;
         let location;
         if (user && user.ts) {
             session.attributes.returningUser = true;
             if (user.location) {
-                now = hebcal.getDayjsForTodayHebrewDate(user.location);
+                const {targetDay} = hebcal.getDayjsForTodayHebrewDate(user.location);
+                hd = new HDate(targetDay.toDate());
                 location = session.attributes.location = user.location;
             }
         }
-        const hd = new HDate(now.toDate());
+        if (!hd) {
+            hd = new HDate();
+        }
         session.attributes.todayHebrewDateStr = hd.render();
         const events = getHolidaysOnDate(hd, location);
         const arr = hebcal.getSpecialGreetings(events);

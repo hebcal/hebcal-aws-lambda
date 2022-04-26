@@ -2,12 +2,10 @@ const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HDate, OmerEvent, months, greg } = require('@hebcal/core');
 const { respond, getLocation } = require("./respond");
-const { getHebrewDateSrc, todayOrTonight } = require("./common");
 
 function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);
-    const now = dayjs();
-    const targetDay = getHebrewDateSrc(now, location);
+    const {beforeSunset, targetDay} = hebcal.getDayjsForTodayHebrewDate(location);
     const hd = new HDate(targetDay.toDate());
     const hyear = hd.getFullYear();
     const beginOmer = HDate.hebrew2abs(hyear, months.NISAN, 16);
@@ -17,7 +15,7 @@ function getOmerResponse(intent, session, callback) {
         const num = abs - beginOmer + 1;
         const weeks = Math.floor(num / 7);
         const days = num % 7;
-        const todayOrTonightStr = todayOrTonight(now, location);
+        const todayOrTonightStr = beforeSunset ? 'Today' : 'Tonight';
         let suffix = '';
         const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
         if (weeks) {
