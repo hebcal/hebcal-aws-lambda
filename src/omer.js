@@ -9,7 +9,7 @@ function getOmerResponse(intent, session, callback) {
     const hd = new HDate(targetDay.toDate());
     const hyear = hd.getFullYear();
     const beginOmer = HDate.hebrew2abs(hyear, months.NISAN, 16);
-    const endOmer = HDate.hebrew2abs(hyear, months.SIVAN, 5);
+    const endOmer = beginOmer + 48;
     const abs = hd.abs();
     if (abs >= beginOmer && abs <= endOmer) {
         const num = abs - beginOmer + 1;

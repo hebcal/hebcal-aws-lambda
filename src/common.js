@@ -35,10 +35,9 @@ function getHolidaysOnDate(hd, location) {
 }
 function formatEvents(events, location) {
     return events.map((ev) => {
-        const attrs = ev.getAttrs();
         const dt = ev.getDate().greg();
         const iso = dt.toISOString().substring(0, 10);
-        const time = attrs.eventTimeStr ? 'T' + attrs.eventTimeStr + ':00' : '';
+        const time = ev.eventTimeStr ? 'T' + ev.eventTimeStr + ':00' : '';
         return {
             name: ev.renderBrief(),
             dt: dayjs(iso + time),

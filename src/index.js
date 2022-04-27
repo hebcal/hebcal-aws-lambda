@@ -23,7 +23,8 @@ dayjs.extend(timezone);
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
     console.log(`HELLO WORLD`);
-    console.log(JSON.stringify(event));
+    console.log(JSON.stringify(event.session));
+    console.log(JSON.stringify(event.request));
     try {
 /*
         if (event.session.application && event.session.application.applicationId && event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {
@@ -31,7 +32,9 @@ exports.handler = function (event, context) {
         }
 */
         if (event.request.type === "LaunchRequest" || event.request.type === "IntentRequest") {
+            event.session.attributes = event.session.attributes || {};
             loadUserAndGreetings(event.request, event.session, () => {
+                console.log(`Done looking up user, attrs=` + JSON.stringify(event.session.attributes));
                 if (event.request.type === "LaunchRequest") {
                     onLaunch(event.request, event.session, (session, speechletResponse) => {
                         const sessionAttributes = session && session.attributes ? session.attributes : {};
@@ -59,12 +62,7 @@ exports.handler = function (event, context) {
 }
 
 function loadUserAndGreetings(request, session, callback) {
-    session.attributes = session.attributes || {};
-
-    if (session.attributes.todayHebrewDateStr) {
-        return callback();
-    }
-
+    session.attributes.userId = session.user.userId;
     hebcal.lookupUser(session.user.userId, (user) => {
         let hd = null;
         let location;
@@ -75,6 +73,8 @@ function loadUserAndGreetings(request, session, callback) {
                 hd = new HDate(targetDay.toDate());
                 location = session.attributes.location = user.location;
             }
+        } else {
+            session.attributes.userNotFound = true;
         }
         if (!hd) {
             hd = new HDate();
