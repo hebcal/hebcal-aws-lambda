@@ -13,7 +13,7 @@ function getHebrewDateSrc(now, location, slotValue) {
         return hebcal.parseAmazonDateFormat(slotValue);
     } else if (location && location.latitude && location.tzid) {
         const {targetDay} = hebcal.getDayjsForTodayHebrewDate(location);
-        return targetDay.toDate();
+        return targetDay;
     } else {
         return now;
     }
