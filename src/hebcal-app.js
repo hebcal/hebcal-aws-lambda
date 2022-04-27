@@ -161,7 +161,8 @@ const hebcal = {
     },
 
     weekendGreeting(location) {
-        const now = dayjs.tz(new Date(), location.tzid);
+        const tzid = (location && location.tzid) || this.defaultTimezone;
+        const now = dayjs.tz(new Date(), tzid);
         const dow = now.day();
         if (dow === 6) {
             if (this.isAfterSunset(now, location)) {
@@ -409,14 +410,13 @@ const hebcal = {
      * @return {dayjs.Dayjs}
      */
     getDayjsForTodayHebrewDate(location) {
-        const now = dayjs.tz(new Date(), location.tzid);
+        const tzid = (location && location.tzid) || this.defaultTimezone;
+        const now = dayjs.tz(new Date(), tzid);
         const localDate = new Date(now.year(), now.month(), now.date());
-        const sunset = this.getSunset(localDate, location);
-        const beforeSunset = now.isBefore(sunset);
-        const d = dayjs.tz(localDate, location.tzid);
-        console.log(`tz=${location.tzid}, now=${now.format('YYYY-MM-DDTHH:MM')}, sunset=${sunset.format('YYYY-MM-DDTHH:MM')}, beforeSunset=${beforeSunset}`);
-        const targetDay = beforeSunset ? d : d.add(1, 'd');
-        return {now, sunset, d, beforeSunset, targetDay};
+        const afterSunset = this.isAfterSunset(now, location);
+        const d = dayjs.tz(localDate, tzid);
+        const targetDay = afterSunset ? d.add(1, 'd') : d;
+        return {now, afterSunset, d, targetDay};
     },
 
     /**
@@ -425,10 +425,12 @@ const hebcal = {
      * @return {boolean}
      */
     isAfterSunset(now, location) {
-        if (location && location.latitude) {
+        if (location && location.latitude && location.tzid) {
             const localDate = new Date(now.year(), now.month(), now.date());
             const sunset = this.getSunset(localDate, location);
-            return now.isAfter(sunset);
+            const afterSunset = now.isAfter(sunset);
+            console.log(`tz=${location.tzid}, now=${now.format('YYYY-MM-DDTHH:MM')}, sunset=${sunset.format('YYYY-MM-DDTHH:MM')}, afterSunset=${afterSunset}`);
+            return afterSunset;
         }
         return false;
     },

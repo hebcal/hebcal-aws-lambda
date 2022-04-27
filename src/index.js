@@ -22,7 +22,8 @@ dayjs.extend(timezone);
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
-    console.log(`MAIN event.request=${JSON.stringify(event.request)}`);
+    console.log(`HELLO WORLD`);
+    console.log(JSON.stringify(event));
     try {
 /*
         if (event.session.application && event.session.application.applicationId && event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {

@@ -11,7 +11,7 @@ const hebcal = require('./hebcal-app');
 function getHebrewDateSrc(now, location, slotValue) {
     if (slotValue) {
         return hebcal.parseAmazonDateFormat(slotValue);
-    } else if (location && location.latitude) {
+    } else if (location && location.latitude && location.tzid) {
         const {targetDay} = hebcal.getDayjsForTodayHebrewDate(location);
         return targetDay.toDate();
     } else {

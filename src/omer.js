@@ -5,7 +5,7 @@ const { respond, getLocation } = require("./respond");
 
 function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);
-    const {beforeSunset, targetDay} = hebcal.getDayjsForTodayHebrewDate(location);
+    const {targetDay, afterSunset} = hebcal.getDayjsForTodayHebrewDate(location);
     const hd = new HDate(targetDay.toDate());
     const hyear = hd.getFullYear();
     const beginOmer = HDate.hebrew2abs(hyear, months.NISAN, 16);
@@ -15,7 +15,7 @@ function getOmerResponse(intent, session, callback) {
         const num = abs - beginOmer + 1;
         const weeks = Math.floor(num / 7);
         const days = num % 7;
-        const todayOrTonightStr = beforeSunset ? 'Today' : 'Tonight';
+        const todayOrTonightStr = afterSunset ? 'Tonight' : 'Today';
         let suffix = '';
         const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
         if (weeks) {
