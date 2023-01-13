@@ -42,8 +42,8 @@ const matomoAnalytics = {
               args.set('city', location.name);
             }
             if (typeof location.latitude === 'number' && typeof location.longitude === 'number') {
-              args.st('lat', location.latitude);
-              args.st('long', location.longitude);
+              args.set('lat', location.latitude);
+              args.set('long', location.longitude);
             }
           }
         }

@@ -39,13 +39,13 @@ function trackException(session, description) {
 
 function trackIntent(intent, session) {
   const intentName = intent.name;
-  const slotvals = [];
+  const slotvals = {};
   let count = 0;
   const slots = intent.slots;
   if (typeof slots === 'object') {
     for (const [key, val] of Object.entries(slots)) {
         if (typeof val.value === 'string' && val.value.length) {
-            slotvals.push([key, val.value]);
+            slotvals[key] = val.value;
             count++;
         }
     }
@@ -53,10 +53,10 @@ function trackIntent(intent, session) {
   if (count === 0) {
     trackScreenview(session, intentName);
   } else if (count === 1) {
-    const slotval = slotvals[0];
+    const slotval = Object.entries(slotvals)[0];
     trackScreenview(session, intentName, slotval[0], slotval[1]);
   } else {
-    trackScreenview(session, intentName, 'multi', JSON.stringify(slotvals));
+    trackScreenview(session, intentName, 'slots', JSON.stringify(slotvals));
   }
 }
 
