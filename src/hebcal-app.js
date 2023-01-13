@@ -3,7 +3,7 @@ const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
 
 // don't lazily load
-const AWS = require('aws-sdk');
+const {DynamoDBClient, GetItemCommand, PutItemCommand} = require("@aws-sdk/client-dynamodb");
 
 const {SolarCalc} = require('@hebcal/solar-calc');
 const {Location} = require('@hebcal/core');
@@ -429,7 +429,7 @@ const hebcal = {
             const localDate = new Date(now.year(), now.month(), now.date());
             const sunset = this.getSunset(localDate, location);
             const afterSunset = now.isAfter(sunset);
-            console.log(`tz=${location.tzid}, now=${now.format('YYYY-MM-DDTHH:MM')}, sunset=${sunset.format('YYYY-MM-DDTHH:MM')}, afterSunset=${afterSunset}`);
+            // console.log(`tz=${location.tzid}, now=${now.format('YYYY-MM-DDTHH:MM')}, sunset=${sunset.format('YYYY-MM-DDTHH:MM')}, afterSunset=${afterSunset}`);
             return afterSunset;
         }
         return false;
@@ -501,7 +501,7 @@ const hebcal = {
     getDynamoDB() {
         if (!this.dynamodb) {
             console.log("Creating DynamoDB...");
-            this.dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+            this.dynamodb = new DynamoDBClient({ region: "us-east-1" });
         }
         return this.dynamodb;
     },
@@ -517,21 +517,18 @@ const hebcal = {
         };
         const dynamodb = this.getDynamoDB();
         console.log(`Getting from DynamoDB userId=${userId}`);
-        const request = dynamodb.getItem(params);
+        const command = new GetItemCommand(params);
         const timeoutObject = setTimeout(() => {
             console.log(`ABORT DynamoDB request for userId=${userId}`);
-            request.abort();
             callback(null);
         }, 2000);
-        request.send((err, {Item}) => {
+        dynamodb.send(command).then((data) => {
             clearTimeout(timeoutObject);
-            if (err) {
-                console.log(err, err.stack);
-                callback(null);
-            } else if (typeof Item == 'undefined') {
+            const Item = data.Item;
+            if (typeof Item == 'undefined') {
                 callback(null);
             } else {
-                console.log(`SUCCESS Got from DynamoDB userId=${userId},ts=${Item.Timestamp.N}`);
+                console.log(`SUCCESS Got from DynamoDB`, Item);
                 const user = {
                     ts: Item.Timestamp.N
                 };
@@ -540,6 +537,10 @@ const hebcal = {
                 }
                 callback(user);
             }
+        }).catch((err) => {
+            console.log("ERROR dynamodb.getItem");
+            console.log(err);
+            callback(null);
         });
     },
 
@@ -560,11 +561,15 @@ const hebcal = {
         };
         const dynamodb = this.getDynamoDB();
         console.log(`Storing in DynamoDB userId=${userId},data=${params.Item.Data.S}`);
-        dynamodb.putItem(params, (err, data) => {
-            if (err) {
-                console.log("ERROR dynamodb.putItem");
-                console.log(err, err.stack);
+        const command = new PutItemCommand(params);
+        dynamodb.send(command).then((data) => {
+            console.log(`SUCCESS dynamodb.putItem ${data}`);
+            if (callback) {
+                callback();
             }
+        }).catch((err) => {
+            console.log("ERROR dynamodb.putItem");
+            console.log(err);
             if (callback) {
                 callback();
             }

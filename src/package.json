@@ -7,9 +7,9 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.245.0",
     "@hebcal/core": "^3.49.0",
     "@hebcal/solar-calc": "^1.1.2",
-    "aws-sdk": "^2.1295.0",
     "dayjs": "^1.11.7"
   },
   "repository": {
