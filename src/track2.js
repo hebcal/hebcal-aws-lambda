@@ -1,4 +1,4 @@
-const googleAnalytics = require('./hebcal-track');
+const matomoAnalytics = require('./hebcal-track');
 const { getLocation } = require("./respond");
 
 function getTrackingOptions(session) {
@@ -19,16 +19,16 @@ function getTrackingOptions(session) {
 }
 function trackScreenview(session, screenName) {
     const options = getTrackingOptions(session);
-    googleAnalytics.screenview(session.user.userId, screenName, options);
+    matomoAnalytics.screenview(session.user.userId, screenName, options);
 }
 function trackEvent(session, category, action, label) {
     const options = getTrackingOptions(session);
-    googleAnalytics.event(session.user.userId, category, action, label, options);
+    matomoAnalytics.event(session.user.userId, category, action, label, options);
 }
 
 function trackException(session, description) {
     const options = getTrackingOptions(session);
-    googleAnalytics.exception(session.user.userId, description, options);
+    matomoAnalytics.exception(session.user.userId, description, options);
 }
 
 function trackIntent(intent, session) {

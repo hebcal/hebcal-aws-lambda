@@ -1,13 +1,7 @@
-const querystring = require('querystring');
-
-const http = require('http');
+const http = require('node:http');
 const crypto = require('crypto');
 
-const googleAnalytics = {
-    tid: 'UA-967247-4',
-
-    an: 'Hebcal',
-
+const matomoAnalytics = {
     extend(destination, source) {
         if (typeof source === 'object') {
             Object.assign(destination, source);
@@ -23,45 +17,64 @@ const googleAnalytics = {
     },
 
     send(hitType, userId, params) {
-        let postParams = {
-            v: '1',
-            tid: this.tid,
-            t: hitType,
-            cid: this.hashUuid4(userId),
-            an: this.an
+        const args = new URLSearchParams();
+        args.set('rec', '1');
+        args.set('apiv', '1');
+        args.set('idsite', '4');
+        args.set('send_image', '0'); // prefer HTTP 204 instead of a GIF image
+        args.set('e_c', hitType);
+        args.set('e_a', params.cd || params.ec);
+        const name = params.ea;
+        if (name) {
+          args.set('e_n', name);
+        }
+        if (userId) {
+          const uid = this.hashUuid4(userId);
+          args.set('uid', uid);
+          const vid = uid.substring(0, 4) + uid.substring(24);
+          if (vid.length === 16) {
+            args.set('_id', vid);
+            args.set('cid', vid);
+          }
+        }
+        const postData = args.toString();
+        const postLen = Buffer.byteLength(postData);
+        let path = '/ma/ma.php';
+        let sendPostBody = true;
+        if (postLen < 4000) {
+          path += '?' + postData;
+          sendPostBody = false;
+        }
+        const httpHost = 'www.hebcal.com';
+        const headers = {
+          'Host': httpHost,
+          'X-Forwarded-Proto': 'https',
+          'User-Agent': 'hebcal-aws-lambda/0.9.4',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': sendPostBody ? postLen : 0,
         };
-
-        postParams = this.extend(postParams, params);
-
-        const postData = querystring.stringify(postParams);
-        console.log(`TRACKING: ${postData}`);
-
         const options = {
-            hostname: 'www.google-analytics.com',
-            port: 80,
-            path: '/collect',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Content-Length': postData.length
-            }
+          hostname: httpHost,
+          port: 80,
+          path: path,
+          method: 'POST',
+          headers: headers,
         };
-
+        console.log(`TRACKING: ${postData}`);
         const req = http.request(options);
-
-        req.on('error', ({message}) => {
-            console.log(`problem with request: ${message}`);
+        req.on('error', (err) => {
+          console.log(`problem with request: ${err.message}`);
         });
-
-        // write data to request body
-        req.write(postData);
+        req.setTimeout(1000);
+        if (sendPostBody) {
+          req.write(postData);
+        }
         req.end();
     },
 
     screenview(userId, screenName, options) {
         let params = {
-            cd: screenName,
-            geoid: 'US'
+            cd: screenName
         };
         params = this.extend(params, options);
         this.send('screenview', userId, params);
@@ -70,8 +83,7 @@ const googleAnalytics = {
     event(userId, category, action, label, options) {
         let params = {
             ec: category,
-            ea: action,
-            geoid: 'US'
+            ea: action
         };
         if (typeof label !== 'undefined') {
             params.el = label;
@@ -82,8 +94,7 @@ const googleAnalytics = {
 
     exception(userId, description, options) {
         let params = {
-            exd: description,
-            geoid: 'US'
+            exd: description
         };
         params = this.extend(params, options);
         this.send('exception', userId, params);
@@ -102,4 +113,4 @@ var x = sendGoogleTracking(
 console.log(x);
 */
 
-module.exports = googleAnalytics;
+module.exports = matomoAnalytics;
