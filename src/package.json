@@ -7,10 +7,10 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "@hebcal/core": "^3.36.2",
+    "@hebcal/core": "^3.49.0",
     "@hebcal/solar-calc": "^1.1.2",
-    "aws-sdk": "^2.1122.0",
-    "dayjs": "^1.11.1"
+    "aws-sdk": "^2.1295.0",
+    "dayjs": "^1.11.7"
   },
   "repository": {
     "type": "git",
