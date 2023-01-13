@@ -4,10 +4,17 @@
         "commonjs": true,
         "es6": true
     },
-    "extends": "eslint:recommended",
+    "extends": [
+        "google"
+    ],
+    "globals": {
+        "Atomics": "readonly",
+        "SharedArrayBuffer": "readonly"
+    },
     "parserOptions": {
-        "ecmaVersion": 6
+        "ecmaVersion": 11
     },
     "rules": {
+        "max-len": ["error", { "code": 120 }]
     }
 }

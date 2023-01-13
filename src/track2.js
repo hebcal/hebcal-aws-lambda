@@ -14,34 +14,49 @@ function getTrackingOptions(session) {
                 geoid: location.cc
             };
         }
+        options.location = location;
     }
     return options;
 }
-function trackScreenview(session, screenName) {
+function trackScreenview(session, screenName, action, label) {
     const options = getTrackingOptions(session);
-    matomoAnalytics.screenview(session.user.userId, screenName, options);
+    options.action = action;
+    options.label = label;
+    matomoAnalytics.send(screenName, session.user.userId, options);
 }
 function trackEvent(session, category, action, label) {
     const options = getTrackingOptions(session);
-    matomoAnalytics.event(session.user.userId, category, action, label, options);
+    options.action = action;
+    options.label = label;
+    matomoAnalytics.send(category, session.user.userId, options);
 }
 
 function trackException(session, description) {
     const options = getTrackingOptions(session);
-    matomoAnalytics.exception(session.user.userId, description, options);
+    options.action = description;
+    matomoAnalytics.send('Exception', session.user.userId, options);
 }
 
 function trackIntent(intent, session) {
   const intentName = intent.name;
-  trackScreenview(session, intentName);
-  if (typeof intent.slots === 'object') {
-      const slots = intent.slots;
-      for (const slot in slots) {
-          const slotval = slots[slot].value;
-          if (slotval && slotval.length) {
-              trackEvent(session, slot, slotval);
-          }
-      }
+  const slotvals = [];
+  let count = 0;
+  const slots = intent.slots;
+  if (typeof slots === 'object') {
+    for (const [key, val] of Object.entries(slots)) {
+        if (typeof val.value === 'string' && val.value.length) {
+            slotvals.push([key, val.value]);
+            count++;
+        }
+    }
+  }
+  if (count === 0) {
+    trackScreenview(session, intentName);
+  } else if (count === 1) {
+    const slotval = slotvals[0];
+    trackScreenview(session, intentName, slotval[0], slotval[1]);
+  } else {
+    trackScreenview(session, intentName, 'multi', JSON.stringify(slotvals));
   }
 }
 
