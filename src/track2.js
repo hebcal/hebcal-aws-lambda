@@ -3,7 +3,7 @@ const { getLocation } = require("./respond");
 
 function getTrackingOptions(session) {
     const location = getLocation(session);
-    let options;
+    let options = {};
     if (location) {
         if (location.geoid) {
             options = {

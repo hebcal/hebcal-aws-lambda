@@ -22,12 +22,12 @@ const hebcal = {
             const rck = `Rosh Chodesh ${k}`;
             config.holiday2ipa[rck] = config.roshChodeshIpa + config.month2ipa[k];
         }
+        this.zipsDb = this.loadZipsDb(); // about 20ms
         console.log("Loading cities.json...");
         const allCities = require('./cities.json');
         console.log(`Parsing ${allCities.length} cities`);
         this.cities = this.loadCities(allCities); // about 9ms
         this.initCityAliases();
-        this.zipsDb = this.loadZipsDb(); // about 20ms
         const t1 = Date.now();
         console.log(`Init finished in ${t1 - t0}ms`);
     },
@@ -35,7 +35,7 @@ const hebcal = {
     loadCities(allCities) {
         const cities = {};
         const cityObjs = allCities.map(this.parseCityString);
-        cityObjs.forEach(city => {
+        const processCity = (city) => {
             const cityLc = city.name.toLowerCase();
             let aliasLc;
             if (city.cc == 'US') {
@@ -49,9 +49,9 @@ const hebcal = {
                 cities[cityLc] = city;
             }
             cities[aliasLc] = city;
-        });
+        };
         // this is silly, but alias the first occurrence of each country and US state
-        cityObjs.forEach(city => {
+        const aliasFirstCityOccurrence = (city) => {
             if (city.cc == 'US') {
                 const stateLc = config.stateNames[city.state].toLowerCase();
                 if (!cities[stateLc]) {
@@ -63,7 +63,16 @@ const hebcal = {
                     cities[countryLc] = city;
                 }
             }
-        });
+        };
+        cityObjs.forEach(processCity);
+        for (const zipCode of Object.keys(this.zipsDb)) {
+            const zipObj = this.lookupZipCode(zipCode);
+            const cityLc = zipObj.name.toLowerCase();
+            if (!cities[cityLc] && zipObj.state && config.stateNames[zipObj.state]) {
+                processCity(zipObj);
+            }
+        }
+        cityObjs.forEach(aliasFirstCityOccurrence);
         return cities;
     },
 
@@ -484,6 +493,8 @@ const hebcal = {
                 latitude: row.Latitude,
                 longitude: row.Longitude,
                 tzid,
+                name: row.CityMixedCase,
+                state: row.State,
                 cc: 'US',
                 cityName
             };
