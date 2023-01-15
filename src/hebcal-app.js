@@ -8,6 +8,7 @@ const {DynamoDBClient, GetItemCommand, PutItemCommand} = require("@aws-sdk/clien
 const {SolarCalc} = require('@hebcal/solar-calc');
 const {Location} = require('@hebcal/core');
 const config = require('./config.json');
+const pkg = require('./package.json');
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -17,6 +18,7 @@ const hebcal = {
 
     init() {
         const t0 = Date.now();
+        console.log(`Init ${pkg.name}/${pkg.version}`);
         this.setDefaultTimeZone(config.defaultTimezone);
         for (let k in config.month2ipa) {
             const rck = `Rosh Chodesh ${k}`;
