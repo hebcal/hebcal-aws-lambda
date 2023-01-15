@@ -67,9 +67,13 @@ const hebcal = {
         cityObjs.forEach(processCity);
         for (const zipCode of Object.keys(this.zipsDb)) {
             const zipObj = this.lookupZipCode(zipCode);
-            const cityLc = zipObj.name.toLowerCase();
-            if (!cities[cityLc] && zipObj.state && config.stateNames[zipObj.state]) {
-                processCity(zipObj);
+            if (zipObj.state && config.stateNames[zipObj.state]) {
+                const stateLc = config.stateNames[zipObj.state].toLowerCase();
+                const cityLc = zipObj.name.toLowerCase();
+                const aliasLc = `${cityLc} ${stateLc}`;
+                if (!cities[aliasLc]) {
+                    processCity(zipObj);
+                }
             }
         }
         cityObjs.forEach(aliasFirstCityOccurrence);
@@ -84,7 +88,7 @@ const hebcal = {
         const latitude = +f[3];
         const longitude = +f[4];
         const tzid = f[5];
-        const geoid = f[6];
+        // const geoid = f[6];
 
         const city = {
             name: cityName,
@@ -94,9 +98,11 @@ const hebcal = {
             tzid
         };
 
+        /*
         if (geoid) {
             city.geoid = +geoid;
         }
+        */
         if (country == 'US') {
             city.state = admin1;
             city.cityName = `${cityName}, ${admin1}`;
@@ -457,9 +463,11 @@ const hebcal = {
             TimeZone: +f[5],
             DayLightSaving: f[6]
         };
+        /*
         if (f[7] && f[7].length) {
             r.GeoId = +f[7];
         }
+        */
         return r;
     },
 
@@ -499,9 +507,11 @@ const hebcal = {
                 cc: 'US',
                 cityName
             };
+            /*
             if (row.GeoId) {
                 result.geoid = row.GeoId;
             }
+            */
             return result;
         }
     },
