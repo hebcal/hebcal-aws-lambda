@@ -73,10 +73,11 @@ const matomoAnalytics = {
         };
         console.log(`TRACKING: ${postData}`);
         const req = http.request(options);
-        req.on('error', (err) => {
-          console.log(`problem with request: ${err.message}`);
-        });
         req.setTimeout(1000);
+        req.on('error', (err) => {
+          // this is often 'socket hang up'. Nothing we can do, so just bail.
+          req.end();
+        });
         if (sendPostBody) {
           req.write(postData);
         }
