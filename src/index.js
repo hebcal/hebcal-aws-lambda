@@ -14,6 +14,7 @@ const { getHavdalahResponse } = require("./havdalah");
 const { getParshaResponse } = require("./parsha");
 const { getHolidayResponse } = require("./holiday");
 const { getDafYomiResponse } = require("./daf-yomi");
+const pkg = require('./package.json');
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(utc);
@@ -63,6 +64,7 @@ exports.handler = function (event, context) {
 
 function loadUserAndGreetings(request, session, callback) {
     session.attributes.userId = session.user.userId;
+    session.attributes.lambdaApp = pkg.name + '/' + pkg.version;
     hebcal.lookupUser(session.user.userId, (user) => {
         let hd = null;
         let location;

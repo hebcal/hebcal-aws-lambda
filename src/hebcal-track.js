@@ -1,5 +1,6 @@
 const http = require('node:http');
 const crypto = require('crypto');
+const pkg = require('./package.json');
 
 const matomoAnalytics = {
     hashUuid4(str) {
@@ -59,7 +60,7 @@ const matomoAnalytics = {
         const headers = {
           'Host': httpHost,
           'X-Forwarded-Proto': 'https',
-          'User-Agent': 'hebcal-aws-lambda/0.9.5',
+          'User-Agent': pkg.name + '/' + pkg.version,
           'Content-Type': 'application/x-www-form-urlencoded',
           'Content-Length': sendPostBody ? postLen : 0,
         };

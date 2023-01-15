@@ -585,7 +585,7 @@ const hebcal = {
         console.log(`Storing in DynamoDB userId=${userId},data=${params.Item.Data.S}`);
         const command = new PutItemCommand(params);
         dynamodb.send(command).then((data) => {
-            console.log(`SUCCESS dynamodb.putItem ${data}`);
+            console.log('SUCCESS dynamodb.putItem', data);
             if (callback) {
                 callback();
             }
