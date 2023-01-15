@@ -487,7 +487,8 @@ const hebcal = {
         } else {
             const row = this.parseZipCodeRow(row0);
             const tzid = Location.getUsaTzid(row.State, row.TimeZone, row.DayLightSaving);
-            const cityName = `${row.CityMixedCase}, ${row.State}`;
+            const stateName = config.stateNames[row.State] || row.State;
+            const cityName = `${row.CityMixedCase}, ${stateName}`;
             const result = {
                 zipCode,
                 latitude: row.Latitude,
