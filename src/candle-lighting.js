@@ -15,7 +15,7 @@ function getCandleLightingResponse(intent, session, callback) {
         console.log(`NOTFOUND: ${location.cityName}`);
         trackEvent(session, 'cityNotFound', location.cityName);
         return getWhichZipCodeResponse(session, callback,
-            `Sorry, we don't know where ${location.cityName} is. `);
+            `Sorry, we are having trouble finding the city ${location.cityName}. `);
     }
 
     const hebcalEventsCallback = (err, events) => {
