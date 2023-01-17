@@ -73,10 +73,20 @@ const matomoAnalytics = {
           headers: headers,
         };
         console.log(`TRACKING: ${postData}`);
-        const req = http.request(options);
-        req.setTimeout(1000);
+        const req = http.request(options, (res) => {
+          console.log(`TRACKING STATUS: ${res.statusCode}`);
+          res.setEncoding('utf8');
+          res.on('data', (chunk) => {
+            console.log(`BODY: ${chunk}`);
+          });
+          res.on('end', () => {
+            console.log('TRACKING COMPLETE.');
+          });
+        });
+        req.setTimeout(2500);
         req.on('error', (err) => {
           // this is often 'socket hang up'. Nothing we can do, so just bail.
+          console.log(`TRACKING ERR: ${err.message}`);
           req.end();
         });
         if (sendPostBody) {

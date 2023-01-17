@@ -37,16 +37,16 @@ exports.handler = function (event, context) {
             loadUserAndGreetings(event.request, event.session, () => {
                 console.log(`Done looking up user, attrs=` + JSON.stringify(event.session.attributes));
                 if (event.request.type === "LaunchRequest") {
+                    trackScreenview(event.session, "LaunchRequest");
                     onLaunch(event.request, event.session, (session, speechletResponse) => {
                         const sessionAttributes = session && session.attributes ? session.attributes : {};
-                        trackScreenview(session, "LaunchRequest");
                         context.succeed(buildResponse(sessionAttributes, speechletResponse));
                     });
                 } else {
                     // event.request.type === "IntentRequest"
+                    trackIntent(event.request.intent, event.session);
                     onIntent(event.request, event.session, (session, speechletResponse) => {
                         const sessionAttributes = session && session.attributes ? session.attributes : {};
-                        trackIntent(event.request.intent, session);
                         context.succeed(buildResponse(sessionAttributes, speechletResponse));
                     });
                 }
