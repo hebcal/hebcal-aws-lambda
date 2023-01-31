@@ -8,7 +8,7 @@ const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse 
 const { getHolidaysOnDate } = require("./common");
 const { getOmerResponse } = require("./omer");
 const { getHebrewDateResponse } = require("./hebdate");
-const { trackScreenview, trackIntent } = require("./track2");
+const { trackScreenview, trackIntent, trackRequest } = require("./track2");
 const { getCandleLightingResponse } = require("./candle-lighting");
 const { getHavdalahResponse } = require("./havdalah");
 const { getParshaResponse } = require("./parsha");
@@ -39,21 +39,27 @@ exports.handler = function (event, context) {
                 if (event.request.type === "LaunchRequest") {
                     trackScreenview(event.session, "LaunchRequest");
                     onLaunch(event.request, event.session, (session, speechletResponse) => {
-                        const sessionAttributes = session && session.attributes ? session.attributes : {};
-                        context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        trackRequest(event.request, event.session, {}).then(() => {
+                            const sessionAttributes = session && session.attributes ? session.attributes : {};
+                            context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        });
                     });
                 } else {
                     // event.request.type === "IntentRequest"
                     trackIntent(event.request.intent, event.session);
                     onIntent(event.request, event.session, (session, speechletResponse) => {
-                        const sessionAttributes = session && session.attributes ? session.attributes : {};
-                        context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        trackRequest(event.request, event.session, {}).then(() => {
+                            const sessionAttributes = session && session.attributes ? session.attributes : {};
+                            context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        });
                     });
                 }
             });
         } else if (event.request.type === "SessionEndedRequest") {
             trackScreenview(event.session, "SessionEndedRequest");
-            context.succeed();
+            trackRequest(event.request, event.session, {}).then(() => {
+                context.succeed();
+            });
         } else {
             context.fail("Unknown event.request.type");
         }

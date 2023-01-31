@@ -1,5 +1,33 @@
+const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const matomoAnalytics = require('./hebcal-track');
 const { getLocation } = require("./respond");
+const sqsClient = new SQSClient({ region: 'us-east-1' });
+const pkg = require('./package.json');
+
+async function trackRequest(request, session, details) {
+  const params = {
+    QueueUrl: 'https://sqs.us-east-1.amazonaws.com/904217700991/alexa-matomo-track',
+    MessageAttributes: {
+      Date: {
+        DataType: 'String',
+        StringValue: new Date().toISOString(),
+      },
+      Client: {
+        DataType: 'String',
+        StringValue: pkg.name + '/' + pkg.version,
+      },
+    },
+    MessageBody: JSON.stringify({session, request, details}),
+  };
+  console.log(`Sending tracking to SQS`, details);
+  const command = new SendMessageCommand(params);
+  try {
+    const data = await sqsClient.send(command);
+    console.log(`SUCCESS sent SQS messageId ${data.MessageId}`);
+  } catch (err) {
+    console.log('ERROR sqsClient.send', err);
+  }
+}
 
 function getTrackingOptions(session) {
     const location = getLocation(session);
@@ -58,3 +86,4 @@ exports.trackIntent = trackIntent;
 exports.trackScreenview = trackScreenview;
 exports.trackEvent = trackEvent;
 exports.trackException = trackException;
+exports.trackRequest = trackRequest;
