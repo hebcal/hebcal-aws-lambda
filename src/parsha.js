@@ -3,10 +3,11 @@ const dayjs = require('dayjs');
 const { HebrewCalendar } = require('@hebcal/core');
 const { respond, getLocation } = require("./respond");
 const { formatEvents } = require("./common");
-const { trackException } = require("./track2");
+const { trackRequest } = require("./track2");
 
 const reParsha = /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
-function getParshaResponse(intent, session, callback) {
+function getParshaResponse(request, session, callback) {
+    const intent = request.intent;
     const now = dayjs();
     const saturday = now.day(6);
     const location = getLocation(session);
@@ -45,9 +46,11 @@ function getParshaResponse(intent, session, callback) {
             true,
             session));
     } else {
-        trackException(session, intent.name);
-        callback(session, respond(`Internal Error - ${intent.name}`,
-            "Sorry, we could find the weekly Torah portion."));
+        const details = {category: 'exception', action: 'noTorah', name: saturday.format('YYYY-MM-DD')};
+        trackRequest(request, session, details).then(() => {
+            callback(session, respond(`Internal Error - ${intent.name}`,
+                `Sorry, we could find the weekly Torah portion.`));
+        });
     }
 }
 exports.getParshaResponse = getParshaResponse;

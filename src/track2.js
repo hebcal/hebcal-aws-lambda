@@ -5,21 +5,42 @@ const sqsClient = new SQSClient({ region: 'us-east-1' });
 const pkg = require('./package.json');
 
 async function trackRequest(request, session, details) {
+  const body = {
+    timestamp: new Date().toISOString(),
+    client: pkg.name + '/' + pkg.version,
+    requestType: request?.type,
+    requestId: request?.requestId,
+    sessionId: session?.sessionId,
+    userId: session?.user?.userId,
+    locale: request?.locale,
+  };
+  const slotvals = {};
+  let count = 0;
+  const slots = request?.intent?.slots;
+  if (typeof slots === 'object' && slots !== null) {
+    for (const [key, val] of Object.entries(slots)) {
+        if (typeof val.value === 'string' && val.value.length) {
+            slotvals[key] = val.value;
+            count++;
+        }
+    }
+  }
+  if (count) {
+    body.intentName = request?.intent?.name;
+    body.slots = slotvals;
+  }
+  const location = getLocation(session);
+  if (location) {
+    body.location = location;
+  }
+  if (details) {
+    body.details = details;
+  }
   const params = {
     QueueUrl: 'https://sqs.us-east-1.amazonaws.com/904217700991/alexa-matomo-track',
-    MessageAttributes: {
-      Date: {
-        DataType: 'String',
-        StringValue: new Date().toISOString(),
-      },
-      Client: {
-        DataType: 'String',
-        StringValue: pkg.name + '/' + pkg.version,
-      },
-    },
-    MessageBody: JSON.stringify({session, request, details}),
+    MessageBody: JSON.stringify(body),
   };
-  console.log(`Sending tracking to SQS`, details);
+  console.log(`Sending tracking to SQS`, body);
   const command = new SendMessageCommand(params);
   try {
     const data = await sqsClient.send(command);
@@ -53,12 +74,6 @@ function trackEvent(session, category, action, label) {
     matomoAnalytics.send(category, session.user.userId, options);
 }
 
-function trackException(session, description) {
-    const options = getTrackingOptions(session);
-    options.action = description;
-    matomoAnalytics.send('Exception', session.user.userId, options);
-}
-
 function trackIntent(intent, session) {
   const intentName = intent.name;
   const slotvals = {};
@@ -85,5 +100,4 @@ function trackIntent(intent, session) {
 exports.trackIntent = trackIntent;
 exports.trackScreenview = trackScreenview;
 exports.trackEvent = trackEvent;
-exports.trackException = trackException;
 exports.trackRequest = trackRequest;

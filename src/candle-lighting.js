@@ -3,9 +3,10 @@ const dayjs = require('dayjs');
 const { HebrewCalendar, Location } = require('@hebcal/core');
 const { respond, getLocation, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
 const { formatEvents } = require("./common");
-const { trackEvent, trackException } = require("./track2");
+const { trackRequest } = require("./track2");
 
-function getCandleLightingResponse(intent, session, callback) {
+function getCandleLightingResponse(request, session, callback) {
+    const intent = request.intent;
     const now = dayjs();
     const friday = hebcal.getUpcomingFriday(now);
     let location = userSpecifiedLocation(intent);
@@ -13,8 +14,13 @@ function getCandleLightingResponse(intent, session, callback) {
 
     if (location && location.cityNotFound) {
         console.log(`NOTFOUND: ${location.cityName}`);
-        trackEvent(session, 'cityNotFound', location.cityName);
-        return getWhichZipCodeResponse(session, callback,
+        const myCallback = (session, speechletResponse) => {
+            const details = {category: 'error', action: 'cityNotFound', name: location.cityName};
+            trackRequest(request, session, details).then(() => {
+                callback(session, speechletResponse);
+            });
+        }
+        return getWhichZipCodeResponse(session, myCallback,
             `Sorry, we are having trouble finding the city ${location.cityName}. `);
     }
 
@@ -28,9 +34,11 @@ function getCandleLightingResponse(intent, session, callback) {
             callback(session, respond(title, cardText, ssml, true, session));
         } else {
             console.log(`Found NO events with date=${friday.format('YYYY-MM-DD')}`);
-            trackException(session, intent.name);
-            callback(session, respond(`Internal Error - ${intent.name}`,
+            const details = {category: 'exception', action: 'noEvents', name: friday.format('YYYY-MM-DD')};
+            trackRequest(request, session, details).then(() => {
+                callback(session, respond(`Internal Error - ${intent.name}`,
                 `Sorry, we could not get candle-lighting times for ${location.cityName}`));
+            });
         }
     };
 
@@ -60,8 +68,13 @@ function getCandleLightingResponse(intent, session, callback) {
         const data = hebcal.lookupZipCode(location.zipCode);
         if (!data) {
             console.log(`NOTFOUND: ${location.zipCode}`);
-            trackEvent(session, 'zipNotFound', location.zipCode);
-            return getWhichZipCodeResponse(session, callback,
+            const myCallback = (session, speechletResponse) => {
+                const details = {category: 'error', action: 'zipNotFound', name: location.zipCode};
+                trackRequest(request, session, details).then(() => {
+                    callback(session, speechletResponse);
+                });
+            }
+            return getWhichZipCodeResponse(session, myCallback,
                 `We could not find ZIP code ${location.zipCode}. `);
         }
         // save location in this session and persist in DynamoDB

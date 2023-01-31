@@ -39,7 +39,7 @@ exports.handler = function (event, context) {
                 if (event.request.type === "LaunchRequest") {
                     trackScreenview(event.session, "LaunchRequest");
                     onLaunch(event.request, event.session, (session, speechletResponse) => {
-                        trackRequest(event.request, event.session, {}).then(() => {
+                        trackRequest(event.request, event.session).then(() => {
                             const sessionAttributes = session && session.attributes ? session.attributes : {};
                             context.succeed(buildResponse(sessionAttributes, speechletResponse));
                         });
@@ -48,7 +48,7 @@ exports.handler = function (event, context) {
                     // event.request.type === "IntentRequest"
                     trackIntent(event.request.intent, event.session);
                     onIntent(event.request, event.session, (session, speechletResponse) => {
-                        trackRequest(event.request, event.session, {}).then(() => {
+                        trackRequest(event.request, event.session).then(() => {
                             const sessionAttributes = session && session.attributes ? session.attributes : {};
                             context.succeed(buildResponse(sessionAttributes, speechletResponse));
                         });
@@ -57,7 +57,7 @@ exports.handler = function (event, context) {
             });
         } else if (event.request.type === "SessionEndedRequest") {
             trackScreenview(event.session, "SessionEndedRequest");
-            trackRequest(event.request, event.session, {}).then(() => {
+            trackRequest(event.request, event.session).then(() => {
                 context.succeed();
             });
         } else {
@@ -124,7 +124,7 @@ function onIntent(intentRequest, session, callback) {
             if (intent.slots && intent.slots.Holiday && intent.slots.Holiday.value && intent.slots.Holiday.value.length > 1) {
                 const holidayName = intent.slots.Holiday.value.toLowerCase();
                 if (holidayName === 'shabbat' || holidayName === 'shabbos') {
-                    getCandleLightingResponse(intent, session, callback);
+                    getCandleLightingResponse(intentRequest, session, callback);
                 } else {
                     getHolidayResponse(intent, session, callback);
                 }
@@ -133,7 +133,7 @@ function onIntent(intentRequest, session, callback) {
             }
             break;
         case "GetParsha":
-            getParshaResponse(intent, session, callback);
+            getParshaResponse(intentRequest, session, callback);
             break;
         case "GetHebrewDate":
         case "MyDateSlotOnlyIntent":
@@ -143,10 +143,10 @@ function onIntent(intentRequest, session, callback) {
         case "SetLocation":
         case "CityNameSlotOnlyIntent":
         case "ZipCodeSlotOnlyIntent":
-            getCandleLightingResponse(intent, session, callback);
+            getCandleLightingResponse(intentRequest, session, callback);
             break;
         case "GetHavdalah":
-            getHavdalahResponse(intent, session, callback);
+            getHavdalahResponse(intentRequest, session, callback);
             break;
         case "GetOmer":
             getOmerResponse(intent, session, callback);
