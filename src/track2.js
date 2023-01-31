@@ -67,13 +67,6 @@ function trackScreenview(session, screenName, action, label) {
     options.label = label;
     matomoAnalytics.send(screenName, session.user.userId, options);
 }
-function trackEvent(session, category, action, label) {
-    const options = getTrackingOptions(session);
-    options.action = action;
-    options.label = label;
-    matomoAnalytics.send(category, session.user.userId, options);
-}
-
 function trackIntent(intent, session) {
   const intentName = intent.name;
   const slotvals = {};
@@ -99,5 +92,4 @@ function trackIntent(intent, session) {
 
 exports.trackIntent = trackIntent;
 exports.trackScreenview = trackScreenview;
-exports.trackEvent = trackEvent;
 exports.trackRequest = trackRequest;
