@@ -18,11 +18,7 @@ function getHavdalahResponse(intent, session, callback) {
             `Sorry, we don't know where ${location.cityName} is. `);
     }
 
-    const hebcalEventsCallback = (err, events) => {
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
+    const hebcalEventsCallback = (events) => {
         const found = events.filter((ev) => ev.orig.getDesc() === 'Havdalah');
         if (found.length) {
             const evt = found[0];
@@ -64,7 +60,7 @@ function getHavdalahResponse(intent, session, callback) {
             end: dt,
         });
         const events = formatEvents(events0, location);
-        hebcalEventsCallback(null, events);
+        hebcalEventsCallback(events);
     };
 
     session.attributes = session.attributes || {};

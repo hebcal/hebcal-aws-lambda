@@ -436,6 +436,29 @@ const hebcal = {
         return {now, afterSunset, d, targetDay};
     },
 
+    makeCandleLightingSpeech(evt, location) {
+        const dateText = evt.dt.format('dddd, MMMM D YYYY');
+        const timeText = evt.dt.format('h:mma');
+        let cardText = `${evt.name} is at ${timeText} on ${dateText} in ${location.cityName}`;
+        if (location.zipCode) {
+            cardText += ` ${location.zipCode}`;
+        }
+        cardText += '.';
+        const tzid = (location && location.tzid) || this.defaultTimezone;
+        const now = dayjs.tz(new Date(), tzid);
+        let whenSpeech;
+        if (now.day() === 5) {
+            whenSpeech = 'tonight';
+        } else if (now.day() === 6) {
+            whenSpeech = 'next Friday night';
+        } else {
+            whenSpeech = 'on Friday';
+        }
+        const ssml = `${evt.name} ${whenSpeech}, in ${location.cityName}, is at ${timeText}.`;
+        const title = `${evt.name} ${timeText}`;
+        return { title, cardText, ssml };
+    },
+
     /**
      * @param {dayjs.Dayjs} now
      * @param {*} location

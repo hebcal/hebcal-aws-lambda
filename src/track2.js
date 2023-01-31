@@ -5,14 +5,8 @@ function getTrackingOptions(session) {
     const location = getLocation(session);
     let options = {};
     if (location) {
-        if (location.geoid) {
-            options = {
-                geoid: location.geoid
-            };
-        } else if (location.cc && location.cc.length && location.cc != 'US') {
-            options = {
-                geoid: location.cc
-            };
+        if (location.cc && location.cc.length && location.cc != 'US') {
+            options.geoid = location.cc;
         }
         options.location = location;
     }

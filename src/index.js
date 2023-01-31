@@ -71,6 +71,9 @@ function loadUserAndGreetings(request, session, callback) {
         if (user && user.ts) {
             session.attributes.returningUser = true;
             if (user.location) {
+                if (!user.location.cc && user.location.zipCode && user.location.zipCode.length === 5) {
+                    user.location.cc = 'US';
+                }
                 const {targetDay} = hebcal.getDayjsForTodayHebrewDate(user.location);
                 hd = new HDate(targetDay.toDate());
                 location = session.attributes.location = user.location;

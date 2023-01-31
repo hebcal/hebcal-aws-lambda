@@ -18,36 +18,14 @@ function getCandleLightingResponse(intent, session, callback) {
             `Sorry, we are having trouble finding the city ${location.cityName}. `);
     }
 
-    const hebcalEventsCallback = (err, events) => {
-        if (err) {
-            trackException(session, err);
-            return callback(session, respond('Internal Error', err));
-        }
+    const hebcalEventsCallback = (events) => {
         const found = events.filter(({ name }) => {
             return name === 'Candle lighting';
         });
         if (found.length) {
             const evt = found[0];
-            const dateText = evt.dt.format('dddd, MMMM D YYYY');
-            const timeText = evt.dt.format('h:mma');
-            let whenSpeech;
-            let cardText = `${evt.name} is at ${timeText} on ${dateText} in ${location.cityName}`;
-            if (location.zipCode) {
-                cardText += ` ${location.zipCode}`;
-            }
-            cardText += '.';
-            if (now.day() === 5) {
-                whenSpeech = 'tonight';
-            } else if (now.day() === 6) {
-                whenSpeech = 'next Friday night';
-            } else {
-                whenSpeech = 'on Friday';
-            }
-            callback(session, respond(`${evt.name} ${timeText}`,
-                cardText,
-                `${evt.name} ${whenSpeech}, in ${location.cityName}, is at ${timeText}.`,
-                true,
-                session));
+            const { title, cardText, ssml } = hebcal.makeCandleLightingSpeech(evt, location);
+            callback(session, respond(title, cardText, ssml, true, session));
         } else {
             console.log(`Found NO events with date=${friday.format('YYYY-MM-DD')}`);
             trackException(session, intent.name);
@@ -68,7 +46,7 @@ function getCandleLightingResponse(intent, session, callback) {
             end: dt,
         });
         const events = formatEvents(events0, location);
-        hebcalEventsCallback(null, events);
+        hebcalEventsCallback(events);
     };
 
     session.attributes = session.attributes || {};
