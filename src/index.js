@@ -8,7 +8,7 @@ const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse 
 const { getHolidaysOnDate } = require("./common");
 const { getOmerResponse } = require("./omer");
 const { getHebrewDateResponse } = require("./hebdate");
-const { trackScreenview, trackIntent, trackRequest } = require("./track2");
+const { trackRequest } = require("./track2");
 const { getCandleLightingResponse } = require("./candle-lighting");
 const { getHavdalahResponse } = require("./havdalah");
 const { getParshaResponse } = require("./parsha");
@@ -37,7 +37,6 @@ exports.handler = function (event, context) {
             loadUserAndGreetings(event.request, event.session, () => {
                 console.log(`Done looking up user, attrs=` + JSON.stringify(event.session.attributes));
                 if (event.request.type === "LaunchRequest") {
-                    trackScreenview(event.session, "LaunchRequest");
                     onLaunch(event.request, event.session, (session, speechletResponse) => {
                         trackRequest(event.request, event.session).then(() => {
                             const sessionAttributes = session && session.attributes ? session.attributes : {};
@@ -46,7 +45,6 @@ exports.handler = function (event, context) {
                     });
                 } else {
                     // event.request.type === "IntentRequest"
-                    trackIntent(event.request.intent, event.session);
                     onIntent(event.request, event.session, (session, speechletResponse) => {
                         trackRequest(event.request, event.session).then(() => {
                             const sessionAttributes = session && session.attributes ? session.attributes : {};
@@ -56,7 +54,6 @@ exports.handler = function (event, context) {
                 }
             });
         } else if (event.request.type === "SessionEndedRequest") {
-            trackScreenview(event.session, "SessionEndedRequest");
             trackRequest(event.request, event.session).then(() => {
                 context.succeed();
             });
