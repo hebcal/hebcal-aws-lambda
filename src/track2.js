@@ -13,6 +13,10 @@ async function trackRequest(request, session, details) {
     userId: session?.user?.userId,
     locale: request?.locale,
   };
+  const intentName = request?.intent?.name;
+  if (intentName) {
+    body.intentName = intentName;
+  }
   const slotvals = {};
   let count = 0;
   const slots = request?.intent?.slots;
@@ -25,7 +29,6 @@ async function trackRequest(request, session, details) {
     }
   }
   if (count) {
-    body.intentName = request?.intent?.name;
     body.slots = slotvals;
   }
   const location = getLocation(session);
