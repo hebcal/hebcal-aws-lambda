@@ -1,9 +1,9 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HebrewCalendar, Location } = require('@hebcal/core');
-const { respond, getLocation, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
+const { respond, buildResponse, getLocation, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
 const { formatEvents } = require("./common");
-const { trackRequest } = require("./track2");
+const { trackEventSQS } = require("./track2");
 
 function getCandleLightingResponse(request, session, callback) {
     const intent = request.intent;
@@ -16,7 +16,8 @@ function getCandleLightingResponse(request, session, callback) {
         console.log(`NOTFOUND: ${location.cityName}`);
         const myCallback = (session, speechletResponse) => {
             const details = {category: 'error', action: 'cityNotFound', name: location.cityName};
-            trackRequest(request, session, details).then(() => {
+            const response = buildResponse(session?.attributes, speechletResponse);
+            trackEventSQS(request, session, response, details).then(() => {
                 callback(session, speechletResponse);
             });
         }
@@ -35,9 +36,11 @@ function getCandleLightingResponse(request, session, callback) {
         } else {
             console.log(`Found NO events with date=${friday.format('YYYY-MM-DD')}`);
             const details = {category: 'exception', action: 'noEvents', name: friday.format('YYYY-MM-DD')};
-            trackRequest(request, session, details).then(() => {
-                callback(session, respond(`Internal Error - ${intent.name}`,
-                `Sorry, we could not get candle-lighting times for ${location.cityName}`));
+            const speechletResponse = respond(`Internal Error - ${intent.name}`,
+                `Sorry, we could not get candle-lighting times for ${location.cityName}`);
+            const response = buildResponse(session?.attributes, speechletResponse);
+            trackEventSQS(request, session, response, details).then(() => {
+                callback(session, speechletResponse);
             });
         }
     };
@@ -70,7 +73,8 @@ function getCandleLightingResponse(request, session, callback) {
             console.log(`NOTFOUND: ${location.zipCode}`);
             const myCallback = (session, speechletResponse) => {
                 const details = {category: 'error', action: 'zipNotFound', name: location.zipCode};
-                trackRequest(request, session, details).then(() => {
+                const response = buildResponse(session?.attributes, speechletResponse);
+                trackEventSQS(request, session, response, details).then(() => {
                     callback(session, speechletResponse);
                 });
             }

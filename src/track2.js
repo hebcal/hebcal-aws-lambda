@@ -1,17 +1,26 @@
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
 const { getLocation } = require("./respond");
-const sqsClient = new SQSClient({ region: 'us-east-1' });
 const pkg = require('./package.json');
 
-async function trackRequest(request, session, details) {
+const sqsClient = new SQSClient({ region: 'us-east-1' });
+
+async function trackEventSQS(request, session, response, details) {
+  const now = new Date();
+  const duration = now.getTime() - session.attributes.startTime;
+  let title = response?.response?.card?.title;
+  if (typeof title === 'string' && title.startsWith('Hebcal - ')) {
+    title = title.substring(9);
+  }
   const body = {
-    timestamp: new Date().toISOString(),
+    timestamp: request?.timestamp || now.toISOString(),
     client: pkg.name + '/' + pkg.version,
     requestType: request?.type,
     requestId: request?.requestId,
     sessionId: session?.sessionId,
     userId: session?.user?.userId,
     locale: request?.locale,
+    duration: duration,
+    title: title,
   };
   const intentName = request?.intent?.name;
   if (intentName) {
@@ -52,4 +61,4 @@ async function trackRequest(request, session, details) {
   }
 }
 
-exports.trackRequest = trackRequest;
+exports.trackEventSQS = trackEventSQS;

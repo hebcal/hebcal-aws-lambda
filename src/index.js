@@ -8,7 +8,7 @@ const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse 
 const { getHolidaysOnDate } = require("./common");
 const { getOmerResponse } = require("./omer");
 const { getHebrewDateResponse } = require("./hebdate");
-const { trackRequest } = require("./track2");
+const { trackEventSQS } = require("./track2");
 const { getCandleLightingResponse } = require("./candle-lighting");
 const { getHavdalahResponse } = require("./havdalah");
 const { getParshaResponse } = require("./parsha");
@@ -24,6 +24,8 @@ dayjs.extend(timezone);
 // etc.) The JSON body of the request is provided in the event parameter.
 exports.handler = function (event, context) {
     console.log(`HELLO WORLD ${pkg.name}/${pkg.version}`);
+    event.session.attributes = event.session.attributes || {};
+    event.session.attributes.startTime = Date.now();
     console.log(JSON.stringify(event.session));
     console.log(JSON.stringify(event.request));
     try {
@@ -38,23 +40,25 @@ exports.handler = function (event, context) {
                 console.log(`Done looking up user, attrs=` + JSON.stringify(event.session.attributes));
                 if (event.request.type === "LaunchRequest") {
                     onLaunch(event.request, event.session, (session, speechletResponse) => {
-                        trackRequest(event.request, event.session).then(() => {
-                            const sessionAttributes = session && session.attributes ? session.attributes : {};
-                            context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        const sessionAttributes = session && session.attributes ? session.attributes : {};
+                        const response = buildResponse(sessionAttributes, speechletResponse);
+                        trackEventSQS(event.request, event.session, response, null).then(() => {
+                            context.succeed(response);
                         });
                     });
                 } else {
                     // event.request.type === "IntentRequest"
                     onIntent(event.request, event.session, (session, speechletResponse) => {
-                        trackRequest(event.request, event.session).then(() => {
-                            const sessionAttributes = session && session.attributes ? session.attributes : {};
-                            context.succeed(buildResponse(sessionAttributes, speechletResponse));
+                        const sessionAttributes = session && session.attributes ? session.attributes : {};
+                        const response = buildResponse(sessionAttributes, speechletResponse);
+                        trackEventSQS(event.request, event.session, response, null).then(() => {
+                            context.succeed(response);
                         });
                     });
                 }
             });
         } else if (event.request.type === "SessionEndedRequest") {
-            trackRequest(event.request, event.session).then(() => {
+            trackEventSQS(event.request, event.session, {}, null).then(() => {
                 context.succeed();
             });
         } else {
