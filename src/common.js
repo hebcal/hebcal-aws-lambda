@@ -2,6 +2,13 @@ const dayjs = require('dayjs');
 const { HebrewCalendar } = require('@hebcal/core');
 const hebcal = require('./hebcal-app');
 
+function getLocation(session) {
+    if (session && session.attributes && session.attributes.location) {
+        return session.attributes.location;
+    }
+    return undefined;
+}
+
 /**
  * @param {dayjs.Dayjs} now
  * @param {*} location
@@ -47,6 +54,7 @@ function formatEvents(events, location) {
     });
 }
 
+exports.getLocation = getLocation;
 exports.getHolidaysOnDate = getHolidaysOnDate;
 exports.formatEvents = formatEvents;
 exports.getDateSlotValue = getDateSlotValue;

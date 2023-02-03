@@ -1,7 +1,8 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HDate, OmerEvent, months, greg } = require('@hebcal/core');
-const { respond, getLocation } = require("./respond");
+const { respond } = require("./respond");
+const { getLocation } = require("./common");
 
 function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);

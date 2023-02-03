@@ -1,8 +1,8 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HebrewCalendar } = require('@hebcal/core');
-const { respond, getLocation } = require("./respond");
-const { formatEvents } = require("./common");
+const { respond  } = require("./respond");
+const { getLocation, formatEvents } = require("./common");
 
 function getHolidayResponse({ slots, name }, session, callback) {
     const location = getLocation(session);

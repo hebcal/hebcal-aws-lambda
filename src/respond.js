@@ -1,11 +1,5 @@
+const { getLocation } = require("./common");
 const hebcal = require('./hebcal-app');
-
-function getLocation(session) {
-  if (session && session.attributes && session.attributes.location) {
-      return session.attributes.location;
-  }
-  return undefined;
-}
 
 function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
     const specialGreeting = session && session.attributes ? session.attributes.specialGreeting : undefined;
@@ -107,7 +101,6 @@ function userSpecifiedLocation({ slots }) {
     }
 }
 
-exports.getLocation = getLocation;
 exports.respond = respond;
 exports.buildResponse = buildResponse;
 exports.buildSpeechletResponse = buildSpeechletResponse;

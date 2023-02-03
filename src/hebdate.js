@@ -1,8 +1,8 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HDate } = require('@hebcal/core');
-const { respond, getLocation } = require("./respond");
-const { getHebrewDateSrc, todayOrTonight, getDateSlotValue } = require("./common");
+const { respond } = require("./respond");
+const { getLocation, getHebrewDateSrc, todayOrTonight, getDateSlotValue } = require("./common");
 
 function getHebrewDateResponse(intent, session, callback) {
     const location = getLocation(session);

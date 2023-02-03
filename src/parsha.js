@@ -1,8 +1,8 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HebrewCalendar } = require('@hebcal/core');
-const { respond, buildResponse, getLocation } = require("./respond");
-const { formatEvents } = require("./common");
+const { respond, buildResponse } = require("./respond");
+const { getLocation, formatEvents } = require("./common");
 const { trackEventSQS } = require("./track2");
 
 const reParsha = /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;

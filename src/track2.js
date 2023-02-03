@@ -1,5 +1,5 @@
 const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
-const { getLocation } = require("./respond");
+const { getLocation } = require("./common");
 const pkg = require('./package.json');
 
 const sqsClient = new SQSClient({ region: 'us-east-1' });

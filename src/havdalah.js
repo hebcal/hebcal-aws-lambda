@@ -1,8 +1,8 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HebrewCalendar, Location } = require('@hebcal/core');
-const { respond, getLocation, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
-const { formatEvents } = require("./common");
+const { respond, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
+const { getLocation, formatEvents } = require("./common");
 const { trackEventSQS } = require("./track2");
 
 function getHavdalahResponse(request, session, callback) {

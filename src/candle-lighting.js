@@ -1,8 +1,8 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HebrewCalendar, Location } = require('@hebcal/core');
-const { respond, buildResponse, getLocation, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
-const { formatEvents } = require("./common");
+const { respond, buildResponse, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
+const { formatEvents, getLocation } = require("./common");
 const { trackEventSQS } = require("./track2");
 
 function getCandleLightingResponse(request, session, callback) {
