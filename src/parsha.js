@@ -2,7 +2,7 @@ const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
 const { HebrewCalendar, HDate } = require('@hebcal/core');
 const { respond, buildResponse } = require("./respond");
-const { getLocation, formatEvents, getParshaHaShavua } = require("./common");
+const { getLocation, getParshaHaShavua } = require("./common");
 const { trackEventSQS } = require("./track2");
 
 function getParshaResponse(request, session, callback) {

@@ -187,8 +187,9 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
             const dow = now.day();
             const todayOrThisWeek = dow === 6 ? 'Today' : dow === 5 ? 'Tomorrow' : 'This week';
             const prefixText = `${todayOrThisWeek}'s Torah portion is `;
-            const phoneme = hebcal.getPhonemeTag(parsha.ipa, parsha.name);
-            cardText += `${prefixText}${parsha.name}. `;
+            const result = hebcal.getParashaOrHolidayName(parsha);
+            const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
+            cardText += `${prefixText}${result.name}. `;
             ssmlContent += `${prefixText}${phoneme}. `;
         }
     }
