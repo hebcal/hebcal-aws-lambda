@@ -34,6 +34,30 @@ function getDateSlotValue({ slots }) {
     return slots && slots.MyDate && slots.MyDate.value;
 }
 
+const reParsha = /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
+
+function getParshaHaShavua(hd, location) {
+    const il = Boolean(location && location.cc && location.cc === 'IL');
+    const saturday = hd.onOrAfter(6);
+    const events0 = HebrewCalendar.calendar({
+        start: saturday,
+        end: saturday,
+        sedrot: true,
+        il,
+    });
+    const events = formatEvents(events0, location);
+    const parsha = events.find((evt) => {
+        if (evt.name === 'Rosh Hashana LaBehemot') {
+            return false;
+        }
+        return evt.name.search(reParsha) != -1;
+    });
+    const specialShabbat = events.find((evt) => {
+        return evt.name.indexOf('Shabbat ') === 0;
+    });
+    return {parsha, specialShabbat};
+}
+
 function getHolidaysOnDate(hd, location) {
     const il = Boolean(location && location.cc && location.cc === 'IL');
     const events0 = HebrewCalendar.getHolidaysOnDate(hd) || [];
@@ -60,3 +84,4 @@ exports.formatEvents = formatEvents;
 exports.getDateSlotValue = getDateSlotValue;
 exports.todayOrTonight = todayOrTonight;
 exports.getHebrewDateSrc = getHebrewDateSrc;
+exports.getParshaHaShavua = getParshaHaShavua;

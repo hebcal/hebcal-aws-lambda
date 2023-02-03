@@ -5,7 +5,7 @@ const timezone = require('dayjs/plugin/timezone');
 const {HDate} = require('@hebcal/core');
 const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } = require("./respond");
-const { getHolidaysOnDate } = require("./common");
+const { getHolidaysOnDate, getParshaHaShavua } = require("./common");
 const { getOmerResponse } = require("./omer");
 const { getHebrewDateResponse } = require("./hebdate");
 const { trackEventSQS } = require("./track2");
@@ -92,6 +92,13 @@ function loadUserAndGreetings(request, session, callback) {
             hd = new HDate();
         }
         session.attributes.todayHebrewDateStr = hd.render();
+        const {parsha, specialShabbat} = getParshaHaShavua(hd, location);
+        if (parsha) {
+            session.attributes.parshaHaShavua = hebcal.getParashaOrHolidayName(parsha);
+            if (specialShabbat) {
+                session.attributes.specialShabbat = hebcal.getParashaOrHolidayName(specialShabbat);
+            }
+        }
         const events = getHolidaysOnDate(hd, location);
         const arr = hebcal.getSpecialGreetings(events);
         if (arr.length) {

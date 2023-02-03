@@ -1,36 +1,22 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
-const { HebrewCalendar } = require('@hebcal/core');
+const { HebrewCalendar, HDate } = require('@hebcal/core');
 const { respond, buildResponse } = require("./respond");
-const { getLocation, formatEvents } = require("./common");
+const { getLocation, formatEvents, getParshaHaShavua } = require("./common");
 const { trackEventSQS } = require("./track2");
 
-const reParsha = /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
 function getParshaResponse(request, session, callback) {
     const intent = request.intent;
     const now = dayjs();
     const saturday = now.day(6);
     const location = getLocation(session);
-    const il = Boolean(location && location.cc && location.cc === 'IL');
-    const dt = saturday.toDate();
-    const events0 = HebrewCalendar.calendar({
-        start: dt,
-        end: dt,
-        sedrot: true,
-        il,
-    });
-    const events = formatEvents(events0, location);
-    const found = events.find((evt) => {
-        return evt.name.search(reParsha) != -1;
-    });
-    if (found) {
+    const hd = new HDate(now.toDate());
+    const {parsha, specialShabbat} = getParshaHaShavua(hd, location);
+    if (parsha) {
         const todayOrThisWeek = (now.day() === 6) ? 'Today' : 'This week';
         const prefixText = `${todayOrThisWeek}'s Torah portion is `;
-        const result = hebcal.getParashaOrHolidayName(found);
+        const result = hebcal.getParashaOrHolidayName(parsha);
         const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
-        const specialShabbat = events.find((evt) => {
-            return evt.name.indexOf('Shabbat ') === 0;
-        });
         let suffixText = '';
         let suffixSsml = '';
         if (specialShabbat) {
