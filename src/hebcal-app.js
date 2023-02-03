@@ -354,18 +354,19 @@ const hebcal = {
         if (name.indexOf("Parashat ") === 0) {
             const space = name.indexOf(' ');
             const parsha = name.substr(space + 1);
-            const ipa = config.parsha2ipa[parsha];
+            const ipa = config.parashatIpa + config.parsha2ipa[parsha];
             return {
                 title: name,
                 name,
-                ipa: `ˈpɑːʁɑːˈʃɑːt ${ipa}`
+                ipa,
             };
         } else {
             const holiday = evt.basename;
+            const ipa = config.parashatIpa + config.holiday2ipa[holiday];
             return {
                 title: `${holiday} Torah reading`,
                 name: holiday,
-                ipa: config.holiday2ipa[holiday]
+                ipa,
             };
         }
     },
