@@ -1,5 +1,5 @@
 const dayjs = require('dayjs');
-const { HebrewCalendar } = require('@hebcal/core');
+const { HebrewCalendar, HDate, Location } = require('@hebcal/core');
 const hebcal = require('./hebcal-app');
 
 function getLocation(session) {
@@ -58,6 +58,33 @@ function getParshaHaShavua(hd, location) {
     return {parsha, specialShabbat};
 }
 
+/**
+ * @param {HDate} hd
+ * @param {any} location
+ * @param {number} numDays
+ * @return {any[]}
+ */
+function getUpcomingEvents(hd, location, numDays) {
+    const il = Boolean(location && location.cc && location.cc === 'IL');
+    const loc = location && new Location(location.latitude, location.longitude, il,
+        location.tzid, location.cityName, location.cc);
+    const events0 = HebrewCalendar.calendar({
+        start: hd,
+        end: new HDate(hd.abs() + numDays),
+        location: loc,
+        il,
+        candlelighting: true,
+        havdalahMins: 0,
+        shabbatMevarchim: false,
+    });
+    return formatEvents(events0, location);
+}
+
+/**
+ * @param {HDate} hd
+ * @param {any} location
+ * @return {any[]}
+ */
 function getHolidaysOnDate(hd, location) {
     const il = Boolean(location && location.cc && location.cc === 'IL');
     const events0 = HebrewCalendar.getHolidaysOnDate(hd) || [];
@@ -85,3 +112,4 @@ exports.getDateSlotValue = getDateSlotValue;
 exports.todayOrTonight = todayOrTonight;
 exports.getHebrewDateSrc = getHebrewDateSrc;
 exports.getParshaHaShavua = getParshaHaShavua;
+exports.getUpcomingEvents = getUpcomingEvents;

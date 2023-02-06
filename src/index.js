@@ -5,7 +5,7 @@ const timezone = require('dayjs/plugin/timezone');
 const {HDate} = require('@hebcal/core');
 const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } = require("./respond");
-const { getHolidaysOnDate, getParshaHaShavua, getLocation } = require("./common");
+const { getHolidaysOnDate, getParshaHaShavua, getLocation, getUpcomingEvents } = require("./common");
 const { getOmerResponse } = require("./omer");
 const { getHebrewDateResponse } = require("./hebdate");
 const { trackEventSQS } = require("./track2");
@@ -181,16 +181,28 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
         ssmlContent += `Welcome to Hieb-Kal. Today is the ${speech}. `;
         const location = getLocation(session);
         const hd = session.attributes.hdate;
+        const now = dayjs();
+        const dow = now.day();
         const {parsha} = getParshaHaShavua(hd, location);
         if (parsha) {
-            const now = dayjs();
-            const dow = now.day();
             const todayOrThisWeek = dow === 6 ? 'Today' : dow === 5 ? 'Tomorrow' : 'This week';
             const prefixText = `${todayOrThisWeek}'s Torah portion is `;
             const result = hebcal.getParashaOrHolidayName(parsha);
             const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
             cardText += `${prefixText}${result.name}. `;
             ssmlContent += `${prefixText}${phoneme}. `;
+        }
+        // On Thursday and Friday, check for upcoming candle lighting time
+        if (location && (dow === 4 || dow === 5)) {
+            const evts = getUpcomingEvents(hd, location, 2);
+            for (const evt of evts) {
+                if (evt.name === 'Candle lighting' && evt.dt.day() === 5) {
+                    const { title, cardText: cardText0, ssml } = hebcal.makeCandleLightingSpeech(evt, location);
+                    cardText += cardText0 + ' ';
+                    ssmlContent += ssml + ' ';
+                }
+            }
+
         }
     }
     if (isHelpIntent || !session.attributes.returningUser) {

@@ -61,7 +61,7 @@ function getHavdalahResponse(request, session, callback) {
 
     const myInvokeHebcal = location => {
         const loc = new Location(location.latitude, location.longitude, location.cc === 'IL',
-            location.tzid, location.cityName, location.cc, location.geoid);
+            location.tzid, location.cityName, location.cc);
         const dt = saturday.toDate();
         const events0 = HebrewCalendar.calendar({
             location: loc,
