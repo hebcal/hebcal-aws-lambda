@@ -148,11 +148,22 @@
     "Tzom Tammuz",
     "Tish'a B'Av"
   ],
-  "noGreetingHolidays": [
-    "Yom HaShoah",
-    "Yom HaZikaron",
-    "Pesach Sheni",
-    "Leil Selichot"
+  "chagSameach": [
+    "Chanukah",
+    "Sukkot",
+    "Pesach",
+    "Shavuot",
+    "Rosh Hashana",
+    "Rosh Hashana LaBehemot",
+    "Tu BiShvat",
+    "Tu B'Av",
+    "Purim",
+    "Shushan Purim",
+    "Yom HaAtzma'ut",
+    "Lag B'Omer",
+    "Lag BaOmer",
+    "Shmini Atzeret",
+    "Simchat Torah"
   ],
   "greeting2ipa": {
     "Shabbat Shalom": "ʃəˈbɑːt ʃɑːˈlom",

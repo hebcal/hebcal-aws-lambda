@@ -100,11 +100,6 @@ const hebcal = {
             tzid
         };
 
-        /*
-        if (geoid) {
-            city.geoid = +geoid;
-        }
-        */
         if (country == 'US') {
             city.state = admin1;
             city.cityName = `${cityName}, ${admin1}`;
@@ -375,7 +370,8 @@ const hebcal = {
 
     reHebrewDate: /^(\d+)\w+ of ([^,]+), (\d+)$/,
 
-    getGreetingForHoliday({name}) {
+    getGreetingForHoliday(evt) {
+        const name = evt.name;
         let str = name;
         if (str.indexOf('Erev ') === 0) {
             str = str.substr(5);
@@ -383,7 +379,7 @@ const hebcal = {
         if (this.reHebrewDate.test(str) || this.reOmer.test(str)) {
             // ignore Hebrew date and Omer
             return undefined;
-        } else if (str.indexOf('Shabbat ') === 0 || config.noGreetingHolidays.includes(str)) {
+        } else if (str.indexOf('Shabbat ') === 0) {
             // no Chag Sameach on these days
             return undefined;
         } else if (str.indexOf('Rosh Chodesh ') === 0) {
@@ -400,8 +396,10 @@ const hebcal = {
             return 'Shana Tovah';
         } else if (str === 'Yom Kippur') {
             return "G'mar Chatimah Tovah";
-        } else {
+        } else if (config.chagSameach.includes(evt.basename)) {
             return 'Chag Sameach';
+        } else {
+            return undefined;
         }
     },
 
@@ -489,11 +487,6 @@ const hebcal = {
             TimeZone: +f[5],
             DayLightSaving: f[6]
         };
-        /*
-        if (f[7] && f[7].length) {
-            r.GeoId = +f[7];
-        }
-        */
         return r;
     },
 
@@ -533,11 +526,6 @@ const hebcal = {
                 cc: 'US',
                 cityName
             };
-            /*
-            if (row.GeoId) {
-                result.geoid = row.GeoId;
-            }
-            */
             return result;
         }
     },
