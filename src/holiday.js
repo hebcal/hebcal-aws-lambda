@@ -4,6 +4,30 @@ const { HebrewCalendar } = require('@hebcal/core');
 const { respond  } = require("./respond");
 const { getLocation, formatEvents } = require("./common");
 
+function makeHolidaySpeech(evt, titleYear) {
+    const holiday = evt.basename;
+    const ipa = hebcal.getHolidayIPA(holiday);
+    const phoneme = hebcal.getPhonemeTag(ipa, holiday);
+    const observedDt = hebcal.dayEventObserved(evt);
+    const observedWhen = hebcal.beginsWhen(evt.name);
+    const dateSsml = hebcal.formatDateSsml(observedDt);
+    const dateText = observedDt.format('dddd, MMMM D YYYY');
+    const now = dayjs();
+    const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
+    const isToday = observedDt.isSame(now, 'day');
+    let beginsOn = ` ${begins} ${observedWhen} `;
+    let title = holiday;
+    if (titleYear) {
+        title += ` ${titleYear}`;
+    }
+    if (!isToday) {
+        beginsOn += 'on ';
+    }
+    const cardText = `${holiday + beginsOn + dateText}.`;
+    const ssmlContent = phoneme + beginsOn + dateSsml;
+    return { title, cardText, ssmlContent };
+}
+
 function getHolidayResponse({ slots, name }, session, callback) {
     const location = getLocation(session);
     const il = Boolean(location && location.cc && location.cc === 'IL');
@@ -59,28 +83,9 @@ function getHolidayResponse({ slots, name }, session, callback) {
     });
     if (found.length) {
         const evt = found[0];
-        const holiday = evt.basename;
-        const ipa = hebcal.getHolidayIPA(holiday);
-        const phoneme = hebcal.getPhonemeTag(ipa, holiday);
-        const observedDt = hebcal.dayEventObserved(evt);
-        const observedWhen = hebcal.beginsWhen(evt.name);
-        const dateSsml = hebcal.formatDateSsml(observedDt);
-        const dateText = observedDt.format('dddd, MMMM D YYYY');
-        const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
-        const isToday = observedDt.isSame(now, 'day');
-        let beginsOn = ` ${begins} ${observedWhen} `;
-        let title = holiday;
-        if (titleYear) {
-            title += ` ${titleYear}`;
-        }
-        if (!isToday) {
-            beginsOn += 'on ';
-        }
-        callback(session, respond(title,
-            `${holiday + beginsOn + dateText}.`,
-            phoneme + beginsOn + dateSsml,
-            true,
-            session));
+        var { title, cardText, ssmlContent } = makeHolidaySpeech(evt, titleYear);
+        const speechletResponse = respond(title, cardText, ssmlContent, true, session);
+        callback(session, speechletResponse);
     } else {
         callback(session, respond(slots.Holiday.value,
             `Sorry, we could not find the date for ${slots.Holiday.value}.`));
