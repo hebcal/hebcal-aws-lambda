@@ -4,7 +4,7 @@ const { HebrewCalendar } = require('@hebcal/core');
 const { respond  } = require("./respond");
 const { getLocation, formatEvents } = require("./common");
 
-function makeHolidaySpeech(evt, titleYear) {
+function makeHolidaySpeech(evt) {
     const holiday = evt.basename;
     const ipa = hebcal.getHolidayIPA(holiday);
     const phoneme = hebcal.getPhonemeTag(ipa, holiday);
@@ -17,9 +17,6 @@ function makeHolidaySpeech(evt, titleYear) {
     const isToday = observedDt.isSame(now, 'day');
     let beginsOn = ` ${begins} ${observedWhen} `;
     let title = holiday;
-    if (titleYear) {
-        title += ` ${titleYear}`;
-    }
     if (!isToday) {
         beginsOn += 'on ';
     }
@@ -83,7 +80,10 @@ function getHolidayResponse({ slots, name }, session, callback) {
     });
     if (found.length) {
         const evt = found[0];
-        var { title, cardText, ssmlContent } = makeHolidaySpeech(evt, titleYear);
+        var { title, cardText, ssmlContent } = makeHolidaySpeech(evt);
+        if (titleYear) {
+            title += ` ${titleYear}`;
+        }
         const speechletResponse = respond(title, cardText, ssmlContent, true, session);
         callback(session, speechletResponse);
     } else {
