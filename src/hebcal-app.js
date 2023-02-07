@@ -117,7 +117,7 @@ const hebcal = {
             'the bronx': ['bronx', 'bronx new york'],
             'los angeles': ['la', 'l a'],
             'washington': ['dc', 'd c', 'washington dc', 'washington d c'],
-            'london': ['england', 'great britain', 'britain'],
+            'london': ['england', 'great britain', 'britain', 'london uk', 'london england'],
             'glasgow': ['scotland'],
             'belfast': ['northern ireland'],
             'cardiff': ['wales'],
