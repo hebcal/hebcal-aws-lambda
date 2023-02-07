@@ -436,7 +436,8 @@ const hebcal = {
     },
 
     makeCandleLightingSpeech(evt, location) {
-        const dateText = evt.dt.format('dddd, MMMM D YYYY');
+        const dowText = evt.dt.format('dddd');
+        const dateText = dowText + ', ' + evt.dt.format('MMMM D YYYY');
         const timeText = evt.dt.format('h:mma');
         let cardText = `${evt.name} is at ${timeText} on ${dateText} in ${location.cityName}`;
         if (location.zipCode) {
@@ -446,12 +447,12 @@ const hebcal = {
         const tzid = (location && location.tzid) || this.defaultTimezone;
         const now = dayjs.tz(new Date(), tzid);
         let whenSpeech;
-        if (now.day() === 5) {
+        if (now.day() === evt.dt.day()) {
             whenSpeech = 'tonight';
-        } else if (now.day() === 6) {
+        } else if (now.day() === 6 && evt.dt.day() === 5) {
             whenSpeech = 'next Friday night';
         } else {
-            whenSpeech = 'on Friday';
+            whenSpeech = 'on ' + dowText;
         }
         const ssml = `${evt.name} ${whenSpeech}, in ${location.cityName}, is at ${timeText}.`;
         const title = `${evt.name} ${timeText}`;

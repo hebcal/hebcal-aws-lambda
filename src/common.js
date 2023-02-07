@@ -1,6 +1,11 @@
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
 const { HebrewCalendar, HDate, Location } = require('@hebcal/core');
 const hebcal = require('./hebcal-app');
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 function getLocation(session) {
     if (session && session.attributes && session.attributes.location) {
@@ -92,13 +97,15 @@ function getHolidaysOnDate(hd, location) {
     return formatEvents(events1, location);
 }
 function formatEvents(events, location) {
+    const tzid = hebcal.getTzidFromLocation(location);
     return events.map((ev) => {
         const dt = ev.getDate().greg();
         const iso = dt.toISOString().substring(0, 10);
-        const time = ev.eventTimeStr ? 'T' + ev.eventTimeStr + ':00' : '';
+        const str = ev.eventTimeStr ? iso + ' ' + ev.eventTimeStr + ':00' : iso;
+        const d = tzid && ev.eventTimeStr ? dayjs.tz(str, tzid) : dayjs(str);
         return {
             name: ev.renderBrief(),
-            dt: dayjs(iso + time),
+            dt: d,
             basename: ev.basename(),
             orig: ev,
         };

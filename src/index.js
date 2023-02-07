@@ -196,13 +196,12 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
         if (location && (dow === 4 || dow === 5)) {
             const evts = getUpcomingEvents(hd, location, 2);
             for (const evt of evts) {
-                if (evt.name === 'Candle lighting' && evt.dt.day() === 5) {
-                    const { title, cardText: cardText0, ssml } = hebcal.makeCandleLightingSpeech(evt, location);
+                if (evt.name === 'Candle lighting') {
+                    const { cardText: cardText0, ssml } = hebcal.makeCandleLightingSpeech(evt, location);
                     cardText += cardText0 + ' ';
                     ssmlContent += ssml + ' ';
                 }
             }
-
         }
     }
     if (isHelpIntent || !session.attributes.returningUser) {
