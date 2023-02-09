@@ -178,7 +178,9 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
     let ssmlContent = '';
     if (!isHelpIntent) {
         cardText += `Welcome to Hebcal. Today is the ${hebrewDateStr}. `;
-        ssmlContent += `Welcome to Hieb-Kal. Today is the ${speech}. `;
+        ssmlContent += `Welcome to ` +
+            hebcal.getPhonemeTag("'hibkal", 'Hebcal') +
+            `Today is the ${speech}. `;
         const location = getLocation(session);
         const hd = session.attributes.hdate;
         const now = dayjs();
@@ -189,8 +191,9 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
             const prefixText = `${todayOrThisWeek}'s Torah portion is `;
             const result = hebcal.getParashaOrHolidayName(parsha);
             const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
-            cardText += `${prefixText}${result.name}. `;
-            ssmlContent += `${prefixText}${phoneme}. `;
+            cardText += `\n${prefixText}${result.name}. `;
+            ssmlContent += ' <break time="0.2s"/> ' +
+                `${prefixText}${phoneme}. `;
         }
         // On Thursday and Friday, check for upcoming candle lighting time
         if (location && (dow === 4 || dow === 5)) {
@@ -198,8 +201,8 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
             for (const evt of evts) {
                 if (evt.name === 'Candle lighting') {
                     const { cardText: cardText0, ssml } = hebcal.makeCandleLightingSpeech(evt, location);
-                    cardText += cardText0 + ' ';
-                    ssmlContent += ssml + ' ';
+                    cardText += '\n' + cardText0 + ' ';
+                    ssmlContent += ' <break time="0.2s"/> ' + ssml + ' ';
                 }
             }
         }
