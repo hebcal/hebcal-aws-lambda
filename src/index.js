@@ -178,8 +178,7 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
     let ssmlContent = '';
     if (!isHelpIntent) {
         cardText += `Welcome to Hebcal. Today is the ${hebrewDateStr}. `;
-        ssmlContent += `Welcome to ` +
-            hebcal.getPhonemeTag("'hibkal", 'Hebcal') +
+        ssmlContent += `Welcome to ` + hebcal.getPhonemeTag("'hibkæl", 'Hebcal') +
             `Today is the ${speech}. `;
         const location = getLocation(session);
         const hd = session.attributes.hdate;
