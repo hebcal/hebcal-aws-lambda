@@ -90,7 +90,6 @@ const hebcal = {
         const latitude = +f[3];
         const longitude = +f[4];
         const tzid = f[5];
-        // const geoid = f[6];
 
         const city = {
             name: cityName,
@@ -106,7 +105,8 @@ const hebcal = {
         } else {
             const countryName = config.countryNames[country];
             city.country = countryName;
-            city.cityName = `${cityName}, ${countryName}`;
+            const suffix = admin1 || countryName;
+            city.cityName = `${cityName}, ${suffix}`;
         }
         return city;
     },
