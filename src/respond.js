@@ -82,17 +82,20 @@ function getWhichZipCodeResponse(session, callback, prefixText) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function userSpecifiedLocation({ slots }) {
-    if (slots && slots.CityName && slots.CityName.value) {
-        const location = hebcal.getCity(slots.CityName.value);
+function userSpecifiedLocation(intent) {
+    const slots = intent?.slots;
+    if (!slots) {
+        return false;
+    }
+    if (slots.CityName?.value) {
+        const str = slots.CityName.value;
+        const cityName = str.endsWith(' tomorrow') ? str.substring(0, str.length - 9) : str;
+        const location = hebcal.getCity(cityName);
         return location ? location : {
-            cityName: slots.CityName.value,
+            cityName: cityName,
             cityNotFound: true
         };
-    } else if (slots &&
-        slots.ZipCode &&
-        slots.ZipCode.value &&
-        slots.ZipCode.value.length == 5) {
+    } else if (slots.ZipCode?.value?.length === 5) {
         return {
             zipCode: slots.ZipCode.value
         };

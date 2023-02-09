@@ -171,7 +171,7 @@ function onIntent(intentRequest, session, callback) {
 
 function getWelcomeResponse(session, callback, isHelpIntent) {
     const repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
-    const nag = ' What will it be?';
+    const nag = '\nWhat will it be?';
     const hebrewDateStr = session.attributes.todayHebrewDateStr;
     const speech = hebcal.hebrewDateSSML(hebrewDateStr, true);
     let cardText = '';
