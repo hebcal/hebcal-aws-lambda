@@ -179,7 +179,7 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
     if (!isHelpIntent) {
         cardText += `Welcome to Hebcal. Today is the ${hebrewDateStr}. `;
         ssmlContent += `Welcome to ` + hebcal.getPhonemeTag("'hibkæl", 'Hebcal') +
-            `Today is the ${speech}. `;
+            `. Today is the ${speech}. `;
         const location = getLocation(session);
         const hd = session.attributes.hdate;
         const now = dayjs();
