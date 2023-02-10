@@ -39,18 +39,23 @@ const hebcal = {
         const cityObjs = allCities.map(this.parseCityString);
         const processCity = (city) => {
             const cityLc = city.name.toLowerCase();
-            let aliasLc;
-            if (city.cc == 'US') {
-                const stateLc = config.stateNames[city.state].toLowerCase();
-                aliasLc = `${cityLc} ${stateLc}`;
-            } else {
-                const countryLc = city.country.toLowerCase();
-                aliasLc = `${cityLc} ${countryLc}`;
-            }
             if (!cities[cityLc]) {
                 cities[cityLc] = city;
             }
-            cities[aliasLc] = city;
+            if (city.cc == 'US') {
+                const stateLc = config.stateNames[city.state].toLowerCase();
+                const aliasLc = `${cityLc} ${stateLc}`;
+                cities[aliasLc] = city;
+            } else {
+                const countryLc = city.country.toLowerCase();
+                const aliasLc = `${cityLc} ${countryLc}`;
+                cities[aliasLc] = city;
+                if (city.admin1) {
+                    const a1lc = city.admin1.toLowerCase();
+                    const alias2 = `${cityLc} ${a1lc}`;
+                    cities[alias2] = city;
+                }
+            }
         };
         // this is silly, but alias the first occurrence of each country and US state
         const aliasFirstCityOccurrence = (city) => {
@@ -107,6 +112,9 @@ const hebcal = {
             city.country = countryName;
             const suffix = admin1 || countryName;
             city.cityName = `${cityName}, ${suffix}`;
+            if (admin1) {
+                city.admin1 = admin1;
+            }
         }
         return city;
     },

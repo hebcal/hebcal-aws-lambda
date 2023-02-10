@@ -1,6 +1,6 @@
 {
   "name": "hebcal-aws-lambda",
-  "version": "0.9.24",
+  "version": "0.9.25",
   "description": "Hebcal Amazon Web Services Lambda responder",
   "main": "index.js",
   "scripts": {
