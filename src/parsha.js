@@ -12,7 +12,8 @@ function getParshaResponse(request, session, callback) {
     const hd = new HDate(now.toDate());
     const {parsha, specialShabbat} = getParshaHaShavua(hd, location);
     if (parsha) {
-        const todayOrThisWeek = (now.day() === 6) ? 'Today' : 'This week';
+        const afterSunset = session?.attributes?.afterSunset;
+        const todayOrThisWeek = (now.day() === 6 && !afterSunset) ? 'Today' : 'This week';
         const prefixText = `${todayOrThisWeek}'s Torah portion is `;
         const result = hebcal.getParashaOrHolidayName(parsha);
         const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
