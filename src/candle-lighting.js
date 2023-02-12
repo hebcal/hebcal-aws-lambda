@@ -1,5 +1,4 @@
 const hebcal = require('./hebcal-app');
-const dayjs = require('dayjs');
 const { HebrewCalendar, Location } = require('@hebcal/core');
 const { respond, buildResponse, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
 const { formatEvents, getLocation } = require("./common");
@@ -7,9 +6,9 @@ const { trackEventSQS } = require("./track2");
 
 function getCandleLightingResponse(request, session, callback) {
     const intent = request.intent;
-    const now = dayjs();
-    const friday = hebcal.getUpcomingFriday(now);
     let location = userSpecifiedLocation(intent);
+    const now = hebcal.nowInLocation(location);
+    const friday = hebcal.getUpcomingFriday(now);
     const sessionLocation = getLocation(session);
 
     if (location && location.cityNotFound) {

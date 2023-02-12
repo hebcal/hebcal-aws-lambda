@@ -1,6 +1,6 @@
 {
   "name": "hebcal-aws-lambda",
-  "version": "0.9.25",
+  "version": "0.9.26",
   "description": "Hebcal Amazon Web Services Lambda responder",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,7 @@
     "dayjs": "^1.11.7"
   },
   "devDependencies": {
-    "eslint": "^8.33.0"
+    "eslint": "^8.34.0"
   },
   "repository": {
     "type": "git",

@@ -1,9 +1,5 @@
 const hebcal = require('./hebcal-app');
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
 const {HDate} = require('@hebcal/core');
-const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } = require("./respond");
 const { getHolidaysOnDate, getParshaHaShavua, getLocation, getUpcomingEvents } = require("./common");
 const { getOmerResponse } = require("./omer");
@@ -15,10 +11,6 @@ const { getParshaResponse } = require("./parsha");
 const { getHolidayResponse } = require("./holiday");
 const { getDafYomiResponse } = require("./daf-yomi");
 const pkg = require('./package.json');
-
-dayjs.extend(isSameOrAfter);
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
@@ -81,7 +73,9 @@ function loadUserAndGreetings(request, session, callback) {
                 if (!user.location.cc && user.location.zipCode && user.location.zipCode.length === 5) {
                     user.location.cc = 'US';
                 }
-                const {targetDay} = hebcal.getDayjsForTodayHebrewDate(user.location);
+                const {now, targetDay, afterSunset} = hebcal.getDayjsForTodayHebrewDate(user.location);
+                session.attributes.now = now.format('YYYY-MM-DD HH:mm:ss');
+                session.attributes.afterSunset = afterSunset;
                 hd = new HDate(targetDay.toDate());
                 location = session.attributes.location = user.location;
             }
@@ -89,7 +83,15 @@ function loadUserAndGreetings(request, session, callback) {
             session.attributes.userNotFound = true;
         }
         if (!hd) {
-            hd = new HDate();
+            // assume default timezone
+            const now = hebcal.nowInLocation(undefined);
+            session.attributes.now = now.format('YYYY-MM-DD HH:mm:ss');
+            hd = new HDate(now.toDate());
+            if (now.hour() > 19) {
+                // Consider 8pm or later "after sunset"
+                session.attributes.afterSunset = true;
+                hd = hd.next();
+            }
         }
         session.attributes.hdate = hd;
         session.attributes.todayHebrewDateStr = hd.render();
@@ -177,16 +179,19 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
     let cardText = '';
     let ssmlContent = '';
     if (!isHelpIntent) {
-        cardText += `Welcome to Hebcal. Today is the ${hebrewDateStr}. `;
+        const afterSunset = session.attributes.afterSunset;
+        const when = afterSunset ? 'Tonight' : 'Today';
+        cardText += `Welcome to Hebcal. ${when} is the ${hebrewDateStr}. `;
         ssmlContent += `Welcome to ` + hebcal.getPhonemeTag("'hibkæl", 'Hebcal') +
-            `. Today is the ${speech}. `;
+            `. ${when} is the ${speech}. `;
         const location = getLocation(session);
         const hd = session.attributes.hdate;
-        const now = dayjs();
+        const now = hebcal.nowInLocation(location);
         const dow = now.day();
         const {parsha} = getParshaHaShavua(hd, location);
         if (parsha) {
-            const todayOrThisWeek = dow === 6 ? 'Today' : dow === 5 ? 'Tomorrow' : 'This week';
+            const todayOrThisWeek = dow === 6 && !afterSunset ?
+                'Today' : dow === 5 ? 'Tomorrow' : 'This week';
             const prefixText = `${todayOrThisWeek}'s Torah portion is `;
             const result = hebcal.getParashaOrHolidayName(parsha);
             const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);

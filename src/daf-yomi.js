@@ -1,11 +1,11 @@
-const dayjs = require('dayjs');
+const hebcal = require('./hebcal-app');
 const { DafYomi } = require('@hebcal/core');
 const { respond } = require("./respond");
 const { getLocation, getHebrewDateSrc, getDateSlotValue } = require("./common");
 
 function getDafYomiResponse(intent, session, callback) {
     const location = getLocation(session);
-    const now = dayjs();
+    const now = hebcal.nowInLocation(location);
     const slotValue = getDateSlotValue(intent);
     const src = getHebrewDateSrc(now, location, slotValue);
     const dy = new DafYomi(src.toDate());

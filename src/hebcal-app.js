@@ -181,8 +181,7 @@ const hebcal = {
     },
 
     weekendGreeting(location) {
-        const tzid = (location && location.tzid) || this.defaultTimezone;
-        const now = dayjs.tz(new Date(), tzid);
+        const now = this.nowInLocation(location);
         const dow = now.day();
         if (dow === 6) {
             if (this.isAfterSunset(now, location)) {
@@ -279,8 +278,8 @@ const hebcal = {
     },
 
     // returns a 8-char string with 0-padding on month and day if needed
-    formatDateSsml(dt) {
-        const now = dayjs();
+    formatDateSsml(dt, location) {
+        const now = hebcal.nowInLocation(location);
         const isToday = dt.isSame(now, 'day');
 
         if (isToday) {
@@ -433,6 +432,15 @@ const hebcal = {
      * @param {*} location
      * @return {dayjs.Dayjs}
      */
+    nowInLocation(location) {
+        const tzid = (location && location.tzid) || this.defaultTimezone;
+        return dayjs.tz(new Date(), tzid);
+    },
+
+    /**
+     * @param {*} location
+     * @return {dayjs.Dayjs}
+     */
     getDayjsForTodayHebrewDate(location) {
         const tzid = (location && location.tzid) || this.defaultTimezone;
         const now = dayjs.tz(new Date(), tzid);
@@ -452,8 +460,7 @@ const hebcal = {
             cardText += ` ${location.zipCode}`;
         }
         cardText += '.';
-        const tzid = (location && location.tzid) || this.defaultTimezone;
-        const now = dayjs.tz(new Date(), tzid);
+        const now = this.nowInLocation(location);
         let whenSpeech;
         if (now.day() === evt.dt.day()) {
             whenSpeech = 'tonight';

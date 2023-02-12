@@ -1,5 +1,4 @@
 const hebcal = require('./hebcal-app');
-const dayjs = require('dayjs');
 const { HebrewCalendar, Location } = require('@hebcal/core');
 const { respond, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
 const { getLocation, formatEvents } = require("./common");
@@ -7,9 +6,9 @@ const { trackEventSQS } = require("./track2");
 
 function getHavdalahResponse(request, session, callback) {
     const intent = request.intent;
-    const now = dayjs();
-    const saturday = hebcal.getUpcomingSaturday(now);
     let location = userSpecifiedLocation(intent);
+    const now = hebcal.nowInLocation(location);
+    const saturday = hebcal.getUpcomingSaturday(now);
     const sessionLocation = getLocation(session);
 
     if (location && location.cityNotFound) {

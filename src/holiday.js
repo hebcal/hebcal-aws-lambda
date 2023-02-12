@@ -1,18 +1,21 @@
 const hebcal = require('./hebcal-app');
 const dayjs = require('dayjs');
+const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 const { HebrewCalendar } = require('@hebcal/core');
 const { respond  } = require("./respond");
 const { getLocation, formatEvents } = require("./common");
 
-function makeHolidaySpeech(evt) {
+dayjs.extend(isSameOrAfter);
+
+function makeHolidaySpeech(evt, location) {
     const holiday = evt.basename;
     const ipa = hebcal.getHolidayIPA(holiday);
     const phoneme = hebcal.getPhonemeTag(ipa, holiday);
     const observedDt = hebcal.dayEventObserved(evt);
     const observedWhen = hebcal.beginsWhen(evt.name);
-    const dateSsml = hebcal.formatDateSsml(observedDt);
+    const dateSsml = hebcal.formatDateSsml(observedDt, location);
     const dateText = observedDt.format('dddd, MMMM D YYYY');
-    const now = dayjs();
+    const now = hebcal.nowInLocation(location);
     const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
     const isToday = observedDt.isSame(now, 'day');
     let beginsOn = ` ${begins} ${observedWhen} `;
@@ -46,7 +49,7 @@ function getHolidayResponse({ slots, name }, session, callback) {
         titleYear = year.toString();
     }
 
-    const now = dayjs();
+    const now = hebcal.nowInLocation(location);
     const events0 = HebrewCalendar.calendar(options);
     let events = formatEvents(events0, location);
     console.log(`Got ${events.length} events`);
@@ -80,7 +83,7 @@ function getHolidayResponse({ slots, name }, session, callback) {
     });
     if (found.length) {
         const evt = found[0];
-        var { title, cardText, ssmlContent } = makeHolidaySpeech(evt);
+        var { title, cardText, ssmlContent } = makeHolidaySpeech(evt, location);
         if (titleYear) {
             title += ` ${titleYear}`;
         }

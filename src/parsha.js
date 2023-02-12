@@ -1,5 +1,4 @@
 const hebcal = require('./hebcal-app');
-const dayjs = require('dayjs');
 const { HDate } = require('@hebcal/core');
 const { respond, buildResponse } = require("./respond");
 const { getLocation, getParshaHaShavua } = require("./common");
@@ -7,9 +6,9 @@ const { trackEventSQS } = require("./track2");
 
 function getParshaResponse(request, session, callback) {
     const intent = request.intent;
-    const now = dayjs();
-    const saturday = now.day(6);
     const location = getLocation(session);
+    const now = hebcal.nowInLocation(location);
+    const saturday = now.day(6);
     const hd = new HDate(now.toDate());
     const {parsha, specialShabbat} = getParshaHaShavua(hd, location);
     if (parsha) {
