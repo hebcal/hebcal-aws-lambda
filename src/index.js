@@ -170,53 +170,62 @@ function onIntent(intentRequest, session, callback) {
     }
 }
 
-function getWelcomeResponse(session, callback, isHelpIntent) {
-    const repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
-    const nag = '\nWhat will it be?';
+const ssmlBreak = ' <break time="0.2s"/> ';
+
+function makeLaunchSpeech(session) {
+    let text = '';
+    let ssml = '';
+    const afterSunset = session.attributes.afterSunset;
+    const when = afterSunset ? 'Tonight' : 'Today';
     const hebrewDateStr = session.attributes.todayHebrewDateStr;
+    text += `Welcome to Hebcal. ${when} is the ${hebrewDateStr}.`;
     const speech = hebcal.hebrewDateSSML(hebrewDateStr, true);
+    ssml += `Welcome to ` + hebcal.getPhonemeTag("'hibkæl", 'Hebcal') +
+        `. ${when} is the ${speech}.`;
+    const location = getLocation(session);
+    const hd = session.attributes.hdate;
+    const now = hebcal.nowInLocation(location);
+    const dow = now.day();
+    const {parsha} = getParshaHaShavua(hd, location);
+    if (parsha) {
+        const todayOrThisWeek = dow === 6 && !afterSunset ?
+            'Today' : dow === 5 ? 'Tomorrow' : 'This week';
+        const prefixText = `${todayOrThisWeek}'s Torah portion is `;
+        const result = hebcal.getParashaOrHolidayName(parsha);
+        const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
+        text += `\n${prefixText}${result.name}.`;
+        ssml += ssmlBreak + `${prefixText}${phoneme}.`;
+    }
+    // Check for upcoming holidays and candle lighting time
+    const evts = getUpcomingEvents(hd, location, 4);
+    for (const evt of evts) {
+        const {cardText, ssml: ssml0} = (evt.name === 'Candle lighting') ?
+            hebcal.makeCandleLightingSpeech(evt, location) :
+            makeHolidaySpeech(evt, location);
+        text += '\n' + cardText;
+        ssml += ssmlBreak + ssml0;
+    }
+    return {text, ssml};
+}
+
+function getWelcomeResponse(session, callback, isHelpIntent) {
     let cardText = '';
     let ssmlContent = '';
     if (!isHelpIntent) {
-        const afterSunset = session.attributes.afterSunset;
-        const when = afterSunset ? 'Tonight' : 'Today';
-        cardText += `Welcome to Hebcal. ${when} is the ${hebrewDateStr}. `;
-        ssmlContent += `Welcome to ` + hebcal.getPhonemeTag("'hibkæl", 'Hebcal') +
-            `. ${when} is the ${speech}. `;
-        const location = getLocation(session);
-        const hd = session.attributes.hdate;
-        const now = hebcal.nowInLocation(location);
-        const dow = now.day();
-        const {parsha} = getParshaHaShavua(hd, location);
-        if (parsha) {
-            const todayOrThisWeek = dow === 6 && !afterSunset ?
-                'Today' : dow === 5 ? 'Tomorrow' : 'This week';
-            const prefixText = `${todayOrThisWeek}'s Torah portion is `;
-            const result = hebcal.getParashaOrHolidayName(parsha);
-            const phoneme = hebcal.getPhonemeTag(result.ipa, result.name);
-            cardText += `\n${prefixText}${result.name}. `;
-            ssmlContent += ' <break time="0.2s"/> ' +
-                `${prefixText}${phoneme}. `;
-        }
-        // Starting Wednesday night, check for upcoming candle lighting time
-        if ((dow === 3 && afterSunset) || dow === 4 || dow === 5) {
-            const evts = getUpcomingEvents(hd, location, 4);
-            for (const evt of evts) {
-                const { cardText: cardText0, ssml } = (evt.name === 'Candle lighting') ?
-                     hebcal.makeCandleLightingSpeech(evt, location) :
-                     makeHolidaySpeech(evt, location);
-                cardText += '\n' + cardText0 + ' ';
-                ssmlContent += ' <break time="0.2s"/> ' + ssml + ' ';
-            }
-        }
+        const {text, ssml} = makeLaunchSpeech(session);
+        cardText = text;
+        ssmlContent = ssml;
     }
+    const repromptText = "You can ask about holidays, the Torah portion, candle lighting times, or Hebrew dates.";
     if (isHelpIntent || !session.attributes.returningUser) {
-        cardText += repromptText;
-        ssmlContent += repromptText;
+        cardText += '\n' + repromptText;
+        ssmlContent += ' ' + repromptText;
     }
-    const response = respond('Welcome to Hebcal', cardText + nag, ssmlContent + nag);
+    const nag = 'What will it be?';
+    const response = respond('Welcome to Hebcal',
+        cardText + '\n' + nag,
+        ssmlContent + ssmlBreak + nag);
     response.shouldEndSession = false;
     response.reprompt.outputSpeech.text = repromptText;
     callback(session, response);
 }
-
