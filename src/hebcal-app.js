@@ -580,7 +580,7 @@ const hebcal = {
             if (typeof Item == 'undefined') {
                 callback(null);
             } else {
-                console.log(`SUCCESS Got from DynamoDB`, Item);
+                console.log(`SUCCESS Got from DynamoDB userId=${userId}`);
                 const user = {
                     ts: Item.Timestamp.N
                 };

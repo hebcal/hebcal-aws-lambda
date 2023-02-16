@@ -70,18 +70,20 @@ function getParshaHaShavua(hd, location) {
  * @return {any[]}
  */
 function getUpcomingEvents(hd, location, numDays) {
-    const il = Boolean(location && location.cc && location.cc === 'IL');
-    const loc = location && new Location(location.latitude, location.longitude, il,
-        location.tzid, location.cityName, location.cc);
-    const events0 = HebrewCalendar.calendar({
+    const il = Boolean(typeof location === 'object' && location.cc === 'IL');
+    const opts = {
         start: hd,
         end: new HDate(hd.abs() + numDays),
-        location: loc,
         il,
-        candlelighting: true,
-        havdalahMins: 0,
         shabbatMevarchim: false,
-    });
+    };
+    if (typeof location === 'object') {
+        opts.location = new Location(location.latitude, location.longitude, il,
+            location.tzid, location.cityName, location.cc);
+        opts.candlelighting = true;
+        opts.havdalahMins = 0;
+    }
+    const events0 = HebrewCalendar.calendar(opts);
     return formatEvents(events0, location);
 }
 

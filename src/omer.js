@@ -42,7 +42,7 @@ function getOmerResponse(intent, session, callback) {
         const upcoming = abs < beginOmer ? beginOmer : HDate.hebrew2abs(hyear + 1, months.NISAN, 16);
         const upcomingDt = greg.abs2greg(upcoming); /** @todo: subtract 1? */
         const observedDt = dayjs(upcomingDt);
-        const dateSsml = hebcal.formatDateSsml(observedDt);
+        const dateSsml = hebcal.formatDateSsml(observedDt, location);
         const dateText = observedDt.format('dddd, MMMM D YYYY');
         const prefix = 'The counting of the Omer begins at sundown on ';
         callback(session, respond('Counting of the Omer',

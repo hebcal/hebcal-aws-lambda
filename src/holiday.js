@@ -24,8 +24,8 @@ function makeHolidaySpeech(evt, location) {
         beginsOn += 'on ';
     }
     const cardText = `${holiday + beginsOn + dateText}.`;
-    const ssmlContent = phoneme + beginsOn + dateSsml;
-    return { title, cardText, ssmlContent };
+    const ssml = phoneme + beginsOn + dateSsml;
+    return { title, cardText, ssml };
 }
 
 function getHolidayResponse({ slots, name }, session, callback) {
@@ -83,11 +83,11 @@ function getHolidayResponse({ slots, name }, session, callback) {
     });
     if (found.length) {
         const evt = found[0];
-        var { title, cardText, ssmlContent } = makeHolidaySpeech(evt, location);
+        let { title, cardText, ssml } = makeHolidaySpeech(evt, location);
         if (titleYear) {
             title += ` ${titleYear}`;
         }
-        const speechletResponse = respond(title, cardText, ssmlContent, true, session);
+        const speechletResponse = respond(title, cardText, ssml, true, session);
         callback(session, speechletResponse);
     } else {
         callback(session, respond(slots.Holiday.value,
@@ -95,3 +95,4 @@ function getHolidayResponse({ slots, name }, session, callback) {
     }
 }
 exports.getHolidayResponse = getHolidayResponse;
+exports.makeHolidaySpeech = makeHolidaySpeech;

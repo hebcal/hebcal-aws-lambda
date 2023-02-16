@@ -8,7 +8,7 @@ const { trackEventSQS } = require("./track2");
 const { getCandleLightingResponse } = require("./candle-lighting");
 const { getHavdalahResponse } = require("./havdalah");
 const { getParshaResponse } = require("./parsha");
-const { getHolidayResponse } = require("./holiday");
+const { getHolidayResponse, makeHolidaySpeech } = require("./holiday");
 const { getDafYomiResponse } = require("./daf-yomi");
 const pkg = require('./package.json');
 
@@ -63,7 +63,6 @@ exports.handler = function (event, context) {
 
 function loadUserAndGreetings(request, session, callback) {
     session.attributes.userId = session.user.userId;
-    session.attributes.lambdaApp = pkg.name + '/' + pkg.version;
     hebcal.lookupUser(session.user.userId, (user) => {
         let hd = null;
         let location;
@@ -199,15 +198,15 @@ function getWelcomeResponse(session, callback, isHelpIntent) {
             ssmlContent += ' <break time="0.2s"/> ' +
                 `${prefixText}${phoneme}. `;
         }
-        // On Thursday and Friday, check for upcoming candle lighting time
-        if (location && (dow === 4 || dow === 5)) {
-            const evts = getUpcomingEvents(hd, location, 2);
+        // Starting Wednesday night, check for upcoming candle lighting time
+        if ((dow === 3 && afterSunset) || dow === 4 || dow === 5) {
+            const evts = getUpcomingEvents(hd, location, 4);
             for (const evt of evts) {
-                if (evt.name === 'Candle lighting') {
-                    const { cardText: cardText0, ssml } = hebcal.makeCandleLightingSpeech(evt, location);
-                    cardText += '\n' + cardText0 + ' ';
-                    ssmlContent += ' <break time="0.2s"/> ' + ssml + ' ';
-                }
+                const { cardText: cardText0, ssml } = (evt.name === 'Candle lighting') ?
+                     hebcal.makeCandleLightingSpeech(evt, location) :
+                     makeHolidaySpeech(evt, location);
+                cardText += '\n' + cardText0 + ' ';
+                ssmlContent += ' <break time="0.2s"/> ' + ssml + ' ';
             }
         }
     }
