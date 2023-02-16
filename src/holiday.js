@@ -23,8 +23,8 @@ function makeHolidaySpeech(evt, location) {
     if (!isToday) {
         beginsOn += 'on ';
     }
-    const cardText = `${holiday + beginsOn + dateText}.`;
-    const ssml = phoneme + beginsOn + dateSsml;
+    const cardText = holiday + beginsOn + dateText + '.';
+    const ssml = phoneme + beginsOn + dateSsml + '.';
     return { title, cardText, ssml };
 }
 
