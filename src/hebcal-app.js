@@ -365,7 +365,8 @@ const hebcal = {
             };
         } else {
             const holiday = evt.basename;
-            const ipa = config.parashatIpa + config.holiday2ipa[holiday];
+            const ipaPrefix = holiday.startsWith('Shabbat ') ? '' : config.parashatIpa;
+            const ipa = ipaPrefix + config.holiday2ipa[holiday];
             return {
                 title: `${holiday} Torah reading`,
                 name: holiday,
