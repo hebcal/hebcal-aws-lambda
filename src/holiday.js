@@ -13,11 +13,12 @@ function makeHolidaySpeech(evt, location) {
     const phoneme = hebcal.getPhonemeTag(ipa, holiday);
     const observedDt = hebcal.dayEventObserved(evt);
     const observedWhen = hebcal.beginsWhen(evt.name);
-    const dateSsml = hebcal.formatDateSsml(observedDt, location);
     const dateText = observedDt.format('dddd, MMMM D YYYY');
     const now = hebcal.nowInLocation(location);
-    const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
+    const dateSsml0 = hebcal.formatDateSsml(observedDt, location);
     const isToday = observedDt.isSame(now, 'day');
+    const dateSsml = isToday && observedWhen === 'at sundown' ? 'tonight' : dateSsml0;
+    const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
     let beginsOn = ` ${begins} ${observedWhen} `;
     let title = holiday;
     if (!isToday) {
