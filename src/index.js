@@ -159,7 +159,13 @@ function onIntent(intentRequest, session, callback) {
             break;
         case "AMAZON.CancelIntent":
         case "AMAZON.StopIntent":
-            callback(session, buildSpeechletResponse("Goodbye", "Goodbye", null, true));
+            const ssmlContent = 'Thanks for using ' +
+                hebcal.getPhonemeTag("'hibkæl", 'Hebcal') +
+                '. Goodbye.';
+            session.attributes.specialGreeting = undefined;
+            const response = respond('Goodbye',
+                'Thanks for using Hebcal. Goodbye.', ssmlContent);
+            callback(session, response);
             break;
         case "AMAZON.HelpIntent":
             getWelcomeResponse(session, callback, true);
