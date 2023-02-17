@@ -22,7 +22,7 @@ function getLocation(session) {
  */
 function getHebrewDateSrc(now, location, slotValue) {
     if (slotValue) {
-        return hebcal.parseAmazonDateFormat(slotValue);
+        return hebcal.parseAmazonDateFormat(slotValue, location);
     } else if (location && location.latitude && location.tzid) {
         const {targetDay} = hebcal.getDayjsForTodayHebrewDate(location);
         return targetDay;
@@ -99,12 +99,12 @@ function getHolidaysOnDate(hd, location) {
     return formatEvents(events1, location);
 }
 function formatEvents(events, location) {
-    const tzid = hebcal.getTzidFromLocation(location);
+    const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
     return events.map((ev) => {
         const dt = ev.getDate().greg();
         const iso = dt.toISOString().substring(0, 10);
         const str = ev.eventTimeStr ? iso + ' ' + ev.eventTimeStr + ':00' : iso;
-        const d = tzid && ev.eventTimeStr ? dayjs.tz(str, tzid) : dayjs(str);
+        const d = dayjs.tz(str, tzid);
         return {
             name: ev.renderBrief(),
             dt: d,

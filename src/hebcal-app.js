@@ -308,13 +308,14 @@ const hebcal = {
     “next year”: 2016
     “this decade”: 201X
     */
-    parseAmazonDateFormat(str) {
+    parseAmazonDateFormat(str, location) {
         if (str.length == 4 & str.charAt(3) == 'X') {
             const yearStr = str.substr(0,3);
             const year = (+yearStr) * 10;
             return dayjs(new Date(year, 0, 1));
         }
-        let m = dayjs(str);
+        const tzid = (location && location.tzid) || this.defaultTimezone;
+        let m = dayjs.tz(str, tzid);
         if ((str.length == 8 && str.charAt(4) == '-' && str.charAt(5) == 'W') ||
             (str.length == 11 && str.substr(8) == '-WE')) {
             m = m.day(6); // advance to Saturday
@@ -323,7 +324,7 @@ const hebcal = {
     },
 
     getUpcomingFriday(now) {
-        const midnight = dayjs(new Date(now.year(), now.month(), now.date()));
+        const midnight = now.hour(0).minute(0).second(0).millisecond(0);
         const dow = midnight.day();
         if (dow === 5) {
             return midnight;
@@ -335,7 +336,7 @@ const hebcal = {
     },
 
     getUpcomingSaturday(now) {
-        const midnight = dayjs(new Date(now.year(), now.month(), now.date()));
+        const midnight = now.hour(0).minute(0).second(0).millisecond(0);
         const dow = midnight.day();
         if (dow === 6) {
             return midnight;
