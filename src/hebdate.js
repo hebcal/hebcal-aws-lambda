@@ -17,7 +17,7 @@ function getHebrewDateResponse(intent, session, callback) {
             srcDateText += ' (after sunset)';
         }
     }
-    const hd = new HDate(src.toDate());
+    const hd = new HDate(new Date(src.year(), src.month(), src.date()));
     const name = hd.render();
     const speech = hebcal.hebrewDateSSML(name);
     callback(session, respond(name,

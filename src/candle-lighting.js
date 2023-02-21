@@ -24,7 +24,18 @@ function getCandleLightingResponse(request, session, callback) {
             `Sorry, we are having trouble finding the city ${location.cityName}. `);
     }
 
-    const hebcalEventsCallback = (events) => {
+    const myInvokeHebcal = location => {
+        const loc = new Location(location.latitude, location.longitude, location.cc === 'IL',
+            location.tzid, location.cityName, location.cc);
+        const dt = new Date(friday.year(), friday.month(), friday.date());
+        const events0 = HebrewCalendar.calendar({
+            location: loc,
+            candlelighting: true,
+            noHolidays: true,
+            start: dt,
+            end: dt,
+        });
+        const events = formatEvents(events0, location);
         const found = events.filter(({ name }) => {
             return name === 'Candle lighting';
         });
@@ -42,21 +53,6 @@ function getCandleLightingResponse(request, session, callback) {
                 callback(session, speechletResponse);
             });
         }
-    };
-
-    const myInvokeHebcal = location => {
-        const loc = new Location(location.latitude, location.longitude, location.cc === 'IL',
-            location.tzid, location.cityName, location.cc);
-        const dt = friday.toDate();
-        const events0 = HebrewCalendar.calendar({
-            location: loc,
-            candlelighting: true,
-            noHolidays: true,
-            start: dt,
-            end: dt,
-        });
-        const events = formatEvents(events0, location);
-        hebcalEventsCallback(events);
     };
 
     session.attributes = session.attributes || {};

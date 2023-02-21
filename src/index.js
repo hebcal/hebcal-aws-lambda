@@ -75,7 +75,7 @@ function loadUserAndGreetings(request, session, callback) {
                 const {now, targetDay, afterSunset} = hebcal.getDayjsForTodayHebrewDate(user.location);
                 session.attributes.now = now.format('YYYY-MM-DD HH:mm:ss');
                 session.attributes.afterSunset = afterSunset;
-                hd = new HDate(targetDay.toDate());
+                hd = new HDate(new Date(targetDay.year(), targetDay.month(), targetDay.date()));
                 location = session.attributes.location = user.location;
             }
         } else {
@@ -85,7 +85,7 @@ function loadUserAndGreetings(request, session, callback) {
             // assume default timezone
             const now = hebcal.nowInLocation(undefined);
             session.attributes.now = now.format('YYYY-MM-DD HH:mm:ss');
-            hd = new HDate(now.toDate());
+            hd = new HDate(new Date(now.year(), now.month(), now.date()));
             if (now.hour() > 19) {
                 // Consider 8pm or later "after sunset"
                 session.attributes.afterSunset = true;
@@ -204,7 +204,14 @@ function makeLaunchSpeech(session) {
     }
     // Check for upcoming holidays and candle lighting time
     const evts = getUpcomingEvents(hd, location, 4);
+    const seen = new Set();
     for (const evt of evts) {
+        // if there's an exact match (e.g. 2-day Rosh Chodesh), skip 2nd
+        if (seen.has(evt.name)) {
+            continue;
+        } else {
+            seen.add(evt.name);
+        }
         const {cardText, ssml: ssml0} = (evt.name === 'Candle lighting') ?
             hebcal.makeCandleLightingSpeech(evt, location) :
             makeHolidaySpeech(evt, location);

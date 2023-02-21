@@ -8,7 +8,7 @@ function getDafYomiResponse(intent, session, callback) {
     const now = hebcal.nowInLocation(location);
     const slotValue = getDateSlotValue(intent);
     const src = getHebrewDateSrc(now, location, slotValue);
-    const dy = new DafYomi(src.toDate());
+    const dy = new DafYomi(new Date(src.year(), src.month(), src.date()));
     const daf = dy.render();
     const cardText = `Today's Daf Yomi is ${daf}`;
     return callback(session, respond(daf, cardText, null, true, session));

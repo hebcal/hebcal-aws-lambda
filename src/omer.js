@@ -7,7 +7,7 @@ const { getLocation } = require("./common");
 function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);
     const {targetDay, afterSunset} = hebcal.getDayjsForTodayHebrewDate(location);
-    const hd = new HDate(targetDay.toDate());
+    const hd = new HDate(new Date(targetDay.year(), targetDay.month(), targetDay.date()));
     const hyear = hd.getFullYear();
     const beginOmer = HDate.hebrew2abs(hyear, months.NISAN, 16);
     const endOmer = beginOmer + 48;

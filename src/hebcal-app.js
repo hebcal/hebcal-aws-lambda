@@ -426,8 +426,7 @@ const hebcal = {
      */
     getSunset(dt, location) {
         const solar = new SolarCalc(dt, location.latitude, location.longitude);
-        const sunset = solar.sun.timeAtAngle(0.833333, false);
-        return dayjs.tz(sunset, location.tzid);
+        return dayjs.tz(solar.sunset, location.tzid);
     },
 
     /**

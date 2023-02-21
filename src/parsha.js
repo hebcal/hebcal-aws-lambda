@@ -9,7 +9,7 @@ function getParshaResponse(request, session, callback) {
     const location = getLocation(session);
     const now = hebcal.nowInLocation(location);
     const saturday = now.day(6);
-    const hd = new HDate(now.toDate());
+    const hd = new HDate(new Date(saturday.year(), saturday.month(), saturday.date()));
     const {parsha, specialShabbat} = getParshaHaShavua(hd, location);
     if (parsha) {
         const afterSunset = session?.attributes?.afterSunset;
