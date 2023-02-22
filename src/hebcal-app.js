@@ -6,7 +6,7 @@ const timezone = require('dayjs/plugin/timezone');
 const {DynamoDBClient, GetItemCommand, PutItemCommand} = require("@aws-sdk/client-dynamodb");
 
 const {SolarCalc} = require('@hebcal/solar-calc');
-const {Location} = require('@hebcal/core');
+const {Location, HDate} = require('@hebcal/core');
 const config = require('./config.json');
 const pkg = require('./package.json');
 
@@ -446,10 +446,15 @@ const hebcal = {
         const tzid = (location && location.tzid) || this.defaultTimezone;
         const now = dayjs.tz(new Date(), tzid);
         const localDate = new Date(now.year(), now.month(), now.date());
+        let hd = new HDate(localDate);
         const afterSunset = this.isAfterSunset(now, location);
+        if (afterSunset) {
+            hd = hd.next();
+        }
         const d = dayjs.tz(localDate, tzid);
         const targetDay = afterSunset ? d.add(1, 'd') : d;
-        return {now, afterSunset, d, targetDay};
+        // console.log(`tzid=${tzid}, now=${now.format('YYYY-MM-DD HH:mm:ss')}, localDate=${localDate.toISOString()}, afterSunset=${afterSunset}, targetDay=${targetDay.format('YYYY-MM-DD HH:mm:ss')}, hd=${hd.toString()}`);
+        return {now, afterSunset, d, targetDay, hd};
     },
 
     makeCandleLightingSpeech(evt, location) {

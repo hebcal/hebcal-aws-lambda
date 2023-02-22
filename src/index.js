@@ -72,10 +72,10 @@ function loadUserAndGreetings(request, session, callback) {
                 if (!user.location.cc && user.location.zipCode && user.location.zipCode.length === 5) {
                     user.location.cc = 'US';
                 }
-                const {now, targetDay, afterSunset} = hebcal.getDayjsForTodayHebrewDate(user.location);
+                const {now, afterSunset, hd: hd0} = hebcal.getDayjsForTodayHebrewDate(user.location);
                 session.attributes.now = now.format('YYYY-MM-DD HH:mm:ss');
                 session.attributes.afterSunset = afterSunset;
-                hd = new HDate(new Date(targetDay.year(), targetDay.month(), targetDay.date()));
+                hd = hd0;
                 location = session.attributes.location = user.location;
             }
         } else {
@@ -85,7 +85,7 @@ function loadUserAndGreetings(request, session, callback) {
             // assume default timezone
             const now = hebcal.nowInLocation(undefined);
             session.attributes.now = now.format('YYYY-MM-DD HH:mm:ss');
-            hd = new HDate(new Date(now.year(), now.month(), now.date()));
+            hd = new HDate(now.toDate());
             if (now.hour() > 19) {
                 // Consider 8pm or later "after sunset"
                 session.attributes.afterSunset = true;
