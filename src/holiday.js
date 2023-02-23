@@ -20,7 +20,7 @@ function makeHolidaySpeech(evt, location) {
     const dateSsml = isToday && observedWhen === 'at sundown' ? 'tonight' : dateSsml0;
     const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
     let beginsOn = ` ${begins} ${observedWhen} `;
-    let title = holiday;
+    const title = holiday + ' ' + evt.orig.getDate().getFullYear();
     if (!isToday) {
         beginsOn += 'on ';
     }
