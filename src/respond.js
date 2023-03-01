@@ -82,6 +82,21 @@ function getWhichZipCodeResponse(session, callback, prefixText) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
+/**
+ * @private
+ * @param {string} str
+ * @return {string}
+ */
+function getCityName(str) {
+    const lower = str.toLowerCase();
+    if (lower.endsWith(' tomorrow')) {
+        return str.substring(0, str.length - 9);
+    } else if (lower.endsWith(' today')) {
+        return str.substring(0, str.length - 6);
+    }
+    return str;
+}
+
 function userSpecifiedLocation(intent) {
     const slots = intent?.slots;
     if (!slots) {
@@ -89,7 +104,7 @@ function userSpecifiedLocation(intent) {
     }
     if (slots.CityName?.value) {
         const str = slots.CityName.value;
-        const cityName = str.endsWith(' tomorrow') ? str.substring(0, str.length - 9) : str;
+        const cityName = getCityName(str);
         const location = hebcal.getCity(cityName);
         return location ? location : {
             cityName: cityName,
