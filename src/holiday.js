@@ -7,20 +7,31 @@ const { getLocation, formatEvents } = require("./common");
 
 dayjs.extend(isSameOrAfter);
 
-function makeHolidaySpeech(evt, location) {
+function makeHolidaySpeech(evt, location, session) {
     const holiday = evt.basename;
     const ipa = hebcal.getHolidayIPA(holiday);
     const phoneme = hebcal.getPhonemeTag(ipa, holiday);
+    const now = hebcal.nowInLocation(location);
+    const title = holiday + ' ' + evt.orig.getDate().getFullYear();
+    if (evt.dt.isSame(now, 'day')) {
+        const cardText = `Today is ${holiday}.`;
+        const ssml = `Today is ${phoneme}.`;
+        return { title, cardText, ssml };
+    }
     const observedDt = hebcal.dayEventObserved(evt);
+    const afterSunset = session?.attributes?.afterSunset;
+    if (afterSunset && observedDt.isSame(now, 'day')) {
+        const cardText = `Tonight is ${holiday}.`;
+        const ssml = `Tonight is ${phoneme}.`;
+        return { title, cardText, ssml };
+    }
     const observedWhen = hebcal.beginsWhen(evt.name);
     const dateText = observedDt.format('dddd, MMMM D YYYY');
-    const now = hebcal.nowInLocation(location);
     const dateSsml0 = hebcal.formatDateSsml(observedDt, location);
     const isToday = observedDt.isSame(now, 'day');
     const dateSsml = isToday && observedWhen === 'at sundown' ? 'tonight' : dateSsml0;
     const begins = observedDt.isSameOrAfter(now, 'day') ? 'begins' : 'began';
     let beginsOn = ` ${begins} ${observedWhen} `;
-    const title = holiday + ' ' + evt.orig.getDate().getFullYear();
     if (!isToday) {
         beginsOn += 'on ';
     }
@@ -84,9 +95,9 @@ function getHolidayResponse({ slots, name }, session, callback) {
     });
     if (found.length) {
         const evt = found[0];
-        let { title, cardText, ssml } = makeHolidaySpeech(evt, location);
+        let { title, cardText, ssml } = makeHolidaySpeech(evt, location, session);
         if (titleYear) {
-            title += ` ${titleYear}`;
+            title += ` (${titleYear})`;
         }
         const speechletResponse = respond(title, cardText, ssml, true, session);
         callback(session, speechletResponse);

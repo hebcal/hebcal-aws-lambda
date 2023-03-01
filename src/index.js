@@ -214,7 +214,7 @@ function makeLaunchSpeech(session) {
         }
         const {cardText, ssml: ssml0} = (evt.name === 'Candle lighting') ?
             hebcal.makeCandleLightingSpeech(evt, location) :
-            makeHolidaySpeech(evt, location);
+            makeHolidaySpeech(evt, location, session);
         text += '\n' + cardText;
         ssml += ssmlBreak + ssml0;
     }
