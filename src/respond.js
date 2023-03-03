@@ -91,6 +91,8 @@ function getCityName(str) {
     const lower = str.toLowerCase();
     if (lower.endsWith(' tomorrow')) {
         return str.substring(0, str.length - 9);
+    } else if (lower.endsWith(' tonight')) {
+        return str.substring(0, str.length - 8);
     } else if (lower.endsWith(' today')) {
         return str.substring(0, str.length - 6);
     }
