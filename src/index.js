@@ -203,7 +203,7 @@ function makeLaunchSpeech(session) {
         ssml += ssmlBreak + `${prefixText}${phoneme}.`;
     }
     // Check for upcoming holidays and candle lighting time
-    const evts = getUpcomingEvents(hd, location, 4);
+    const evts = getUpcomingEvents(hd, location, 3);
     const seen = new Set();
     for (const evt of evts) {
         // if there's an exact match (e.g. 2-day Rosh Chodesh), skip 2nd

@@ -26,7 +26,7 @@ function makeHolidaySpeech(evt, location, session) {
         return { title, cardText, ssml };
     }
     const observedWhen = hebcal.beginsWhen(evt.name);
-    const dateText = observedDt.format('dddd, MMMM D YYYY');
+    const dateText = observedDt.format('dddd, MMMM D, YYYY');
     const dateSsml0 = hebcal.formatDateSsml(observedDt, location);
     const isToday = observedDt.isSame(now, 'day');
     const dateSsml = isToday && observedWhen === 'at sundown' ? 'tonight' : dateSsml0;

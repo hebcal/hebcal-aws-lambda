@@ -84,7 +84,16 @@ function getUpcomingEvents(hd, location, numDays) {
         opts.havdalahMins = 0;
     }
     const events0 = HebrewCalendar.calendar(opts);
-    return formatEvents(events0, location);
+    const events1 = events0.filter((ev) => {
+        const desc = ev.getDesc();
+        if (desc === 'Fast begins' || desc === 'Fast ends') {
+            return false;
+        } else if (desc.startsWith("Erev ")) {
+            return false;
+        }
+        return true;
+    });
+    return formatEvents(events1, location);
 }
 
 /**
