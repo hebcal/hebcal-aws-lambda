@@ -5,19 +5,18 @@ const { getLocation, getHebrewDateSrc, todayOrTonight, getDateSlotValue } = requ
 
 function getHebrewDateResponse(intent, session, callback) {
     const location = getLocation(session);
-    const now = hebcal.nowInLocation(location);
     const slotValue = getDateSlotValue(intent);
-    const src = getHebrewDateSrc(now, location, slotValue);
+    const {src, hd} = getHebrewDateSrc(location, slotValue);
     let srcDateSsml = hebcal.formatDateSsml(src, location);
-    let srcDateText = src.format('MMMM D YYYY');
+    let srcDateText = src.format('MMMM D, YYYY');
     if (!slotValue) {
+        const now = hebcal.nowInLocation(location);
         srcDateSsml = todayOrTonight(now, location);
+        srcDateText = now.format('MMMM D, YYYY');
         if (hebcal.isAfterSunset(now, location)) {
-            srcDateText = now.format('MMMM D YYYY');
             srcDateText += ' (after sunset)';
         }
     }
-    const hd = new HDate(new Date(src.year(), src.month(), src.date()));
     const name = hd.render();
     const speech = hebcal.hebrewDateSSML(name);
     callback(session, respond(name,

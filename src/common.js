@@ -15,19 +15,25 @@ function getLocation(session) {
 }
 
 /**
- * @param {dayjs.Dayjs} now
  * @param {*} location
  * @param {*} slotValue
  * @return {dayjs.Dayjs}
  */
-function getHebrewDateSrc(now, location, slotValue) {
+function getHebrewDateSrc(location, slotValue) {
     if (slotValue) {
-        return hebcal.parseAmazonDateFormat(slotValue, location);
+        const src = hebcal.parseAmazonDateFormat(slotValue, location);
+        const hd = new HDate(new Date(src.year(), src.month(), src.date()));
+        return {src, hd};
     } else if (location && location.latitude && location.tzid) {
-        const {targetDay} = hebcal.getDayjsForTodayHebrewDate(location);
-        return targetDay;
+        const {targetDay, hd} = hebcal.getDayjsForTodayHebrewDate(location);
+        return {src: targetDay, hd};
     } else {
-        return now;
+        const now = hebcal.nowInLocation(location);
+        let hd = new HDate(new Date(now.year(), now.month(), now.date()));
+        if (now.hour() > 19) {
+            hd = hd.next(); // Consider 8pm or later "after sunset"
+        }
+        return {src: now, hd};
     }
 }
 
@@ -81,7 +87,6 @@ function getUpcomingEvents(hd, location, numDays) {
         opts.location = new Location(location.latitude, location.longitude, il,
             location.tzid, location.cityName, location.cc);
         opts.candlelighting = true;
-        opts.havdalahMins = 0;
     }
     const events0 = HebrewCalendar.calendar(opts);
     const events1 = events0.filter((ev) => {

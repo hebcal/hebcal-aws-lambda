@@ -492,6 +492,8 @@ const hebcal = {
             const afterSunset = now.isAfter(sunset);
             // console.log(`tz=${location.tzid}, now=${now.format('YYYY-MM-DDTHH:MM')}, sunset=${sunset.format('YYYY-MM-DDTHH:MM')}, afterSunset=${afterSunset}`);
             return afterSunset;
+        } else if (now.hour() > 19) {
+            return true;
         }
         return false;
     },
