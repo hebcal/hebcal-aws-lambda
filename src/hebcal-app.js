@@ -355,9 +355,7 @@ const hebcal = {
     getParashaOrHolidayName(evt) {
         const name = evt.name;
         if (name.indexOf("Parashat ") === 0) {
-            const space = name.indexOf(' ');
-            const parsha = name.substr(space + 1);
-            const ipa = config.parashatIpa + config.parsha2ipa[parsha];
+            const ipa = config.parashatIpa + evt.orig.parsha.map((s) => config.parsha2ipa[s]).join(' ');
             return {
                 title: name,
                 name,
