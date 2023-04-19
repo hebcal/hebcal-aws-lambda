@@ -1,20 +1,20 @@
 {
   "name": "hebcal-aws-lambda",
-  "version": "0.9.40",
+  "version": "0.9.41",
   "description": "Hebcal Amazon Web Services Lambda responder",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.290.0",
-    "@aws-sdk/client-sqs": "^3.290.0",
+    "@aws-sdk/client-dynamodb": "^3.315.0",
+    "@aws-sdk/client-sqs": "^3.315.0",
     "@hebcal/core": "^3.50.4",
     "@hebcal/solar-calc": "^1.1.2",
     "dayjs": "^1.11.7"
   },
   "devDependencies": {
-    "eslint": "^8.36.0"
+    "eslint": "^8.38.0"
   },
   "repository": {
     "type": "git",

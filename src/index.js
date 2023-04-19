@@ -1,8 +1,8 @@
 const hebcal = require('./hebcal-app');
-const {HDate} = require('@hebcal/core');
+const {HDate, months} = require('@hebcal/core');
 const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } = require("./respond");
 const { getHolidaysOnDate, getParshaHaShavua, getLocation, getUpcomingEvents } = require("./common");
-const { getOmerResponse } = require("./omer");
+const { getOmerResponse, makeOmerSpeech } = require("./omer");
 const { getHebrewDateResponse } = require("./hebdate");
 const { trackEventSQS } = require("./track2");
 const { getCandleLightingResponse } = require("./candle-lighting");
@@ -190,6 +190,17 @@ function makeLaunchSpeech(session) {
         `. ${when} is the ${speech}.`;
     const location = getLocation(session);
     const hd = session.attributes.hdate;
+    // Count the Omer
+    const hyear = hd.getFullYear();
+    const beginOmer = HDate.hebrew2abs(hyear, months.NISAN, 16);
+    const endOmer = beginOmer + 48;
+    const abs = hd.abs();
+    if (abs >= beginOmer && abs <= endOmer) {
+        const omerDay = abs - beginOmer + 1;
+        const { cardText, ssml: ssml0 } = makeOmerSpeech(hd, afterSunset, omerDay);
+        text += '\n' + cardText;
+        ssml += ssmlBreak + ssml0;
+    }
     const now = hebcal.nowInLocation(location);
     const dow = now.day();
     const {parsha} = getParshaHaShavua(hd, location);

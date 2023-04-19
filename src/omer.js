@@ -4,6 +4,33 @@ const { HDate, OmerEvent, months, greg } = require('@hebcal/core');
 const { respond } = require("./respond");
 const { getLocation } = require("./common");
 
+function makeOmerSpeech(hd, afterSunset, num) {
+    const weeks = Math.floor(num / 7);
+    const days = num % 7;
+    const todayOrTonightStr = afterSunset ? 'Tonight' : 'Today';
+    let suffix = '';
+    const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
+    if (weeks) {
+        suffix = `, which is ${weeks} week`;
+        if (weeks > 1) {
+            suffix += 's';
+        }
+        if (days) {
+            suffix += ` and ${days} day`;
+            if (days > 1) {
+                suffix += 's';
+            }
+        }
+    }
+    const ev = new OmerEvent(hd, num);
+    const title = ev.render();
+    return {
+        title,
+        cardText: `${todayOrTonightStr} is the ${title}${suffix}.`,
+        ssml: todayOrTonightStr + speech + suffix,
+    };
+}
+
 function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);
     const {afterSunset, hd} = hebcal.getDayjsForTodayHebrewDate(location);
@@ -13,30 +40,8 @@ function getOmerResponse(intent, session, callback) {
     const abs = hd.abs();
     if (abs >= beginOmer && abs <= endOmer) {
         const num = abs - beginOmer + 1;
-        const weeks = Math.floor(num / 7);
-        const days = num % 7;
-        const todayOrTonightStr = afterSunset ? 'Tonight' : 'Today';
-        let suffix = '';
-        const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
-        if (weeks) {
-            suffix = `, which is ${weeks} week`;
-            if (weeks > 1) {
-                suffix += 's';
-            }
-            if (days) {
-                suffix += ` and ${days} day`;
-                if (days > 1) {
-                    suffix += 's';
-                }
-            }
-        }
-        const ev = new OmerEvent(hd, num);
-        const title = ev.render();
-        return callback(session, respond(title,
-            `${todayOrTonightStr} is the ${title}${suffix}.`,
-            todayOrTonightStr + speech + suffix,
-            true,
-            session));
+        const { title, cardText, ssml } = makeOmerSpeech(hd, afterSunset, num);
+        return callback(session, respond(title, cardText, ssml, true, session));
     } else {
         const upcoming = abs < beginOmer ? beginOmer : HDate.hebrew2abs(hyear + 1, months.NISAN, 16);
         const upcomingDt = greg.abs2greg(upcoming); /** @todo: subtract 1? */
@@ -51,4 +56,6 @@ function getOmerResponse(intent, session, callback) {
             session));
     }
 }
+
 exports.getOmerResponse = getOmerResponse;
+exports.makeOmerSpeech = makeOmerSpeech;
