@@ -5,29 +5,17 @@ const { respond } = require("./respond");
 const { getLocation } = require("./common");
 
 function makeOmerSpeech(hd, afterSunset, num) {
-    const weeks = Math.floor(num / 7);
-    const days = num % 7;
-    const todayOrTonightStr = afterSunset ? 'Tonight' : 'Today';
-    let suffix = '';
-    const speech = ` is the <say-as interpret-as="ordinal">${num}</say-as> day of the Omer`;
-    if (weeks) {
-        suffix = `, which is ${weeks} week`;
-        if (weeks > 1) {
-            suffix += 's';
-        }
-        if (days) {
-            suffix += ` and ${days} day`;
-            if (days > 1) {
-                suffix += 's';
-            }
-        }
-    }
     const ev = new OmerEvent(hd, num);
+    let text = ev.getTodayIs('en');
+    if (afterSunset) {
+        text = text.replace(/^Today/, 'Tonight');
+    }
+    text += '.';
     const title = ev.render();
     return {
         title,
-        cardText: `${todayOrTonightStr} is the ${title}${suffix}.`,
-        ssml: todayOrTonightStr + speech + suffix,
+        cardText: text,
+        ssml: text,
     };
 }
 
