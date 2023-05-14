@@ -1,5 +1,5 @@
 const hebcal = require('./hebcal-app');
-const { DafYomi } = require('@hebcal/core');
+const { DafYomi } = require('@hebcal/learning');
 const { respond } = require("./respond");
 const { getLocation, getHebrewDateSrc, getDateSlotValue } = require("./common");
 
