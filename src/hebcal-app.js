@@ -5,8 +5,7 @@ const timezone = require('dayjs/plugin/timezone');
 // don't lazily load
 const {DynamoDBClient, GetItemCommand, PutItemCommand} = require("@aws-sdk/client-dynamodb");
 
-const {SolarCalc} = require('@hebcal/solar-calc');
-const {Location, HDate} = require('@hebcal/core');
+const {Location, HDate, GeoLocation, Zmanim} = require('@hebcal/core');
 const config = require('./config.json');
 const pkg = require('./package.json');
 
@@ -423,8 +422,10 @@ const hebcal = {
      * @return {dayjs.Dayjs}
      */
     getSunset(dt, location) {
-        const solar = new SolarCalc(dt, location.latitude, location.longitude);
-        return dayjs.tz(solar.sunset, location.tzid);
+        const gloc = new GeoLocation(null, location.latitude, location.longitude, 0, location.tzid);
+        const zmanim = new Zmanim(gloc, dt, false);
+        const sunset = zmanim.sunset();
+        return dayjs.tz(sunset, location.tzid);
     },
 
     /**
