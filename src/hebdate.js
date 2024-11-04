@@ -1,9 +1,9 @@
-const hebcal = require('./hebcal-app');
-const { HDate } = require('@hebcal/core');
-const { respond } = require("./respond");
-const { getLocation, getHebrewDateSrc, todayOrTonight, getDateSlotValue } = require("./common");
+import * as hebcal from './hebcal-app.js';
+import { HDate } from '@hebcal/core';
+import { respond } from "./respond.js";
+import { getLocation, getHebrewDateSrc, todayOrTonight, getDateSlotValue } from "./common.js";
 
-function getHebrewDateResponse(intent, session, callback) {
+export function getHebrewDateResponse(intent, session, callback) {
     const location = getLocation(session);
     const slotValue = getDateSlotValue(intent);
     const {src, hd} = getHebrewDateSrc(location, slotValue);
@@ -25,5 +25,3 @@ function getHebrewDateResponse(intent, session, callback) {
         true,
         session));
 }
-
-exports.getHebrewDateResponse = getHebrewDateResponse;

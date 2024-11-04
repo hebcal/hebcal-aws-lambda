@@ -1,7 +1,7 @@
-const { getLocation } = require("./common");
-const hebcal = require('./hebcal-app');
+import { getLocation } from "./common.js";
+import * as hebcal from './hebcal-app.js';
 
-function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
+export function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
     const specialGreeting = session && session.attributes ? session.attributes.specialGreeting : undefined;
     const location = getLocation(session);
     const cardText2 = hebcal.strWithSpecialGreeting(cardText, location, false, addShabbatShalom, specialGreeting);
@@ -31,7 +31,7 @@ function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
     };
 }
 
-function buildResponse(sessionAttributes, speechletResponse) {
+export function buildResponse(sessionAttributes, speechletResponse) {
   return {
       version: "1.0",
       sessionAttributes,
@@ -39,7 +39,7 @@ function buildResponse(sessionAttributes, speechletResponse) {
   };
 }
 
-function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
+export function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
   return {
       outputSpeech: {
           type: "PlainText",
@@ -60,7 +60,7 @@ function buildSpeechletResponse(title, output, repromptText, shouldEndSession) {
   };
 }
 
-function getWhichHolidayResponse(session, callback) {
+export function getWhichHolidayResponse(session, callback) {
     const cardTitle = "What holiday?";
     const repromptText = "Which holiday would you like?";
     const speechOutput = `Sorry, Hieb-Kal didn't understand the holiday. ${repromptText}`;
@@ -71,7 +71,7 @@ function getWhichHolidayResponse(session, callback) {
         buildSpeechletResponse(cardTitle, speechOutput, repromptText, shouldEndSession));
 }
 
-function getWhichZipCodeResponse(session, callback, prefixText) {
+export function getWhichZipCodeResponse(session, callback, prefixText) {
     const cardTitle = "What City or ZIP code?";
     const repromptText = "Which city or ZIP code for candle lighting times?";
     const speechOutput = prefixText ? (prefixText + repromptText) : repromptText;
@@ -99,7 +99,7 @@ function getCityName(str) {
     return str;
 }
 
-function userSpecifiedLocation(intent) {
+export function userSpecifiedLocation(intent) {
     const slots = intent?.slots;
     if (!slots) {
         return false;
@@ -120,10 +120,3 @@ function userSpecifiedLocation(intent) {
         return false;
     }
 }
-
-exports.respond = respond;
-exports.buildResponse = buildResponse;
-exports.buildSpeechletResponse = buildSpeechletResponse;
-exports.getWhichHolidayResponse = getWhichHolidayResponse;
-exports.getWhichZipCodeResponse = getWhichZipCodeResponse;
-exports.userSpecifiedLocation = userSpecifiedLocation;

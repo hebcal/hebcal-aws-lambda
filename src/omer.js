@@ -1,10 +1,10 @@
-const hebcal = require('./hebcal-app');
-const dayjs = require('dayjs');
-const { HDate, OmerEvent, months, greg } = require('@hebcal/core');
-const { respond } = require("./respond");
-const { getLocation } = require("./common");
+import * as hebcal from './hebcal-app.js';
+import dayjs from 'dayjs';
+import { HDate, OmerEvent, months, greg } from '@hebcal/core';
+import { respond } from "./respond.js";
+import { getLocation } from "./common.js";
 
-function makeOmerSpeech(hd, afterSunset, num) {
+export function makeOmerSpeech(hd, afterSunset, num) {
     const ev = new OmerEvent(hd, num);
     let text = ev.getTodayIs('en');
     if (afterSunset) {
@@ -19,7 +19,7 @@ function makeOmerSpeech(hd, afterSunset, num) {
     };
 }
 
-function getOmerResponse(intent, session, callback) {
+export function getOmerResponse(intent, session, callback) {
     const location = getLocation(session);
     const {afterSunset, hd} = hebcal.getDayjsForTodayHebrewDate(location);
     const hyear = hd.getFullYear();
@@ -44,6 +44,3 @@ function getOmerResponse(intent, session, callback) {
             session));
     }
 }
-
-exports.getOmerResponse = getOmerResponse;
-exports.makeOmerSpeech = makeOmerSpeech;

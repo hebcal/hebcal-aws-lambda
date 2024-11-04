@@ -1,10 +1,10 @@
-const hebcal = require('./hebcal-app');
-const { HebrewCalendar, Location } = require('@hebcal/core');
-const { respond, buildResponse, userSpecifiedLocation, getWhichZipCodeResponse } = require("./respond");
-const { formatEvents, getLocation } = require("./common");
-const { trackEventSQS } = require("./track2");
+import * as hebcal from './hebcal-app.js';
+import { HebrewCalendar, Location } from '@hebcal/core';
+import { respond, buildResponse, userSpecifiedLocation, getWhichZipCodeResponse } from "./respond.js";
+import { formatEvents, getLocation } from "./common.js";
+import { trackEventSQS } from "./track2.js";
 
-function getCandleLightingResponse(request, session, callback) {
+export function getCandleLightingResponse(request, session, callback) {
     const intent = request.intent;
     let location = userSpecifiedLocation(intent);
     const now = hebcal.nowInLocation(location);
@@ -87,4 +87,3 @@ function getCandleLightingResponse(request, session, callback) {
         return getWhichZipCodeResponse(session, callback);
     }
 }
-exports.getCandleLightingResponse = getCandleLightingResponse;

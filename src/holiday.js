@@ -1,13 +1,13 @@
-const hebcal = require('./hebcal-app');
-const dayjs = require('dayjs');
-const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
-const { HebrewCalendar } = require('@hebcal/core');
-const { respond  } = require("./respond");
-const { getLocation, formatEvents } = require("./common");
+import * as hebcal from './hebcal-app.js';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter.js';
+import { HebrewCalendar } from '@hebcal/core';
+import { respond  } from "./respond.js";
+import { getLocation, formatEvents } from "./common.js";
 
 dayjs.extend(isSameOrAfter);
 
-function makeHolidaySpeech(evt, location, session) {
+export function makeHolidaySpeech(evt, location, session) {
     const holiday = evt.basename;
     const ipa = hebcal.getHolidayIPA(holiday);
     const phoneme = hebcal.getPhonemeTag(ipa, holiday);
@@ -40,7 +40,7 @@ function makeHolidaySpeech(evt, location, session) {
     return { title, cardText, ssml };
 }
 
-function getHolidayResponse({ slots, name }, session, callback) {
+export function getHolidayResponse({ slots, name }, session, callback) {
     const location = getLocation(session);
     const il = Boolean(location && location.cc && location.cc === 'IL');
     const options = { il };
@@ -106,5 +106,3 @@ function getHolidayResponse({ slots, name }, session, callback) {
             `Sorry, we could not find the date for ${slots.Holiday.value}.`));
     }
 }
-exports.getHolidayResponse = getHolidayResponse;
-exports.makeHolidaySpeech = makeHolidaySpeech;

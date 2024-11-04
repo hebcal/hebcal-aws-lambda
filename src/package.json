@@ -1,17 +1,21 @@
 {
   "name": "hebcal-aws-lambda",
-  "version": "0.9.45",
+  "version": "0.9.46",
   "description": "Hebcal Amazon Web Services Lambda responder",
   "main": "index.js",
+  "type": "module",
+  "engines": {
+    "node": ">= 20.0.0"
+  },
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.574.0",
-    "@aws-sdk/client-sqs": "^3.574.0",
-    "@hebcal/core": "^5.3.8",
-    "@hebcal/learning": "^5.0.7",
-    "dayjs": "^1.11.11"
+    "@aws-sdk/client-dynamodb": "^3.682.0",
+    "@aws-sdk/client-sqs": "^3.682.0",
+    "@hebcal/core": "^5.7.2",
+    "@hebcal/learning": "^5.1.2",
+    "dayjs": "^1.11.13"
   },
   "devDependencies": {
     "eslint": "^8.57.0"

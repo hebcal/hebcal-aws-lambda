@@ -1,10 +1,10 @@
-const hebcal = require('./hebcal-app');
-const { HDate } = require('@hebcal/core');
-const { respond, buildResponse } = require("./respond");
-const { getLocation, getParshaHaShavua } = require("./common");
-const { trackEventSQS } = require("./track2");
+import * as hebcal from './hebcal-app.js';
+import { HDate } from '@hebcal/core';
+import { respond, buildResponse } from "./respond.js";
+import { getLocation, getParshaHaShavua } from "./common.js";
+import { trackEventSQS } from "./track2.js";
 
-function getParshaResponse(request, session, callback) {
+export function getParshaResponse(request, session, callback) {
     const intent = request.intent;
     const location = getLocation(session);
     const now = hebcal.nowInLocation(location);
@@ -41,4 +41,3 @@ function getParshaResponse(request, session, callback) {
         });
     }
 }
-exports.getParshaResponse = getParshaResponse;

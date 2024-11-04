@@ -1,20 +1,20 @@
-const hebcal = require('./hebcal-app');
-const {HDate, months} = require('@hebcal/core');
-const { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } = require("./respond");
-const { getHolidaysOnDate, getParshaHaShavua, getLocation, getUpcomingEvents } = require("./common");
-const { getOmerResponse, makeOmerSpeech } = require("./omer");
-const { getHebrewDateResponse } = require("./hebdate");
-const { trackEventSQS } = require("./track2");
-const { getCandleLightingResponse } = require("./candle-lighting");
-const { getHavdalahResponse } = require("./havdalah");
-const { getParshaResponse } = require("./parsha");
-const { getHolidayResponse, makeHolidaySpeech } = require("./holiday");
-const { getDafYomiResponse } = require("./daf-yomi");
-const pkg = require('./package.json');
+import * as hebcal from './hebcal-app.js';
+import {HDate, months} from '@hebcal/core';
+import { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } from "./respond.js";
+import { getHolidaysOnDate, getParshaHaShavua, getLocation, getUpcomingEvents } from "./common.js";
+import { getOmerResponse, makeOmerSpeech } from "./omer.js";
+import { getHebrewDateResponse } from "./hebdate.js";
+import { trackEventSQS } from "./track2.js";
+import { getCandleLightingResponse } from "./candle-lighting.js";
+import { getHavdalahResponse } from "./havdalah.js";
+import { getParshaResponse } from "./parsha.js";
+import { getHolidayResponse, makeHolidaySpeech } from "./holiday.js";
+import { getDafYomiResponse } from "./daf-yomi.js";
+import pkg from './package.json' with { type: "json" };
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
-exports.handler = function (event, context) {
+export function handler(event, context) {
     console.log(`HELLO WORLD ${pkg.name}/${pkg.version}`);
     event.session.attributes = event.session.attributes || {};
     event.session.attributes.startTime = Date.now();

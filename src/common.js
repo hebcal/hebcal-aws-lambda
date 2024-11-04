@@ -1,13 +1,13 @@
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
-const { HebrewCalendar, HDate, Location } = require('@hebcal/core');
-const hebcal = require('./hebcal-app');
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
+import { HebrewCalendar, HDate, Location } from '@hebcal/core';
+import * as hebcal from './hebcal-app.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-function getLocation(session) {
+export function getLocation(session) {
     if (session && session.attributes && session.attributes.location) {
         return session.attributes.location;
     }
@@ -19,7 +19,7 @@ function getLocation(session) {
  * @param {*} slotValue
  * @return {dayjs.Dayjs}
  */
-function getHebrewDateSrc(location, slotValue) {
+export function getHebrewDateSrc(location, slotValue) {
     if (slotValue) {
         const src = hebcal.parseAmazonDateFormat(slotValue, location);
         const hd = new HDate(new Date(src.year(), src.month(), src.date()));
@@ -37,17 +37,17 @@ function getHebrewDateSrc(location, slotValue) {
     }
 }
 
-function todayOrTonight(now, location) {
+export function todayOrTonight(now, location) {
   return hebcal.isAfterSunset(now, location) ? 'Tonight' : 'Today';
 }
 
-function getDateSlotValue({ slots }) {
+export function getDateSlotValue({ slots }) {
     return slots && slots.MyDate && slots.MyDate.value;
 }
 
 const reParsha = /^(Parashat|Pesach|Sukkot|Shavuot|Rosh Hashana|Yom Kippur|Simchat Torah|Shmini Atzeret)/;
 
-function getParshaHaShavua(hd, location) {
+export function getParshaHaShavua(hd, location) {
     const il = Boolean(location && location.cc && location.cc === 'IL');
     const saturday = hd.onOrAfter(6);
     const events0 = HebrewCalendar.calendar({
@@ -75,7 +75,7 @@ function getParshaHaShavua(hd, location) {
  * @param {number} numDays
  * @return {any[]}
  */
-function getUpcomingEvents(hd, location, numDays) {
+export function getUpcomingEvents(hd, location, numDays) {
     const il = Boolean(typeof location === 'object' && location.cc === 'IL');
     const opts = {
         start: hd,
@@ -106,13 +106,13 @@ function getUpcomingEvents(hd, location, numDays) {
  * @param {any} location
  * @return {any[]}
  */
-function getHolidaysOnDate(hd, location) {
+export function getHolidaysOnDate(hd, location) {
     const il = Boolean(location && location.cc && location.cc === 'IL');
     const events0 = HebrewCalendar.getHolidaysOnDate(hd) || [];
     const events1 = events0.filter((ev) => (il && ev.observedInIsrael() || (!il && ev.observedInDiaspora())));
     return formatEvents(events1, location);
 }
-function formatEvents(events, location) {
+export function formatEvents(events, location) {
     const tzid = hebcal.getTzidFromLocation(location) || hebcal.defaultTimezone;
     return events.map((ev) => {
         const dt = ev.getDate().greg();
@@ -127,12 +127,3 @@ function formatEvents(events, location) {
         };
     });
 }
-
-exports.getLocation = getLocation;
-exports.getHolidaysOnDate = getHolidaysOnDate;
-exports.formatEvents = formatEvents;
-exports.getDateSlotValue = getDateSlotValue;
-exports.todayOrTonight = todayOrTonight;
-exports.getHebrewDateSrc = getHebrewDateSrc;
-exports.getParshaHaShavua = getParshaHaShavua;
-exports.getUpcomingEvents = getUpcomingEvents;

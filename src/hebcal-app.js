@@ -1,13 +1,23 @@
-const dayjs = require('dayjs');
-const utc = require('dayjs/plugin/utc');
-const timezone = require('dayjs/plugin/timezone');
+import {readFileSync} from 'node:fs';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc.js';
+import timezone from 'dayjs/plugin/timezone.js';
 
 // don't lazily load
-const {DynamoDBClient, GetItemCommand, PutItemCommand} = require("@aws-sdk/client-dynamodb");
+import {DynamoDBClient, GetItemCommand, PutItemCommand} from "@aws-sdk/client-dynamodb";
 
-const {Location, HDate, GeoLocation, Zmanim} = require('@hebcal/core');
-const config = require('./config.json');
-const pkg = require('./package.json');
+import {Location, HDate, GeoLocation, Zmanim} from '@hebcal/core';
+import config from './config.json' with { type: "json" };
+import pkg from './package.json' with { type: "json" };
+
+/**
+ * @param {string} f
+ * @return {any}
+ */
+function readJSON(f) {
+  const fileUrl = new URL(f, import.meta.url);
+  return JSON.parse(readFileSync(fileUrl, 'utf8'));
+}
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,7 +35,7 @@ const hebcal = {
         }
         this.zipsDb = this.loadZipsDb(); // about 20ms
         console.log("Loading cities.json...");
-        const allCities = require('./cities.json');
+        const allCities = readJSON('./cities.json');
         console.log(`Parsing ${allCities.length} cities`);
         this.cities = this.loadCities(allCities); // about 9ms
         this.initCityAliases();
@@ -514,7 +524,7 @@ const hebcal = {
     },
 
     loadZipsDb() {
-        let arr = require('./zips.json');
+        let arr = readJSON('./zips.json');
         const db = {};
         for (let i = 0; i < arr.length; ++i) {
             const str = arr[i];
@@ -638,4 +648,4 @@ const hebcal = {
 
 hebcal.init();
 
-module.exports = hebcal;
+export default hebcal;

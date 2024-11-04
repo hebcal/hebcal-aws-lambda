@@ -1,10 +1,10 @@
-const { SQSClient, SendMessageCommand } = require('@aws-sdk/client-sqs');
-const { getLocation } = require("./common");
-const pkg = require('./package.json');
+import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs';
+import { getLocation } from "./common.js";
+import pkg from './package.json' with { type: "json" };
 
 const sqsClient = new SQSClient({ region: 'us-east-1' });
 
-async function trackEventSQS(request, session, response, details) {
+export async function trackEventSQS(request, session, response, details) {
   const now = new Date();
   const duration = now.getTime() - session.attributes.startTime;
   let title = response?.response?.card?.title;
@@ -60,5 +60,3 @@ async function trackEventSQS(request, session, response, details) {
     console.log('ERROR sqsClient.send', err);
   }
 }
-
-exports.trackEventSQS = trackEventSQS;
