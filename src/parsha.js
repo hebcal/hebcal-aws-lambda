@@ -1,4 +1,4 @@
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 import { HDate } from '@hebcal/core';
 import { respond, buildResponse } from "./respond.js";
 import { getLocation, getParshaHaShavua } from "./common.js";

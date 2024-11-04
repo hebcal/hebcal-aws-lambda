@@ -1,4 +1,3 @@
-import * as hebcal from './hebcal-app.js';
 import { DafYomi } from '@hebcal/learning';
 import { respond } from "./respond.js";
 import { getLocation, getHebrewDateSrc, getDateSlotValue } from "./common.js";

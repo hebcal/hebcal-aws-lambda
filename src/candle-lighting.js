@@ -1,4 +1,4 @@
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 import { HebrewCalendar, Location } from '@hebcal/core';
 import { respond, buildResponse, userSpecifiedLocation, getWhichZipCodeResponse } from "./respond.js";
 import { formatEvents, getLocation } from "./common.js";

@@ -1,5 +1,4 @@
-import * as hebcal from './hebcal-app.js';
-import { HDate } from '@hebcal/core';
+import hebcal from './hebcal-app.js';
 import { respond } from "./respond.js";
 import { getLocation, getHebrewDateSrc, todayOrTonight, getDateSlotValue } from "./common.js";
 

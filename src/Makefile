@@ -1,5 +1,5 @@
 ZIPFILE=../hebcal-lambda.zip
-ZIPCONTENTS=node_modules/@hebcal node_modules/dayjs *.js config.json zips.json cities.json package.json
+ZIPCONTENTS=node_modules/@hebcal node_modules/dayjs node_modules/temporal-polyfill node_modules/quick-lru *.js config.json zips.json cities.json package.json
 
 all: $(ZIPFILE)
 

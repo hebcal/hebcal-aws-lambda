@@ -1,4 +1,4 @@
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 import {HDate, months} from '@hebcal/core';
 import { respond, buildSpeechletResponse, buildResponse, getWhichHolidayResponse } from "./respond.js";
 import { getHolidaysOnDate, getParshaHaShavua, getLocation, getUpcomingEvents } from "./common.js";

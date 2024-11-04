@@ -1,4 +1,4 @@
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 import dayjs from 'dayjs';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter.js';
 import { HebrewCalendar } from '@hebcal/core';

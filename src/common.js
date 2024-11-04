@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
 import { HebrewCalendar, HDate, Location } from '@hebcal/core';
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);

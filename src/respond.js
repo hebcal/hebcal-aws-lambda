@@ -1,5 +1,5 @@
 import { getLocation } from "./common.js";
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 
 export function respond(title, cardText, ssmlContent, addShabbatShalom, session) {
     const specialGreeting = session && session.attributes ? session.attributes.specialGreeting : undefined;

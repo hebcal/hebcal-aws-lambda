@@ -1,4 +1,4 @@
-import * as hebcal from './hebcal-app.js';
+import hebcal from './hebcal-app.js';
 import dayjs from 'dayjs';
 import { HDate, OmerEvent, months, greg } from '@hebcal/core';
 import { respond } from "./respond.js";
