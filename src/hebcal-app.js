@@ -587,12 +587,26 @@ const hebcal = {
         const dynamodb = this.getDynamoDB();
         console.log(`Getting from DynamoDB userId=${userId}`);
         const command = new GetItemCommand(params);
+        // Guard against calling `callback` twice: the 2-second timeout and the
+        // dynamodb.send() promise race each other, and without this flag a
+        // slow-but-eventually-successful (or slow-but-eventually-rejected)
+        // request would fire `callback` a second time after the timeout
+        // already fired it once.
+        let settled = false;
         const timeoutObject = setTimeout(() => {
+            if (settled) {
+                return;
+            }
+            settled = true;
             console.log(`ABORT DynamoDB request for userId=${userId}`);
             callback(null);
         }, 2000);
         dynamodb.send(command).then((data) => {
             clearTimeout(timeoutObject);
+            if (settled) {
+                return;
+            }
+            settled = true;
             const Item = data.Item;
             if (typeof Item == 'undefined') {
                 callback(null);
@@ -607,6 +621,11 @@ const hebcal = {
                 callback(user);
             }
         }).catch((err) => {
+            clearTimeout(timeoutObject);
+            if (settled) {
+                return;
+            }
+            settled = true;
             console.log("ERROR dynamodb.getItem");
             console.log(err);
             callback(null);
