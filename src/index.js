@@ -14,16 +14,25 @@ import pkg from './package.json' with { type: "json" };
 
 // Route the incoming request based on type (LaunchRequest, IntentRequest,
 // etc.) The JSON body of the request is provided in the event parameter.
+//
+// NOTE: this handler returns a Promise rather than calling the legacy
+// context.succeed()/context.fail() callbacks. Those methods were deprecated
+// by AWS in 2016 and are no longer present on newer Lambda Node.js runtimes
+// (fully removed as of the Node.js 24 runtime), so calling them here threw
+// an unhandled exception deep inside a callback, causing the invocation to
+// return nothing and Alexa to report "SpeechletResponse was null".
 export function handler(event, context) {
     console.log(`HELLO WORLD ${pkg.name}/${pkg.version}`);
     event.session.attributes = event.session.attributes || {};
     event.session.attributes.startTime = Date.now();
     console.log(JSON.stringify(event.session));
     console.log(JSON.stringify(event.request));
+    let resolve0, reject0;
+    const promise = new Promise((resolve, reject) => { resolve0 = resolve; reject0 = reject; });
     try {
 /*
         if (event.session.application && event.session.application.applicationId && event.session.application.applicationId !== "amzn1.echo-sdk-ams.app.24d6d476-8351-403f-9047-f08e42a9f623") {
-             context.fail("Invalid Application ID=" + event.session.application.applicationId);
+             reject0(new Error("Invalid Application ID=" + event.session.application.applicationId));
         }
 */
         if (event.request.type === "LaunchRequest" || event.request.type === "IntentRequest") {
@@ -35,7 +44,7 @@ export function handler(event, context) {
                         const sessionAttributes = session && session.attributes ? session.attributes : {};
                         const response = buildResponse(sessionAttributes, speechletResponse);
                         trackEventSQS(event.request, event.session, response, null).then(() => {
-                            context.succeed(response);
+                            resolve0(response);
                         });
                     });
                 } else {
@@ -44,21 +53,22 @@ export function handler(event, context) {
                         const sessionAttributes = session && session.attributes ? session.attributes : {};
                         const response = buildResponse(sessionAttributes, speechletResponse);
                         trackEventSQS(event.request, event.session, response, null).then(() => {
-                            context.succeed(response);
+                            resolve0(response);
                         });
                     });
                 }
             });
         } else if (event.request.type === "SessionEndedRequest") {
             trackEventSQS(event.request, event.session, {}, null).then(() => {
-                context.succeed();
+                resolve0();
             });
         } else {
-            context.fail("Unknown event.request.type");
+            reject0(new Error("Unknown event.request.type"));
         }
     } catch (e) {
-        context.fail(`Exception: ${e}`);
+        reject0(new Error(`Exception: ${e}`));
     }
+    return promise;
 }
 
 function loadUserAndGreetings(request, session, callback) {
